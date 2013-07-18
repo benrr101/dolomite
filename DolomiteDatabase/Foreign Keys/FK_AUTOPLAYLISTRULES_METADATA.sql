@@ -1,0 +1,4 @@
+﻿ALTER TABLE [dbo].[AutoplaylistRules]
+	ADD CONSTRAINT [FK_AUTOPLAYLISTRULES_METADATA]
+	FOREIGN KEY (MetadataField)
+	REFERENCES [MetadataFields] (Id)

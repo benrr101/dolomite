@@ -1,0 +1,4 @@
+﻿ALTER TABLE [dbo].[Autoplaylists]
+	ADD CONSTRAINT [FK_AUTOPLAYLISTS_OWNER]
+	FOREIGN KEY (Owner)
+	REFERENCES [Users] (Id)

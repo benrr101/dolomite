@@ -1,0 +1,4 @@
+﻿ALTER TABLE [dbo].[AvailableQualities]
+	ADD CONSTRAINT [FK_AVAILABLEQUALITIES_TRACK]
+	FOREIGN KEY (Track)
+	REFERENCES [Tracks] (Id)

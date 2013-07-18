@@ -1,0 +1,5 @@
+﻿CREATE TABLE [dbo].[Rules]
+(
+	[Id]	INT NOT NULL PRIMARY KEY, 
+    [Name]	NVARCHAR(10) NOT NULL
+)

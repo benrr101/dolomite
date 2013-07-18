@@ -1,0 +1,4 @@
+﻿ALTER TABLE [dbo].[Tracks]
+	ADD CONSTRAINT [FK_TRACKS_OWNER]
+	FOREIGN KEY (Owner)
+	REFERENCES [Users] (Id)

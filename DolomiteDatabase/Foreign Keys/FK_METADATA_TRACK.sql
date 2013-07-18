@@ -1,0 +1,4 @@
+﻿ALTER TABLE [dbo].[Metadata]
+	ADD CONSTRAINT [FK_METADATA_TRACK]
+	FOREIGN KEY (Track)
+	REFERENCES [Tracks] (Id)

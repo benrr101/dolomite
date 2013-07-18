@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Name>DolomiteDatabase</Name>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectVersion>4.1</ProjectVersion>
+    <ProjectGuid>{df713ce7-1b5d-4fea-99be-cba5bef33be7}</ProjectGuid>
+    <DSP>Microsoft.Data.Tools.Schema.Sql.Sql110DatabaseSchemaProvider</DSP>
+    <OutputType>Database</OutputType>
+    <RootPath>
+    </RootPath>
+    <RootNamespace>DolomiteDatabase</RootNamespace>
+    <AssemblyName>DolomiteDatabase</AssemblyName>
+    <ModelCollation>1033, CI</ModelCollation>
+    <DefaultFileStructure>BySchemaAndSchemaType</DefaultFileStructure>
+    <DeployToDatabase>True</DeployToDatabase>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetLanguage>CS</TargetLanguage>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <SqlServerVerification>False</SqlServerVerification>
+    <IncludeCompositeObjects>True</IncludeCompositeObjects>
+    <TargetDatabaseSet>True</TargetDatabaseSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <BuildScriptName>$(MSBuildProjectName).sql</BuildScriptName>
+    <TreatWarningsAsErrors>False</TreatWarningsAsErrors>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineDebug>false</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <BuildScriptName>$(MSBuildProjectName).sql</BuildScriptName>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineDebug>true</DefineDebug>
+    <DefineTrace>true</DefineTrace>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <!-- VS10 without SP1 will not have VisualStudioVersion set, so do that here -->
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <!-- Default to the v10.0 targets path if the targets file for the current VS version is not found -->
+    <SSDTExists Condition="Exists('$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets')">True</SSDTExists>
+    <VisualStudioVersion Condition="'$(SSDTExists)' == ''">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VisualStudio\v$(VisualStudioVersion)\SSDT\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
+  <ItemGroup>
+    <Folder Include="Properties" />
+    <Folder Include="Tables" />
+    <Folder Include="Indexes" />
+    <Folder Include="Foreign Keys" />
+  </ItemGroup>
+  <ItemGroup>
+    <Build Include="Tables\Tracks.sql" />
+    <Build Include="Tables\Playlists.sql" />
+    <Build Include="Tables\PlaylistTracks.sql" />
+    <Build Include="Foreign Keys\FK_PLAYLISTTRACKS_PLAYLISTS.sql" />
+    <Build Include="Foreign Keys\FK_PLAYLISTTRACKS_TRACKS.sql" />
+    <Build Include="Tables\Users.sql" />
+    <Build Include="Indexes\UNQ_PLAYLIST_OWNERNAME.sql" />
+    <Build Include="Tables\Metadata.sql" />
+    <Build Include="Tables\MetadataFields.sql" />
+    <Build Include="Foreign Keys\FK_METADATA_FIELD.sql" />
+    <Build Include="Foreign Keys\FK_METADATA_TRACK.sql" />
+    <Build Include="Indexes\UNQ_USERS_USERNAME.sql" />
+    <Build Include="Foreign Keys\FK_TRACKS_OWNER.sql" />
+    <Build Include="Foreign Keys\FK_PLAYLISTS_OWNER.sql" />
+    <Build Include="Tables\Autoplaylists.sql" />
+    <Build Include="Foreign Keys\FK_AUTOPLAYLISTS_OWNER.sql" />
+    <Build Include="Indexes\UNQ_AUTOPLAYLISTS_OWNERNAME.sql" />
+    <Build Include="Tables\Rules.sql" />
+    <Build Include="Indexes\UNQ_RULES_NAME.sql" />
+    <Build Include="Tables\AutoplaylistRules.sql" />
+    <Build Include="Foreign Keys\FK_AUTOPLAYLISTRULES_RULE.sql" />
+    <Build Include="Foreign Keys\FK_AUTOPLAYLISTRULES_METADATA.sql" />
+    <Build Include="Foreign Keys\FK_AUTOPLAYLISTRULES_PLAYLIST.sql" />
+    <Build Include="Tables\Albums.sql" />
+    <Build Include="Tables\Artists.sql" />
+    <Build Include="Foreign Keys\FK_TRACKS_ALBUM.sql" />
+    <Build Include="Foreign Keys\FK_ALBUMS_ARTIST.sql" />
+    <Build Include="Tables\Devices.sql" />
+    <Build Include="Foreign Keys\FK_DEVICES_OWNER.sql" />
+    <Build Include="Tables\Qualities.sql" />
+    <Build Include="Tables\AvailableQualities.sql" />
+    <Build Include="Foreign Keys\FK_AVAILABLEQUALITIES_TRACK.sql" />
+    <Build Include="Foreign Keys\FK_AVAILABLEQUALITIES_QUALITY.sql" />
+  </ItemGroup>
+</Project>

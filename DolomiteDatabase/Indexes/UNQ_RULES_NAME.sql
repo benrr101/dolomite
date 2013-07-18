@@ -1,0 +1,3 @@
+﻿ALTER TABLE [dbo].[Rules]
+	ADD CONSTRAINT [UNQ_RULES_NAME]
+	UNIQUE (Name)

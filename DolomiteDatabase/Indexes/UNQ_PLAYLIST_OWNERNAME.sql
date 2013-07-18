@@ -1,0 +1,3 @@
+﻿CREATE UNIQUE INDEX [UNQ_PLAYLIST_UNIQ_OWNERNAME]
+	ON [dbo].[Playlists]
+	(Owner, Name)

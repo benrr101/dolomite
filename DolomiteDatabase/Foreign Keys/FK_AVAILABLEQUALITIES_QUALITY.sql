@@ -1,0 +1,4 @@
+﻿ALTER TABLE [dbo].[AvailableQualities]
+	ADD CONSTRAINT [FK_AVAILABLEQUALITIES_QUALITY]
+	FOREIGN KEY (Quality)
+	REFERENCES [Qualities] (Id)

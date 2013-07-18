@@ -1,0 +1,4 @@
+﻿ALTER TABLE [dbo].[PlaylistTracks]
+	ADD CONSTRAINT [FK_PLAYLISTTRACKS_TRACKS]
+	FOREIGN KEY (Track)
+	REFERENCES [Tracks] (Id)

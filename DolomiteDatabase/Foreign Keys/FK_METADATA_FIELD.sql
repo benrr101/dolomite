@@ -1,0 +1,4 @@
+﻿ALTER TABLE [dbo].[Metadata]
+	ADD CONSTRAINT [FK_METADATA_FIELD]
+	FOREIGN KEY (Field)
+	REFERENCES [MetadataFields] (Id)

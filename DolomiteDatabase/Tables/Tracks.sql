@@ -1,0 +1,7 @@
+﻿CREATE TABLE [dbo].[Tracks]
+(
+	[Id]	INT NOT NULL PRIMARY KEY IDENTITY(1,1),
+	[Owner] INT NOT NULL,
+	[Hash]	NCHAR(32) NOT NULL, 
+    [Album] INT NOT NULL 
+)
