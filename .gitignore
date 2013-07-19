@@ -7,3 +7,12 @@
 *.Load
 *.gpState
 Thumbs.db
+*.dbmdl
+
+# Azure specific things
+*/rcf/*
+*/csx/*
+
+# NuGet things
+packages/*
+!packages/repositories.config
