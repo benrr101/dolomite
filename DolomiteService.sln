@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{CC5FD16D-436D-48AD-A40C-5A424C6E3E79}") = "DolomiteService", "DolomiteService\DolomiteService.ccproj", "{919F1FAF-2554-436B-A6B4-DC1EDB6F745E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DolomiteWcfService", "DolomiteWcfService\DolomiteWcfService.csproj", "{44CBFD2B-06AF-4664-928C-03BB7C76A7FB}"
-EndProject
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "DolomiteDatabase", "DolomiteDatabase\DolomiteDatabase.sqlproj", "{DF713CE7-1B5D-4FEA-99BE-CBA5BEF33BE7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DolomiteWcfService", "DolomiteWcfService\DolomiteWcfService.csproj", "{EF8D794F-D078-4AC6-9159-ECDDDE11091F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,16 +17,16 @@ Global
 		{919F1FAF-2554-436B-A6B4-DC1EDB6F745E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{919F1FAF-2554-436B-A6B4-DC1EDB6F745E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{919F1FAF-2554-436B-A6B4-DC1EDB6F745E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{44CBFD2B-06AF-4664-928C-03BB7C76A7FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{44CBFD2B-06AF-4664-928C-03BB7C76A7FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{44CBFD2B-06AF-4664-928C-03BB7C76A7FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{44CBFD2B-06AF-4664-928C-03BB7C76A7FB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DF713CE7-1B5D-4FEA-99BE-CBA5BEF33BE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DF713CE7-1B5D-4FEA-99BE-CBA5BEF33BE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DF713CE7-1B5D-4FEA-99BE-CBA5BEF33BE7}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
 		{DF713CE7-1B5D-4FEA-99BE-CBA5BEF33BE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DF713CE7-1B5D-4FEA-99BE-CBA5BEF33BE7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DF713CE7-1B5D-4FEA-99BE-CBA5BEF33BE7}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{EF8D794F-D078-4AC6-9159-ECDDDE11091F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF8D794F-D078-4AC6-9159-ECDDDE11091F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF8D794F-D078-4AC6-9159-ECDDDE11091F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF8D794F-D078-4AC6-9159-ECDDDE11091F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
