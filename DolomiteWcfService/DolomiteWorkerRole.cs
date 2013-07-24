@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Net;
 using System.ServiceModel;
 using System.ServiceModel.Description;
+using System.ServiceModel.Web;
 using System.Threading;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
@@ -16,7 +17,7 @@ namespace DolomiteWcfService
         /// <summary>
         /// Instance of the service host for the dolomite wcf endpoint
         /// </summary>
-        private ServiceHost _serviceHost;
+        private WebServiceHost _serviceHost;
 
         #endregion
 
@@ -51,12 +52,14 @@ namespace DolomiteWcfService
 
             // Grab the base address from the role manager
             IPEndPoint endpoint = RoleEnvironment.CurrentRoleInstance.InstanceEndpoints["DolomiteRest"].IPEndpoint;
+            WebHttpBinding webBinding = new WebHttpBinding();
             Uri baseAddress = new Uri(String.Format("http://{0}:{1}", endpoint.Address, endpoint.Port));
-            
+
             // Spin up a service end point
             try
             {
-                _serviceHost = new ServiceHost(typeof (ServiceEndpoint), baseAddress);
+                _serviceHost = new WebServiceHost(typeof (ServiceEndpoint), baseAddress);
+                _serviceHost.AddServiceEndpoint(typeof (IServiceEndpoint), webBinding, "/");
 
                 // Enable the http metadata output
                 ServiceMetadataBehavior smb = new ServiceMetadataBehavior
