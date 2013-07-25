@@ -1,5 +1,5 @@
-﻿using System.IO;
-using System.Net.Http;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.ServiceModel;
 using System.ServiceModel.Web;
 
@@ -11,5 +11,10 @@ namespace DolomiteWcfService
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "/tracks/")]
         void UploadTrack(Stream file);
+
+        // TODO: REMOVE THIS TEST METHOD
+        [OperationContract]
+        [WebInvoke(Method = "GET", UriTemplate = "/tracks/", ResponseFormat = WebMessageFormat.Json)]
+        List<string> GetTracks();
     }
 }

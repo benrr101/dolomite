@@ -9,5 +9,8 @@
     </Endpoints>
     <Certificates>
     </Certificates>
+    <ConfigurationSettings>
+      <Setting name="StorageConnectionString" />
+    </ConfigurationSettings>
   </WorkerRole>
 </ServiceDefinition>

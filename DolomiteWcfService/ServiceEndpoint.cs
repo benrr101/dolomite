@@ -1,10 +1,27 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace DolomiteWcfService
 {
     public class ServiceEndpoint : IServiceEndpoint
     {
+
+        #region Properties
+
+        /// <summary>
+        /// Instance of the Azure Storage Manager
+        /// </summary>
+        private AzureStorageManager StorageManager { get; set; }
+
+        #endregion
+
+        public ServiceEndpoint()
+        {
+            // Initialize the storage manager
+            StorageManager = AzureStorageManager.Instance;
+        }
+
         /// <summary>
         /// Uploads a track from the RESTful API to Azure blob storage. This
         /// also pulls out the track's metadata and loads the info into the db.
@@ -15,20 +32,19 @@ namespace DolomiteWcfService
         /// <returns>Http response. Follows the standard.</returns>
         public void UploadTrack(Stream file)
         {
-            byte[] buffer = new byte[10000];
-            int bytesRead, totalBytesRead = 0;
-            do
-            {
-                bytesRead = file.Read(buffer, 0, buffer.Length);
-                totalBytesRead += bytesRead;
-            } while (bytesRead > 0);
-            Trace.TraceInformation("Service: Received file with {0} bytes", totalBytesRead);
-
-            // TODO: Write the file out to azure storage
+            // Upload the track to the temporaty storage
+            Guid fileName = Guid.NewGuid();
+            StorageManager.StoreTrack(fileName.ToString(), file);
 
             // TODO: Grab track's metadata
 
             // TODO: Store track's metadata to the database
+        }
+
+        //TODO: REMOVE THIS TEST METHOD
+        public List<string> GetTracks()
+        {
+            return StorageManager.GetAllTracks();
         }
     }
 }
