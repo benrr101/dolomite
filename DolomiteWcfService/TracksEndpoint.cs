@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.ServiceModel.Channels;
 using System.ServiceModel.Web;
+using System.Text;
+using Newtonsoft.Json;
 
 namespace DolomiteWcfService
 {
@@ -51,12 +54,14 @@ namespace DolomiteWcfService
             }
         }
 
-        public Track GetTrackMetadata(string guid)
+        public Message GetTrackMetadata(string guid)
         {
             try
             {
                 // Retrieve the track without the stream
-                return TrackManager.DownloadTrack(guid, false);
+                Track track = TrackManager.DownloadTrack(guid, false);
+                string trackJson = JsonConvert.SerializeObject(track);
+                return WebOperationContext.Current.CreateTextResponse(trackJson, "application/json", Encoding.UTF8);
             }
             catch (FileNotFoundException)
             {

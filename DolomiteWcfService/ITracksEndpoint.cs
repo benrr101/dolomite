@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.ServiceModel;
+using System.ServiceModel.Channels;
 using System.ServiceModel.Web;
 
 namespace DolomiteWcfService
@@ -18,7 +19,7 @@ namespace DolomiteWcfService
 
         [OperationContract]
         [WebInvoke(Method = "GET", UriTemplate = "/{guid}")]
-        Track GetTrackMetadata(string guid);
+        Message GetTrackMetadata(string guid);
 
         // TODO: REMOVE THIS TEST METHOD
         [OperationContract]
