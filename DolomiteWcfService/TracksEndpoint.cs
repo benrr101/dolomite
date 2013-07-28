@@ -6,7 +6,7 @@ using System.ServiceModel.Web;
 
 namespace DolomiteWcfService
 {
-    public class ServiceEndpoint : IServiceEndpoint
+    public class TracksEndpoint : ITracksEndpoint
     {
 
         #region Properties
@@ -18,7 +18,7 @@ namespace DolomiteWcfService
 
         #endregion
 
-        public ServiceEndpoint()
+        public TracksEndpoint()
         {
             // Initialize the storage manager
             StorageManager = AzureStorageManager.Instance;

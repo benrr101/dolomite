@@ -61,8 +61,8 @@ namespace DolomiteWcfService
             // Spin up a service end point
             try
             {
-                _serviceHost = new WebServiceHost(typeof (ServiceEndpoint), baseAddress);
-                _serviceHost.AddServiceEndpoint(typeof (IServiceEndpoint), webBinding, "/");
+                _serviceHost = new WebServiceHost(typeof (TracksEndpoint), baseAddress);
+                _serviceHost.AddServiceEndpoint(typeof (ITracksEndpoint), webBinding, "/tracks/");
 
                 // Enable the http metadata output
                 ServiceMetadataBehavior smb = new ServiceMetadataBehavior

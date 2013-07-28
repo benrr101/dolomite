@@ -72,7 +72,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AzureStorageManager.cs" />
-    <Compile Include="IServiceEndpoint.cs" />
+    <Compile Include="ITracksEndpoint.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DolomiteWorkerRole.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
@@ -80,7 +80,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="ServiceEndpoint.cs" />
+    <Compile Include="TracksEndpoint.cs" />
     <Compile Include="Settings.cs" />
   </ItemGroup>
   <ItemGroup>
