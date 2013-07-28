@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
+using System.ServiceModel.Web;
 
 namespace DolomiteWcfService
 {
@@ -39,6 +41,24 @@ namespace DolomiteWcfService
             // TODO: Grab track's metadata
 
             // TODO: Store track's metadata to the database
+        }
+
+        public Stream DownloadTrack(string guid)
+        {
+            Guid trackGuid;
+            if (!Guid.TryParse(guid, out trackGuid))
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                return null;
+            }
+
+            Stream output = StorageManager.GetTrack(guid);
+            if (output == null)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
+                return null;
+            }
+            return output;
         }
 
         //TODO: REMOVE THIS TEST METHOD

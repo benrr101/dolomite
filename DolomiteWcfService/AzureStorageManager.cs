@@ -96,6 +96,26 @@ namespace DolomiteWcfService
             return container.ListBlobs().Select(item => item.Uri.ToString()).ToList();
         }
 
+        /// <summary>
+        /// Retreive a specific track at a the given path.
+        /// </summary>
+        /// <param name="path">The path to find the track</param>
+        /// <returns>
+        /// A stream that represents contains the track. 
+        /// The position will be reset to the beginning.
+        /// </returns>
+        public Stream GetTrack(string path)
+        {
+            // Retreive a reference to the track container
+            CloudBlobContainer container = BlobClient.GetContainerReference(TrackContainerName);
+
+            // Retreive the track into a memory stream
+            MemoryStream memStream = new MemoryStream();
+            container.GetBlockBlobReference(path).DownloadToStream(memStream);
+            memStream.Position = 0;
+            return memStream;
+        }
+
         #endregion
 
         #region Initialization Methods

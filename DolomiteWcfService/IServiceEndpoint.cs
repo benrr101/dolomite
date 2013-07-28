@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.ServiceModel;
 using System.ServiceModel.Web;
@@ -11,6 +12,10 @@ namespace DolomiteWcfService
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "/tracks/")]
         void UploadTrack(Stream file);
+
+        [OperationContract]
+        [WebInvoke(Method = "GET", UriTemplate = "/tracks/{guid}")]
+        Stream DownloadTrack(string guid);
 
         // TODO: REMOVE THIS TEST METHOD
         [OperationContract]

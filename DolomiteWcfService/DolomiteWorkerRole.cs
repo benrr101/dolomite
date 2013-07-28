@@ -52,7 +52,10 @@ namespace DolomiteWcfService
 
             // Grab the base address from the role manager
             IPEndPoint endpoint = RoleEnvironment.CurrentRoleInstance.InstanceEndpoints["DolomiteRest"].IPEndpoint;
-            WebHttpBinding webBinding = new WebHttpBinding();
+            WebHttpBinding webBinding = new WebHttpBinding()
+                {
+                    MaxReceivedMessageSize = 200*1024*2024 // 200Mb
+                };
             Uri baseAddress = new Uri(String.Format("http://{0}:{1}", endpoint.Address, endpoint.Port));
 
             // Spin up a service end point
@@ -65,7 +68,7 @@ namespace DolomiteWcfService
                 ServiceMetadataBehavior smb = new ServiceMetadataBehavior
                     {
                         HttpGetEnabled = true,
-                        MetadataExporter = {PolicyVersion = PolicyVersion.Policy15}
+                        MetadataExporter = {PolicyVersion = PolicyVersion.Policy15},
                     };
                 _serviceHost.Description.Behaviors.Add(smb);
                 _serviceHost.Open();
