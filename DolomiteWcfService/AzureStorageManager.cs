@@ -94,23 +94,37 @@ namespace DolomiteWcfService
         }
 
         /// <summary>
-        /// Retreive a specific track at a the given path.
+        /// Retrieve a specific track at a the given path.
         /// </summary>
         /// <param name="path">The path to find the track</param>
         /// <returns>
         /// A stream that represents contains the track. 
         /// The position will be reset to the beginning.
         /// </returns>
-        public Stream GetTrack(string path)
+        public Stream GetBlob(string containerName, string path)
         {
-            // Retreive a reference to the track container
-            CloudBlobContainer container = BlobClient.GetContainerReference(TrackContainerName);
+            Trace.TraceInformation("Attempting to retrieve '{0}' from container '{1}'", path, containerName);
+            try
+            {
+                // Retreive a reference to the track container
+                CloudBlobContainer container = BlobClient.GetContainerReference(containerName);
 
-            // Retreive the track into a memory stream
-            MemoryStream memStream = new MemoryStream();
-            container.GetBlockBlobReference(path).DownloadToStream(memStream);
-            memStream.Position = 0;
-            return memStream;
+                // Retreive the track into a memory stream
+                MemoryStream memStream = new MemoryStream();
+                CloudBlockBlob blob = container.GetBlockBlobReference(path);
+                if (!blob.Exists())
+                {
+                    throw new FileNotFoundException(String.Format("Failed to find blob {0} in container {1}", path, container));
+                }
+                blob.DownloadToStream(memStream);
+                memStream.Position = 0;
+                return memStream;
+            }
+            catch (Exception e)
+            {
+                Trace.TraceError("Failed to retrieve blob {0}: {1}", path, e.Message);
+                throw;
+            }
         }
 
         #endregion

@@ -47,23 +47,22 @@ namespace DolomiteWcfService
 
         public Stream DownloadTrack(string guid)
         {
-            WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotImplemented;
-            return null;
-            
-            /*Guid trackGuid;
-            if (!Guid.TryParse(guid, out trackGuid))
+            try
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
-                return null;
+                // Retrieve the track and return the stream
+                Track track = TrackManager.DownloadTrack(guid);
+                return track.FileStream;
             }
-
-            Stream output = TrackManager.GetTrack(guid);
-            if (output == null)
+            catch (FileNotFoundException fnfe)
             {
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
                 return null;
             }
-            return output;*/
+            catch (Exception e)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
+                return null;
+            }
         }
 
         //TODO: REMOVE THIS TEST METHOD
