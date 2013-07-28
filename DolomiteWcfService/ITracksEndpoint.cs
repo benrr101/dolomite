@@ -10,8 +10,8 @@ namespace DolomiteWcfService
     public interface ITracksEndpoint
     {
         [OperationContract]
-        [WebInvoke(Method = "POST", UriTemplate = "/")]
-        void UploadTrack(Stream file);
+        [WebInvoke(Method = "POST", UriTemplate = "/", ResponseFormat = WebMessageFormat.Json)]
+        string UploadTrack(Stream file);
 
         [OperationContract]
         [WebInvoke(Method = "GET", UriTemplate = "/original/{guid}")]

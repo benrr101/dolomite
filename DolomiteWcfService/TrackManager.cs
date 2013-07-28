@@ -83,11 +83,19 @@ namespace DolomiteWcfService
                 };
         }
 
-        public void UploadTrack(Stream stream)
+        /// <summary>
+        /// Uploads the track to the system. Places the track in temporary
+        /// azure storage then kicks off threads to do the rest of the work.
+        /// </summary>
+        /// <param name="stream">Stream of the uploaded track</param>
+        /// <returns>The guid for identifying the track</returns>
+        public Guid UploadTrack(Stream stream)
         {
             // Step 1: Upload the track to temporary storage in azure
-            string filePath = TempStorageDirectory + Guid.NewGuid();
+            Guid trackGuid = Guid.NewGuid();
+            string filePath = TempStorageDirectory + trackGuid;
             AzureStorageManager.StoreBlob(filePath, _trackContainerName, stream);
+            return trackGuid;
 
             // TODO: Step 2: Read the metadata from the track
 

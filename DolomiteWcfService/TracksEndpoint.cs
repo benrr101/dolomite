@@ -54,6 +54,12 @@ namespace DolomiteWcfService
             }
         }
 
+        /// <summary>
+        /// Retrieves the given track's metadata -- does not load any streams 
+        /// from azure
+        /// </summary>
+        /// <param name="guid">Guid of the track</param>
+        /// <returns>A message with JSON formatted track metadata</returns>
         public Message GetTrackMetadata(string guid)
         {
             try
@@ -77,17 +83,18 @@ namespace DolomiteWcfService
         /// different bitrates of the track.
         /// </summary>
         /// <param name="file">Stream of the file that is uploaded</param>
-        /// <returns>Http response. Follows the standard.</returns>
-        public void UploadTrack(Stream file)
+        /// <returns>The GUID of the track that was uploaded</returns>
+        public string UploadTrack(Stream file)
         {
             try
             {
                 // Upload the track
-                TrackManager.UploadTrack(file);
+                return TrackManager.UploadTrack(file).ToString();
             }
             catch (Exception e)
             {
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
+                return null;
             }
         }
 
