@@ -13,8 +13,12 @@ namespace DolomiteWcfService
         void UploadTrack(Stream file);
 
         [OperationContract]
-        [WebInvoke(Method = "GET", UriTemplate = "/{guid}")]
+        [WebInvoke(Method = "GET", UriTemplate = "/original/{guid}")]
         Stream DownloadTrack(string guid);
+
+        [OperationContract]
+        [WebInvoke(Method = "GET", UriTemplate = "/{guid}")]
+        Track GetTrackMetadata(string guid);
 
         // TODO: REMOVE THIS TEST METHOD
         [OperationContract]

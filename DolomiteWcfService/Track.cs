@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Serialization;
 
 namespace DolomiteWcfService
 {
-    class Track
+    [DataContract]
+    public class Track
     {
 
         #region Properties
@@ -11,6 +13,7 @@ namespace DolomiteWcfService
         /// <summary>
         /// The metadata about the track
         /// </summary>
+        [DataMember]
         public Dictionary<string, string> Metadata;
 
         /// <summary>
@@ -18,13 +21,16 @@ namespace DolomiteWcfService
         /// It is reset to the beginning of the stream to make it readable.
         /// </summary>
         private Stream _fileStream;
-
         public Stream FileStream
         {
             get { return _fileStream; }
             set
             {
-                value.Position = 0;
+                // Reset the stream to be beginning
+                if (value != null)
+                {
+                    value.Position = 0;
+                }
                 _fileStream = value;
             }
         }
