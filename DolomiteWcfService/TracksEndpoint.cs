@@ -14,14 +14,14 @@ namespace DolomiteWcfService
         /// <summary>
         /// Instance of the Azure Storage Manager
         /// </summary>
-        private AzureStorageManager StorageManager { get; set; }
+        private TrackManager TrackManager { get; set; }
 
         #endregion
 
         public TracksEndpoint()
         {
-            // Initialize the storage manager
-            StorageManager = AzureStorageManager.Instance;
+            // Initialize the track manager
+            TrackManager = TrackManager.Instance;
         }
 
         /// <summary>
@@ -34,37 +34,43 @@ namespace DolomiteWcfService
         /// <returns>Http response. Follows the standard.</returns>
         public void UploadTrack(Stream file)
         {
-            // Upload the track to the temporaty storage
-            Guid fileName = Guid.NewGuid();
-            StorageManager.StoreTrack(fileName.ToString(), file);
-
-            // TODO: Grab track's metadata
-
-            // TODO: Store track's metadata to the database
+            try
+            {
+                // Upload the track
+                TrackManager.UploadTrack(file);
+            }
+            catch (Exception e)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
+            }
         }
 
         public Stream DownloadTrack(string guid)
         {
-            Guid trackGuid;
+            WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotImplemented;
+            return null;
+            
+            /*Guid trackGuid;
             if (!Guid.TryParse(guid, out trackGuid))
             {
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
                 return null;
             }
 
-            Stream output = StorageManager.GetTrack(guid);
+            Stream output = TrackManager.GetTrack(guid);
             if (output == null)
             {
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
                 return null;
             }
-            return output;
+            return output;*/
         }
 
         //TODO: REMOVE THIS TEST METHOD
         public List<string> GetTracks()
         {
-            return StorageManager.GetAllTracks();
+            WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotImplemented;
+            return null;
         }
     }
 }

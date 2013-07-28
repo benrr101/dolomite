@@ -80,6 +80,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="TrackManager.cs" />
     <Compile Include="TracksEndpoint.cs" />
     <Compile Include="Settings.cs" />
   </ItemGroup>

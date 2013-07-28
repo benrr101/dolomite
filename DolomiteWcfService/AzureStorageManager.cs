@@ -39,31 +39,28 @@ namespace DolomiteWcfService
             // Create a client for accessing the Azure storage
             CloudStorageAccount account = CloudStorageAccount.Parse(CloudConfigurationManager.GetSetting("StorageConnectionString"));
             BlobClient = account.CreateCloudBlobClient();
-
-            // Check for the existence of the track container
-            TrackContainerName = Properties.Settings.Default["trackStorageContainer"].ToString();
-            CloudBlobContainer trackContainer = BlobClient.GetContainerReference(TrackContainerName);
-            if (!trackContainer.Exists())
-            {
-                InitializeContainer(trackContainer);
-            }
         }
 
         #endregion
 
         #region Store Methods
 
-        public void StoreTrack(string fileName, Stream bytes)
+        /// <summary>
+        /// Stores the given stream into a block blob in the given storage
+        /// container.
+        /// </summary>
+        /// <param name="fileName">The path for the file to be stored</param>
+        /// <param name="containerName">The name of the container to store the blob in</param>
+        /// <param name="bytes">A stream of the bytes to store</param>
+        public void StoreBlob(string fileName, string containerName, Stream bytes)
         {
-            Trace.TraceInformation("Attempting to upload track to tracks/{0}", fileName);
-            StoreBlob(fileName, BlobClient.GetContainerReference(TrackContainerName), bytes);
-        }
-
-        private void StoreBlob(string fileName, CloudBlobContainer container, Stream bytes)
-        {
-            // Get a reference to the blob to upload, and create/overwrite
+            Trace.TraceInformation("Attempting to upload block blob '{0}' to container '{1}'", fileName, containerName);
             try
             {
+                // Grab the container that is being used
+                CloudBlobContainer container = BlobClient.GetContainerReference(containerName);
+                
+                // Grab the 
                 CloudBlockBlob block = container.GetBlockBlobReference(fileName);
                 block.UploadFromStream(bytes);
                 Trace.TraceInformation("Successfully stored block blob {0}", fileName);
@@ -124,8 +121,14 @@ namespace DolomiteWcfService
         /// Attempts to create a container with the specified.
         /// </summary>
         /// <param name="container">Name of the container to create</param>
-        private static void InitializeContainer(CloudBlobContainer container)
+        public void InitializeContainer(string containerName)
         {
+            // Check for the existence of the container
+            CloudBlobContainer container = BlobClient.GetContainerReference(containerName);
+            if (container.Exists())
+                return;
+
+            // Container does not exist. Create it
             try
             {
                 Trace.TraceWarning("Container '{0}' does not exist. Attempting to create...", container.Name);
