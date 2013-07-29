@@ -60,6 +60,7 @@
     <Folder Include="Tables" />
     <Folder Include="Indexes" />
     <Folder Include="Foreign Keys" />
+    <Folder Include="Scripts" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="Tables\Tracks.sql" />
@@ -95,5 +96,8 @@
     <Build Include="Tables\AvailableQualities.sql" />
     <Build Include="Foreign Keys\FK_AVAILABLEQUALITIES_TRACK.sql" />
     <Build Include="Foreign Keys\FK_AVAILABLEQUALITIES_QUALITY.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <PostDeploy Include="Scripts\Script.PostDeployment1.sql" />
   </ItemGroup>
 </Project>

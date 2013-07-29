@@ -3,5 +3,6 @@
 	[Id]	UNIQUEIDENTIFIER NOT NULL,
 	[Owner] INT NOT NULL,
 	[Hash]	NCHAR(32) NOT NULL, 
-    [Album] INT NOT NULL 
+    [Album] INT NOT NULL, 
+    CONSTRAINT [PK_Tracks] PRIMARY KEY ([Id]) 
 )
