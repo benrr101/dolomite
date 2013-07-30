@@ -105,6 +105,16 @@ namespace DolomiteWcfService
         } 
 
         /// <summary>
+        /// Checks to see a track exists based on its hash
+        /// </summary>
+        /// <param name="hash">The hash to search with</param>
+        /// <returns>True if the track exists, false otherwise</returns>
+        public bool TrackExists(string hash)
+        {
+            return DatabaseManager.GetTrackByHash(hash) != null;
+        }
+
+        /// <summary>
         /// Uploads the track to the system. Places the track in temporary
         /// azure storage then kicks off threads to do the rest of the work.
         /// </summary>
@@ -128,6 +138,8 @@ namespace DolomiteWcfService
             // Return the guid to the calling system
             return trackGuid;
         }
+
+        
 
         #endregion
 

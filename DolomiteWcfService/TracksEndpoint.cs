@@ -83,6 +83,15 @@ namespace DolomiteWcfService
         }
 
         /// <summary>
+        /// Searches for a track based on its hash. Returns 200 if found, 404 if not found
+        /// </summary>
+        /// <param name="hash">The hash to search with</param>
+        public void TrackExists(string hash)
+        {
+            WebOperationContext.Current.OutgoingResponse.StatusCode = TrackManager.TrackExists(hash) ? HttpStatusCode.OK : HttpStatusCode.NotFound;
+        }
+
+        /// <summary>
         /// Uploads a track from the RESTful API to Azure blob storage. This
         /// also pulls out the track's metadata and loads the info into the db.
         /// Lastly, this kicks off a thread to run the converters to create the

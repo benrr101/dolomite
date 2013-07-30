@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Model = DolomiteModel;
 
@@ -48,6 +47,21 @@ namespace DolomiteWcfService
             }
         }
 
+        public Track GetTrackByHash(string hash)
+        {
+            using (var context = new Model.Entities())
+            {
+                // Search for the track
+                return (from track in context.Tracks
+                        where track.Hash == hash
+                        select new Track {Id = track.Id}).FirstOrDefault();
+            }
+        }
+
+        /// <summary>
+        /// Fetches all tracks in the database. This auto-converts all the fields
+        /// </summary>
+        /// <returns></returns>
         public List<Track> FetchAllTracks()
         {
             using (var context = new Model.Entities())

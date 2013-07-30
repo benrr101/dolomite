@@ -14,6 +14,10 @@ namespace DolomiteWcfService
         string UploadTrack(Stream file);
 
         [OperationContract]
+        [WebInvoke(Method = "HEAD", UriTemplate = "/{hash}")]
+        void TrackExists(string hash);
+
+        [OperationContract]
         [WebInvoke(Method = "GET", UriTemplate = "/original/{guid}")]
         Stream DownloadTrack(string guid);
 
