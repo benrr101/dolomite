@@ -69,6 +69,12 @@ namespace DolomiteWcfService
                 string trackJson = JsonConvert.SerializeObject(track);
                 return WebOperationContext.Current.CreateTextResponse(trackJson, "application/json", Encoding.UTF8);
             }
+            catch (FormatException)
+            {
+                // The guid was probably incorrect
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                return null;
+            }
             catch (FileNotFoundException)
             {
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
@@ -91,7 +97,7 @@ namespace DolomiteWcfService
                 // Upload the track
                 return TrackManager.UploadTrack(file).ToString();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
                 return null;

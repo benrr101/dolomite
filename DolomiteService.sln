@@ -7,6 +7,8 @@ Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "DolomiteDatabase", "Dolomit
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DolomiteWcfService", "DolomiteWcfService\DolomiteWcfService.csproj", "{EF8D794F-D078-4AC6-9159-ECDDDE11091F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DolomiteModel", "DolomiteModel\DolomiteModel.csproj", "{220F4EAC-A673-4534-825B-A0FE9CE76564}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{EF8D794F-D078-4AC6-9159-ECDDDE11091F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF8D794F-D078-4AC6-9159-ECDDDE11091F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EF8D794F-D078-4AC6-9159-ECDDDE11091F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{220F4EAC-A673-4534-825B-A0FE9CE76564}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{220F4EAC-A673-4534-825B-A0FE9CE76564}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{220F4EAC-A673-4534-825B-A0FE9CE76564}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{220F4EAC-A673-4534-825B-A0FE9CE76564}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

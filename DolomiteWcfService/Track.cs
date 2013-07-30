@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
 
@@ -9,6 +10,11 @@ namespace DolomiteWcfService
     {
 
         #region Properties
+
+        /// <summary>
+        /// The unique identifier for the track
+        /// </summary>
+        [DataMember] public Guid Id;
 
         /// <summary>
         /// The metadata about the track

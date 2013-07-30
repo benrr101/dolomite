@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Model = DolomiteModel;
 
 namespace DolomiteWcfService
 {
@@ -18,6 +19,8 @@ namespace DolomiteWcfService
         #region Properties and Member Variables
 
         private AzureStorageManager AzureStorageManager { get; set; }
+
+        private DatabaseManager DatabaseManager { get; set; }
 
         private readonly string _trackContainerName;
 
@@ -52,6 +55,9 @@ namespace DolomiteWcfService
 
             // Make sure the track container exists
             AzureStorageManager.InitializeContainer(_trackContainerName);
+
+            // Get an instance of the database manager
+            DatabaseManager = DatabaseManager.Instance;
         }
 
         #endregion
@@ -69,17 +75,18 @@ namespace DolomiteWcfService
         public Track DownloadTrack(string trackGuid, bool retreiveStream = true)
         {
             // TODO: Remove the temp location stuff. Replace with real quality logic
-            trackGuid = "temp/" + trackGuid;
+            string trackPath = "temp/" + trackGuid;
 
             return new Track
                 {
+                    Id = Guid.Parse(trackGuid),
                     // TODO: Replace with metadata retrieval logic
                     Metadata = new Dictionary<string, string>
                         {
                             {"Title", "Hello World"},
                             {"Artist", "Yo Sup"}
                         },
-                    FileStream = retreiveStream ? AzureStorageManager.GetBlob(_trackContainerName, trackGuid) : null
+                    FileStream = retreiveStream ? AzureStorageManager.GetBlob(_trackContainerName, trackPath) : null
                 };
         }
 
@@ -93,18 +100,31 @@ namespace DolomiteWcfService
         {
             // Step 1: Upload the track to temporary storage in azure
             Guid trackGuid = Guid.NewGuid();
-            string filePath = TempStorageDirectory + trackGuid;
-            AzureStorageManager.StoreBlob(filePath, _trackContainerName, stream);
-            return trackGuid;
+            UploadTrackToTempStorage(trackGuid, stream);
+
+            // Step 2: Create the inital record of the track in the database
+            DatabaseManager.CreateInitialTrackRecord(trackGuid);
 
             // TODO: Step 2: Read the metadata from the track
 
             // TODO: Step 3: Create a track object for the track
 
             // TODO: Step 4: Create the various qualities of the track
+
+            // Return the guid to the calling system
+            return trackGuid;
         }
 
         #endregion
 
+        #region Private Helper Methods
+
+        private void UploadTrackToTempStorage(Guid guid, Stream fileStream)
+        {
+            string filePath = TempStorageDirectory + guid;
+            AzureStorageManager.StoreBlob(filePath, _trackContainerName, fileStream);
+        }
+
+        #endregion
     }
 }

@@ -22,9 +22,9 @@ namespace DolomiteModel
         }
     
         public System.Guid Id { get; set; }
-        public int Owner { get; set; }
+        public Nullable<int> Owner { get; set; }
         public string Hash { get; set; }
-        public int Album { get; set; }
+        public Nullable<int> Album { get; set; }
     
         public virtual Album Album1 { get; set; }
         public virtual ICollection<AvailableQuality> AvailableQualities { get; set; }
