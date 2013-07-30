@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Model = DolomiteModel;
 
 namespace DolomiteWcfService
@@ -89,6 +90,19 @@ namespace DolomiteWcfService
                     FileStream = retreiveStream ? AzureStorageManager.GetBlob(_trackContainerName, trackPath) : null
                 };
         }
+
+        /// <summary>
+        /// Retrieve an index of all the tracks in the database
+        /// </summary>
+        /// <returns>List of track objects in the database</returns>
+        public List<Track> FetchAllTracks()
+        {
+            // Get the tracks from the database
+            var tracks = DatabaseManager.FetchAllTracks();
+
+            // Condense them into a list of tracks
+            return tracks.ToList();
+        } 
 
         /// <summary>
         /// Uploads the track to the system. Places the track in temporary

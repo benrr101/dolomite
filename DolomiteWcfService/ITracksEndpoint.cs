@@ -21,9 +21,8 @@ namespace DolomiteWcfService
         [WebInvoke(Method = "GET", UriTemplate = "/{guid}")]
         Message GetTrackMetadata(string guid);
 
-        // TODO: REMOVE THIS TEST METHOD
         [OperationContract]
         [WebInvoke(Method = "GET", UriTemplate = "/", ResponseFormat = WebMessageFormat.Json)]
-        List<string> GetTracks();
+        List<Track> GetTracks();
     }
 }

@@ -48,6 +48,25 @@ namespace DolomiteWcfService
             }
         }
 
+        public List<Track> FetchAllTracks()
+        {
+            using (var context = new Model.Entities())
+            {
+                // Fetch ORM version of the track from the database
+                // <remarks>Unfortunately, there isn't a better way to do this</remarks>
+                var ormTracks = (from track in context.Tracks
+                                 select track).ToList();
+
+                // Parse them into the model version of the track
+                return (from t in ormTracks
+                        select new Track
+                            {
+                                Id = t.Id,
+                                Metadata = t.Metadatas.AsEnumerable().ToDictionary(o => o.MetadataField.Field, o => o.Value)
+                            }).ToList();
+            }
+        }
+
         #endregion
 
     }

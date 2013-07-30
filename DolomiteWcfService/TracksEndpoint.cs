@@ -106,11 +106,14 @@ namespace DolomiteWcfService
 
         #endregion
 
-        //TODO: REMOVE THIS TEST METHOD
-        public List<string> GetTracks()
+        /// <summary>
+        /// Retrieves all the track objects in the database. These are not linked
+        /// to any azure blob streams and only contain metadata.
+        /// </summary>
+        /// <returns>List of track objects from the track manager</returns>
+        public List<Track> GetTracks()
         {
-            WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotImplemented;
-            return null;
+            return TrackManager.FetchAllTracks();
         }
     }
 }
