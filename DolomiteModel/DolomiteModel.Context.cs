@@ -12,6 +12,9 @@ namespace DolomiteModel
     using System;
     using System.Data.Entity;
     using System.Data.Entity.Infrastructure;
+    using System.Data.Objects;
+    using System.Data.Objects.DataClasses;
+    using System.Linq;
     
     public partial class Entities : DbContext
     {
@@ -39,5 +42,10 @@ namespace DolomiteModel
         public DbSet<Rule> Rules { get; set; }
         public DbSet<Track> Tracks { get; set; }
         public DbSet<User> Users { get; set; }
+    
+        public virtual ObjectResult<Nullable<System.Guid>> GetAndLockTopOnboardingItem()
+        {
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<Nullable<System.Guid>>("GetAndLockTopOnboardingItem");
+        }
     }
 }

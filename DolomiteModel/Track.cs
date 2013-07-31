@@ -25,6 +25,8 @@ namespace DolomiteModel
         public Nullable<int> Owner { get; set; }
         public string Hash { get; set; }
         public Nullable<int> Album { get; set; }
+        public bool HasBeenOnboarded { get; set; }
+        public bool Locked { get; set; }
     
         public virtual Album Album1 { get; set; }
         public virtual ICollection<AvailableQuality> AvailableQualities { get; set; }

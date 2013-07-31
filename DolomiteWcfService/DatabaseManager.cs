@@ -83,5 +83,23 @@ namespace DolomiteWcfService
 
         #endregion
 
+        #region Onboarding Methods
+
+        /// <summary>
+        /// Use the stored procedure on the database to grab and lock an
+        /// onboarding work item.
+        /// </summary>
+        /// <returns>The guid of the track to process, or null if none exists</returns>
+        public Guid? GetOnboardingWorkItem()
+        {
+            using (var context = new Model.Entities())
+            {
+                // Call the stored procedure and hopefully it'll give us a work item
+                return context.GetAndLockTopOnboardingItem().FirstOrDefault();
+            }
+        }
+
+        #endregion
+
     }
 }

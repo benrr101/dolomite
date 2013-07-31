@@ -73,7 +73,7 @@ namespace DolomiteWcfService
         /// Whether or not Azure should be contacted to retreive the file's stream
         /// </param>
         /// <returns>Object representation of the track</returns>
-        public Track DownloadTrack(string trackGuid, bool retreiveStream = true)
+        public Track GetTrack(string trackGuid, bool retreiveStream = true)
         {
             // TODO: Remove the temp location stuff. Replace with real quality logic
             string trackPath = "temp/" + trackGuid;

@@ -5,6 +5,7 @@ using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
 using System.Threading;
+using DolomiteWcfService.Threads;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
 namespace DolomiteWcfService
@@ -81,6 +82,9 @@ namespace DolomiteWcfService
                 Trace.TraceError("Giving up on starting service.");
                 return false;
             }
+
+            // Start up the onboarding thread
+            StartOnboardingThreads(1);
             
             return base.OnStart();
         }
@@ -111,6 +115,16 @@ namespace DolomiteWcfService
             Trace.TraceInformation("Stopped Dolomite WCF Endpoint");
 
             base.OnStop();
+        }
+
+        private void StartOnboardingThreads(int threads)
+        {
+            for (int i = 0; i < threads; ++i)
+            {
+                TrackOnboarding newOnboarder = new TrackOnboarding();
+                Thread newThread = new Thread(newOnboarder.Run);
+                newThread.Start();
+            }
         }
     }
 }

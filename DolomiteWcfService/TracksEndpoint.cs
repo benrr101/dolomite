@@ -39,7 +39,7 @@ namespace DolomiteWcfService
             try
             {
                 // Retrieve the track and return the stream
-                Track track = TrackManager.DownloadTrack(guid);
+                Track track = TrackManager.GetTrack(guid);
                 return track.FileStream;
             }
             catch (FileNotFoundException)
@@ -65,7 +65,7 @@ namespace DolomiteWcfService
             try
             {
                 // Retrieve the track without the stream
-                Track track = TrackManager.DownloadTrack(guid, false);
+                Track track = TrackManager.GetTrack(guid, false);
                 string trackJson = JsonConvert.SerializeObject(track);
                 return WebOperationContext.Current.CreateTextResponse(trackJson, "application/json", Encoding.UTF8);
             }

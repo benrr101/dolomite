@@ -199,6 +199,8 @@
           <Property Name="Owner" Type="int" />
           <Property Name="Hash" Type="nchar" MaxLength="32" />
           <Property Name="Album" Type="int" />
+          <Property Name="HasBeenOnboarded" Type="bit" Nullable="false" />
+          <Property Name="Locked" Type="bit" Nullable="false" />
         </EntityType>
         <EntityType Name="Users">
           <Key>
@@ -387,6 +389,7 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Function Name="GetAndLockTopOnboardingItem" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
       </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
@@ -466,6 +469,7 @@
             <End Role="Users" EntitySet="Users" />
             <End Role="Tracks" EntitySet="Tracks" />
           </AssociationSet>
+          <FunctionImport Name="GetAndLockTopOnboardingItem" ReturnType="Collection(Guid)" />
         </EntityContainer>
         <EntityType Name="Album">
           <Key>
@@ -602,6 +606,8 @@
           <NavigationProperty Name="Metadatas" Relationship="DolomiteModel.FK_METADATA_TRACK" FromRole="Tracks" ToRole="Metadata" />
           <NavigationProperty Name="PlaylistTracks" Relationship="DolomiteModel.FK_PLAYLISTTRACKS_TRACKS" FromRole="Tracks" ToRole="PlaylistTracks" />
           <NavigationProperty Name="User" Relationship="DolomiteModel.FK_TRACKS_OWNER" FromRole="Tracks" ToRole="Users" />
+          <Property Type="Boolean" Name="HasBeenOnboarded" Nullable="false" />
+          <Property Type="Boolean" Name="Locked" Nullable="false" />
         </EntityType>
         <EntityType Name="User">
           <Key>
@@ -915,6 +921,8 @@
           <EntitySetMapping Name="Tracks">
             <EntityTypeMapping TypeName="DolomiteModel.Track">
               <MappingFragment StoreEntitySet="Tracks">
+                <ScalarProperty Name="Locked" ColumnName="Locked" />
+                <ScalarProperty Name="HasBeenOnboarded" ColumnName="HasBeenOnboarded" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Owner" ColumnName="Owner" />
                 <ScalarProperty Name="Hash" ColumnName="Hash" />
@@ -930,6 +938,7 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
+          <FunctionImportMapping FunctionImportName="GetAndLockTopOnboardingItem" FunctionName="DolomiteModel.Store.GetAndLockTopOnboardingItem" />
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>
