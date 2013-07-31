@@ -84,8 +84,19 @@ namespace DolomiteWcfService
             }
 
             // Start up the onboarding thread
-            StartOnboardingThreads(1);
-            
+            try
+            {
+                Trace.TraceInformation("Starting onboarding threads...");
+                StartOnboardingThreads(1);
+                Trace.TraceInformation("Onboarding threads started");
+            }
+            catch (Exception e)
+            {
+                Trace.TraceError("Failed to start onboarding thread: {0}", e.Message);
+                Trace.TraceError("Giving up on starting service");
+                return false;
+            }
+
             return base.OnStart();
         }
 
@@ -117,6 +128,10 @@ namespace DolomiteWcfService
             base.OnStop();
         }
 
+        /// <summary>
+        /// Used for starting up the onboarding threads.
+        /// </summary>
+        /// <param name="threads">The number of threads to start</param>
         private void StartOnboardingThreads(int threads)
         {
             for (int i = 0; i < threads; ++i)
