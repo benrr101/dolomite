@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using Model = DolomiteModel;
 
@@ -99,6 +100,21 @@ namespace DolomiteWcfService
             {
                 // Call the stored procedure and hopefully it'll give us a work item
                 return context.GetAndLockTopOnboardingItem().FirstOrDefault();
+            }
+        }
+
+        /// <summary>
+        /// Sets the hash value of the given track
+        /// </summary>
+        /// <param name="trackId">The track to set the hash of</param>
+        /// <param name="hash">The hash to set for the track</param>
+        /// TODO: Replace with a stored proc call
+        public void SetTrackHash(Guid trackId, string hash)
+        {
+            using (var context = new Model.Entities())
+            {
+                // Call the stored procedure
+                context.SetTrackHash(trackId, hash);
             }
         }
 

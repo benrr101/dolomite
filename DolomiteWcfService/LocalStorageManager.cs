@@ -57,7 +57,14 @@ namespace DolomiteWcfService
 
         public FileStream RetrieveFile(string filename)
         {
-            throw new NotImplementedException();
+            // Create reference to the local storage
+            LocalResource localStorage = RoleEnvironment.GetLocalResource("onboardingStorage");
+
+            // Build the path of the file
+            string path = Path.Combine(localStorage.RootPath, filename);
+
+            // Return a stream of the file
+            return File.OpenRead(path);
         }
 
         #endregion

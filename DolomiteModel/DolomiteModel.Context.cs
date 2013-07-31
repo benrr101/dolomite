@@ -47,5 +47,18 @@ namespace DolomiteModel
         {
             return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<Nullable<System.Guid>>("GetAndLockTopOnboardingItem");
         }
+    
+        public virtual int SetTrackHash(Nullable<System.Guid> trackId, string hash)
+        {
+            var trackIdParameter = trackId.HasValue ?
+                new ObjectParameter("trackId", trackId) :
+                new ObjectParameter("trackId", typeof(System.Guid));
+    
+            var hashParameter = hash != null ?
+                new ObjectParameter("hash", hash) :
+                new ObjectParameter("hash", typeof(string));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("SetTrackHash", trackIdParameter, hashParameter);
+        }
     }
 }

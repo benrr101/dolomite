@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
@@ -15,6 +16,8 @@ namespace DolomiteWcfService.Threads
         private const int SleepSeconds = 10;
 
         private static DatabaseManager DatabaseManager { get; set; }
+
+        private static LocalStorageManager LocalStorageManager { get; set; }
 
         private static TrackManager TrackManager { get; set; }
 
@@ -38,6 +41,7 @@ namespace DolomiteWcfService.Threads
         {
             // Set up the thread with some managers
             DatabaseManager = DatabaseManager.Instance;
+            LocalStorageManager = LocalStorageManager.Instance;
             TrackManager = TrackManager.Instance;
 
             // Loop until the stop flag has been flown
@@ -49,6 +53,8 @@ namespace DolomiteWcfService.Threads
                 {
                     // We have work to do!
                     Trace.TraceInformation("Work item {0} picked up by {1}", workItemId.Value.ToString(), GetHashCode());
+
+                    CalculateHash(workItemId.Value);
                 }
                 else
                 {
@@ -64,11 +70,23 @@ namespace DolomiteWcfService.Threads
         private void CalculateHash(Guid trackGuid)
         {
             // Grab an instance of the track
-            Track track = TrackManager.GetTrack(trackGuid.ToString());
-            
-            // Calculate the hash and save it
-            RIPEMD160 hashCalculator = RIPEMD160Managed.Create();
-            hashCalculator.ComputeHash(track.FileStream);
+            try
+            {
+                FileStream track = LocalStorageManager.RetrieveFile(trackGuid.ToString());
+
+                // Calculate the hash and save it
+                RIPEMD160 hashCalculator = RIPEMD160Managed.Create();
+                byte[] hashBytes = hashCalculator.ComputeHash(track);
+                string hashString = BitConverter.ToString(hashBytes);
+                hashString = hashString.Replace("-", String.Empty);
+
+                // Store that hash to the database
+                DatabaseManager.SetTrackHash(trackGuid, hashString);
+            }
+            catch (Exception e)
+            {
+                Trace.TraceError("Exception from {0} while calculating hash of {1}: {2}", GetHashCode(), trackGuid, e.Message);
+            }
         }
 
         private void CreateQualities(Guid trackGuid)

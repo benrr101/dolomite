@@ -391,6 +391,10 @@
           </ReferentialConstraint>
         </Association>
         <Function Name="GetAndLockTopOnboardingItem" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="SetTrackHash" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="trackId" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="hash" Type="text" Mode="In" />
+        </Function>
       </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
@@ -471,6 +475,10 @@
             <End Role="Tracks" EntitySet="Tracks" />
           </AssociationSet>
           <FunctionImport Name="GetAndLockTopOnboardingItem" ReturnType="Collection(Guid)" />
+          <FunctionImport Name="SetTrackHash">
+            <Parameter Name="trackId" Mode="In" Type="Guid" />
+            <Parameter Name="hash" Mode="In" Type="String" />
+          </FunctionImport>
         </EntityContainer>
         <EntityType Name="Album">
           <Key>
@@ -942,6 +950,7 @@
             </EntityTypeMapping>
           </EntitySetMapping>
           <FunctionImportMapping FunctionImportName="GetAndLockTopOnboardingItem" FunctionName="DolomiteModel.Store.GetAndLockTopOnboardingItem" />
+          <FunctionImportMapping FunctionImportName="SetTrackHash" FunctionName="DolomiteModel.Store.SetTrackHash" />
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>
