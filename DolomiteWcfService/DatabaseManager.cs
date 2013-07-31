@@ -40,7 +40,10 @@ namespace DolomiteWcfService
                 // Create the new track record
                 var track = new Model.Track
                     {
-                        Id = guid
+                        Id = guid,
+                        TrackInTempStorage = true,
+                        HasBeenOnboarded = false,
+                        Locked = false
                     };
                 context.Tracks.Add(track);
                 context.SaveChanges();
