@@ -132,7 +132,7 @@ namespace DolomiteWcfService
         /// Used for starting up the onboarding threads.
         /// </summary>
         /// <param name="threads">The number of threads to start</param>
-        private void StartOnboardingThreads(int threads)
+        private static void StartOnboardingThreads(int threads)
         {
             for (int i = 0; i < threads; ++i)
             {

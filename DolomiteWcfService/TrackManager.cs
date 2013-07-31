@@ -23,6 +23,8 @@ namespace DolomiteWcfService
 
         private DatabaseManager DatabaseManager { get; set; }
 
+        private LocalStorageManager LocalStorageManager { get; set; }
+
         private readonly string _trackContainerName;
 
         #endregion
@@ -59,6 +61,9 @@ namespace DolomiteWcfService
 
             // Get an instance of the database manager
             DatabaseManager = DatabaseManager.Instance;
+
+            // Get an instance of the local storage manager
+            LocalStorageManager = LocalStorageManager.Instance;
         }
 
         #endregion
@@ -124,7 +129,7 @@ namespace DolomiteWcfService
         {
             // Step 1: Upload the track to temporary storage in azure
             Guid trackGuid = Guid.NewGuid();
-            UploadTrackToTempStorage(trackGuid, stream);
+            LocalStorageManager.StoreStream(stream, trackGuid.ToString());
 
             // Step 2: Create the inital record of the track in the database
             DatabaseManager.CreateInitialTrackRecord(trackGuid);

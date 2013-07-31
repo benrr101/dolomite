@@ -17,8 +17,6 @@ namespace DolomiteWcfService
         /// </summary>
         private CloudBlobClient BlobClient { get; set; }
 
-        private string TrackContainerName { get; set; } 
-
         #region Singleton Instance Code
 
         private static AzureStorageManager _instance;
@@ -75,23 +73,6 @@ namespace DolomiteWcfService
         #endregion
 
         #region Retrieve Methods
-
-        /// <summary>
-        /// Retrieve a list of the URIs to all the files in the track container
-        /// </summary>
-        /// <remarks>
-        /// This shouldn't be used in production version. This is really only for testing purposes.
-        /// </remarks>
-        /// TODO: Remove this method when uploading works flawlessly.
-        /// <returns>List of URIs to the files in the track container</returns>
-        public List<string> GetAllTracks()
-        {
-            // Retrieve reference to a previously created container.
-            CloudBlobContainer container = BlobClient.GetContainerReference(TrackContainerName);
-
-            // Loop over items within the container and output the length and URI.
-            return container.ListBlobs().Select(item => item.Uri.ToString()).ToList();
-        }
 
         /// <summary>
         /// Retrieve a specific track at a the given path.

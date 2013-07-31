@@ -82,6 +82,7 @@
     <Compile Include="AzureStorageManager.cs" />
     <Compile Include="DatabaseManager.cs" />
     <Compile Include="ITracksEndpoint.cs" />
+    <Compile Include="LocalStorageManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DolomiteWorkerRole.cs" />
     <Compile Include="Properties\Settings.Designer.cs">

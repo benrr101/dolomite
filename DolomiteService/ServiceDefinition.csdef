@@ -12,5 +12,9 @@
     <ConfigurationSettings>
       <Setting name="StorageConnectionString" />
     </ConfigurationSettings>
+    <LocalResources>
+      <LocalStorage name="onboardingStorage" cleanOnRoleRecycle="true" sizeInMB="2048" />
+      <LocalStorage name="LocalStorage1" cleanOnRoleRecycle="false" />
+    </LocalResources>
   </WorkerRole>
 </ServiceDefinition>
