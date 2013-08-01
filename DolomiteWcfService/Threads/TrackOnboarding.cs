@@ -5,6 +5,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Threading;
 using DolomiteWcfService.Exceptions;
+using TagLib;
 
 namespace DolomiteWcfService.Threads
 {
@@ -62,8 +63,7 @@ namespace DolomiteWcfService.Threads
                     catch (DuplicateNameException)
                     {
                         // There was a duplicate. Delete it from storage and delete the initial record
-                        Trace.TraceInformation("{1} determined track {0} was a duplicate. Removing record...",
-                                               workItemId, GetHashCode());
+                        Trace.TraceError("{1} determined track {0} was a duplicate. Removing record...", workItemId, GetHashCode());
                         DatabaseManager.DeleteTrack(workItemId.Value);
                         LocalStorageManager.DeleteFile(workItemId.Value.ToString());
                         continue;
@@ -71,7 +71,18 @@ namespace DolomiteWcfService.Threads
                     
                     // The file was not a duplicate, so continue processing it
                     // Grab the metadata for the track
-                    StoreMetadata(workItemId.Value);
+                    try
+                    {
+                        StoreMetadata(workItemId.Value);
+                    }
+                    catch (UnsupportedFormatException)
+                    {
+                        // Failed to determine type. We don't want this file.
+                        Trace.TraceError("{1} failed to determine the type of track {0}. Removing record...", workItemId, GetHashCode());
+                        DatabaseManager.DeleteTrack(workItemId.Value);
+                        LocalStorageManager.DeleteFile(workItemId.Value.ToString());
+                        continue;
+                    }
 
                 }
                 else
@@ -132,6 +143,11 @@ namespace DolomiteWcfService.Threads
             
         }
 
+        /// <summary>
+        /// Strips the metadata from the track and stores it to the database
+        /// Also retrieves the mimetype in the process.
+        /// </summary>
+        /// <param name="trackGuid">The guid of the track to store metadata of</param>
         private void StoreMetadata(Guid trackGuid)
         {
             Trace.TraceInformation("{0} is retrieving metadata from {1}", GetHashCode(), trackGuid);
@@ -139,21 +155,10 @@ namespace DolomiteWcfService.Threads
             // Generate the mimetype of the track
             // Why? b/c tag lib isn't smart enough to figure it out for me,
             // except for determining it based on extension -- which is silly.
-            // TODO: Get the mimetype!
+            string mimetype = MimetypeDetector.GetMimeType(LocalStorageManager.RetrieveFile(trackGuid.ToString()));
 
             // Retrieve the file from temporary storage
-            TagLib.File file;
-            try
-            {
-                file = TagLib.File.Create(LocalStorageManager.GetPath(trackGuid.ToString()));
-            }
-            catch (TagLib.UnsupportedFormatException)
-            {
-                Console.WriteLine("UNSUPPORTED FILE: ");
-                Console.WriteLine(String.Empty);
-                Console.WriteLine("---------------------------------------");
-                Console.WriteLine(String.Empty);
-            }
+            TagLib.File file = TagLib.File.Create(LocalStorageManager.GetPath(trackGuid.ToString()), mimetype, ReadStyle.Average);
         }
 
         #endregion

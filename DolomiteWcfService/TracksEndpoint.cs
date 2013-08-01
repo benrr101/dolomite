@@ -6,6 +6,7 @@ using System.ServiceModel.Channels;
 using System.ServiceModel.Web;
 using System.Text;
 using Newtonsoft.Json;
+using AntsCode.Util;
 
 namespace DolomiteWcfService
 {
@@ -103,8 +104,20 @@ namespace DolomiteWcfService
         {
             try
             {
-                // Upload the track
-                return TrackManager.UploadTrack(file).ToString();
+                // Parse the file out of the request body. There's some content metadata in here that we don't really want
+                // TODO: Use the content-disposition to do first-pass content-type filtering
+                MultipartParser parser = new MultipartParser(file);
+                if (parser.Success)
+                {
+                    // Upload the track
+                    MemoryStream memoryStream = new MemoryStream(parser.FileContents);
+                    return TrackManager.UploadTrack(memoryStream).ToString();
+                }
+
+
+                // Failure of one kind or another
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                return null;
             }
             catch (Exception)
             {
