@@ -25,6 +25,20 @@ namespace DolomiteWcfService
 
         #endregion
 
+        /// <summary>
+        /// Generates the path to the file in local storage
+        /// </summary>
+        /// <param name="filename">The name of the file</param>
+        /// <returns>String path to the file</returns>
+        public string GetPath(string filename)
+        {
+            // Create reference to the local storage
+            LocalResource localStorage = RoleEnvironment.GetLocalResource("onboardingStorage");
+
+            // Build the path of the file
+            return Path.Combine(localStorage.RootPath, filename);
+        }
+
         #region Storage Methods
 
         /// <summary>
@@ -38,14 +52,8 @@ namespace DolomiteWcfService
         /// <param name="filename">The name of the file</param>
         public void StoreStream(Stream stream, string filename)
         {
-            // Create a reference to the local storage
-            LocalResource localStorage = RoleEnvironment.GetLocalResource("onboardingStorage");
-            
-            // Build the true path of the file
-            string path = Path.Combine(localStorage.RootPath, filename);
-
             // Copy the stream to the file
-            using (var newFile = File.Create(path))
+            using (var newFile = File.Create(GetPath(filename)))
             {
                 stream.CopyTo(newFile);
             }
@@ -65,14 +73,8 @@ namespace DolomiteWcfService
         /// <returns>The filestream of the file requested</returns>
         public FileStream RetrieveFile(string filename)
         {
-            // Create reference to the local storage
-            LocalResource localStorage = RoleEnvironment.GetLocalResource("onboardingStorage");
-
-            // Build the path of the file
-            string path = Path.Combine(localStorage.RootPath, filename);
-
             // Return a stream of the file
-            return File.OpenRead(path);
+            return File.OpenRead(GetPath(filename));
         }
 
         #endregion
@@ -85,14 +87,8 @@ namespace DolomiteWcfService
         /// <param name="filename">Name of the file to delete</param>
         public void DeleteFile(string filename)
         {
-            // Create reference to local storage
-            LocalResource localStorage = RoleEnvironment.GetLocalResource("onboardingStorage");
-
-            // Build the path of the file
-            string path = Path.Combine(localStorage.RootPath, filename);
-
             // Delete the file
-            File.Delete(path);
+            File.Delete(GetPath(filename));
         }
 
         #endregion

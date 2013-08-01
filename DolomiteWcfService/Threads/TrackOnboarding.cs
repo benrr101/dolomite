@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
+using DolomiteWcfService.Exceptions;
 
 namespace DolomiteWcfService.Threads
 {
@@ -55,19 +55,23 @@ namespace DolomiteWcfService.Threads
                     Trace.TraceInformation("Work item {0} picked up by {1}", workItemId.Value.ToString(), GetHashCode());
 
                     // Calculate the hash and look for a duplicate
-                    string hash = CalculateHash(workItemId.Value);
-                    if (DatabaseManager.GetTrackByHash(hash) != null)
+                    try
+                    {
+                        string hash = CalculateHash(workItemId.Value);
+                    }
+                    catch (DuplicateNameException)
                     {
                         // There was a duplicate. Delete it from storage and delete the initial record
                         Trace.TraceInformation("{1} determined track {0} was a duplicate. Removing record...",
                                                workItemId, GetHashCode());
                         DatabaseManager.DeleteTrack(workItemId.Value);
                         LocalStorageManager.DeleteFile(workItemId.Value.ToString());
+                        continue;
                     }
-                    else
-                    {
-                        // The file was not a duplicate, so continue processing it
-                    }
+                    
+                    // The file was not a duplicate, so continue processing it
+                    // Grab the metadata for the track
+                    StoreMetadata(workItemId.Value);
 
                 }
                 else
@@ -81,6 +85,12 @@ namespace DolomiteWcfService.Threads
 
         #region Onboarding Methods
 
+        /// <summary>
+        /// Calculates the RIPEMD160 hash of the track with the given guid and
+        /// stores it to the database.
+        /// </summary>
+        /// <param name="trackGuid">The track to calculate the hash for</param>
+        /// <returns>The hah of the file</returns>
         private string CalculateHash(Guid trackGuid)
         {
             // Grab an instance of the track
@@ -97,6 +107,13 @@ namespace DolomiteWcfService.Threads
 
                 // CLOSE THE STREAM!
                 track.Close();
+
+                // Is the track a duplicate?
+                if (DatabaseManager.GetTrackByHash(hashString) != null)
+                {
+                    // The track is a duplicate!
+                    throw new DuplicateNameException(String.Format("Track {0} is a duplicate as determined by hash comparison", trackGuid));
+                }
 
                 // Store that hash to the database
                 DatabaseManager.SetTrackHash(trackGuid, hashString);
@@ -115,14 +132,28 @@ namespace DolomiteWcfService.Threads
             
         }
 
-        private void DeleteFromTemporaryStorage(Guid trackGuid)
-        {
-            
-        }
-
         private void StoreMetadata(Guid trackGuid)
         {
-            
+            Trace.TraceInformation("{0} is retrieving metadata from {1}", GetHashCode(), trackGuid);
+
+            // Generate the mimetype of the track
+            // Why? b/c tag lib isn't smart enough to figure it out for me,
+            // except for determining it based on extension -- which is silly.
+            // TODO: Get the mimetype!
+
+            // Retrieve the file from temporary storage
+            TagLib.File file;
+            try
+            {
+                file = TagLib.File.Create(LocalStorageManager.GetPath(trackGuid.ToString()));
+            }
+            catch (TagLib.UnsupportedFormatException)
+            {
+                Console.WriteLine("UNSUPPORTED FILE: ");
+                Console.WriteLine(String.Empty);
+                Console.WriteLine("---------------------------------------");
+                Console.WriteLine(String.Empty);
+            }
         }
 
         #endregion
