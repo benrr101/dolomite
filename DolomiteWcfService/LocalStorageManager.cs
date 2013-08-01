@@ -55,6 +55,14 @@ namespace DolomiteWcfService
 
         #region Retrieval Methods
 
+        /// <summary>
+        /// Retrieves the given filename from the onboarding storage 
+        /// <remarks>
+        /// YOU MUST BE SURE TO CLOSE THE FILE STREAM AFTER USE!!!
+        /// </remarks>
+        /// </summary>
+        /// <param name="filename">The name of the file to retrieve</param>
+        /// <returns>The filestream of the file requested</returns>
         public FileStream RetrieveFile(string filename)
         {
             // Create reference to the local storage
@@ -65,6 +73,26 @@ namespace DolomiteWcfService
 
             // Return a stream of the file
             return File.OpenRead(path);
+        }
+
+        #endregion
+
+        #region Deletion Methods
+
+        /// <summary>
+        /// Deletes the file with the fiven name from the onboarding storage
+        /// </summary>
+        /// <param name="filename">Name of the file to delete</param>
+        public void DeleteFile(string filename)
+        {
+            // Create reference to local storage
+            LocalResource localStorage = RoleEnvironment.GetLocalResource("onboardingStorage");
+
+            // Build the path of the file
+            string path = Path.Combine(localStorage.RootPath, filename);
+
+            // Delete the file
+            File.Delete(path);
         }
 
         #endregion

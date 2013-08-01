@@ -54,7 +54,21 @@ namespace DolomiteWcfService.Threads
                     // We have work to do!
                     Trace.TraceInformation("Work item {0} picked up by {1}", workItemId.Value.ToString(), GetHashCode());
 
-                    CalculateHash(workItemId.Value);
+                    // Calculate the hash and look for a duplicate
+                    string hash = CalculateHash(workItemId.Value);
+                    if (DatabaseManager.GetTrackByHash(hash) != null)
+                    {
+                        // There was a duplicate. Delete it from storage and delete the initial record
+                        Trace.TraceInformation("{1} determined track {0} was a duplicate. Removing record...",
+                                               workItemId, GetHashCode());
+                        DatabaseManager.DeleteTrack(workItemId.Value);
+                        LocalStorageManager.DeleteFile(workItemId.Value.ToString());
+                    }
+                    else
+                    {
+                        // The file was not a duplicate, so continue processing it
+                    }
+
                 }
                 else
                 {
@@ -67,11 +81,12 @@ namespace DolomiteWcfService.Threads
 
         #region Onboarding Methods
 
-        private void CalculateHash(Guid trackGuid)
+        private string CalculateHash(Guid trackGuid)
         {
             // Grab an instance of the track
             try
             {
+                Trace.TraceInformation("{0} is calculating hash for {1}", GetHashCode(), trackGuid);
                 FileStream track = LocalStorageManager.RetrieveFile(trackGuid.ToString());
 
                 // Calculate the hash and save it
@@ -80,12 +95,18 @@ namespace DolomiteWcfService.Threads
                 string hashString = BitConverter.ToString(hashBytes);
                 hashString = hashString.Replace("-", String.Empty);
 
+                // CLOSE THE STREAM!
+                track.Close();
+
                 // Store that hash to the database
                 DatabaseManager.SetTrackHash(trackGuid, hashString);
+
+                return hashString;
             }
             catch (Exception e)
             {
                 Trace.TraceError("Exception from {0} while calculating hash of {1}: {2}", GetHashCode(), trackGuid, e.Message);
+                throw;
             }
         }
 

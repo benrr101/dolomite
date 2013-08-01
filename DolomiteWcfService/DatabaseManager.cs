@@ -51,6 +51,29 @@ namespace DolomiteWcfService
             }
         }
 
+        /// <summary>
+        /// Deletes the track with the given guid from the database.
+        /// </summary>
+        /// <exception cref="ObjectNotFoundException">The track with the given guid does not exist in the database</exception>
+        /// <param name="trackGuid">The guid of the track to delete</param>
+        public void DeleteTrack(Guid trackGuid)
+        {
+            using (var context = new Model.Entities())
+            {
+                // Fetch the track
+                // TODO: Move this to a helper method
+                Model.Track track = context.Tracks.FirstOrDefault(t => t.Id == trackGuid);
+                if (track == null)
+                {
+                    throw new ObjectNotFoundException(String.Format("Track with guid {0} could not be found", trackGuid));
+                }
+
+                // Delete it
+                context.Tracks.Remove(track);
+                context.SaveChanges();
+            }
+        }
+
         public Track GetTrackByHash(string hash)
         {
             using (var context = new Model.Entities())
@@ -108,7 +131,6 @@ namespace DolomiteWcfService
         /// </summary>
         /// <param name="trackId">The track to set the hash of</param>
         /// <param name="hash">The hash to set for the track</param>
-        /// TODO: Replace with a stored proc call
         public void SetTrackHash(Guid trackId, string hash)
         {
             using (var context = new Model.Entities())
