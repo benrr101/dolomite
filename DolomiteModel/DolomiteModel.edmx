@@ -155,7 +155,8 @@
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="Field" Type="nvarchar" Nullable="false" MaxLength="20" />
+          <Property Name="TagName" Type="nvarchar" Nullable="false" MaxLength="20" />
+          <Property Name="DisplayName" Type="nvarchar" Nullable="false" MaxLength="20" />
           <Property Name="AllowedRules" Type="nvarchar" MaxLength="150" />
         </EntityType>
         <EntityType Name="Playlists">
@@ -197,7 +198,7 @@
           </Key>
           <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Owner" Type="int" />
-          <Property Name="Hash" Type="nchar" MaxLength="32" />
+          <Property Name="Hash" Type="nchar" MaxLength="40" />
           <Property Name="Album" Type="int" />
           <Property Name="HasBeenOnboarded" Type="bit" Nullable="false" />
           <Property Name="Locked" Type="bit" Nullable="false" />
@@ -558,10 +559,11 @@
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="Int32" Nullable="false" p1:StoreGeneratedPattern="Identity" />
-          <Property Name="Field" Type="String" Nullable="false" MaxLength="20" Unicode="true" FixedLength="false" />
           <Property Name="AllowedRules" Type="String" MaxLength="150" Unicode="true" FixedLength="false" />
           <NavigationProperty Name="AutoplaylistRules" Relationship="DolomiteModel.FK_AUTOPLAYLISTRULES_METADATA" FromRole="MetadataFields" ToRole="AutoplaylistRules" />
           <NavigationProperty Name="Metadatas" Relationship="DolomiteModel.FK_METADATA_FIELD" FromRole="MetadataFields" ToRole="Metadata" />
+          <Property Type="String" Name="TagName" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="DisplayName" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="Playlist">
           <Key>
@@ -608,7 +610,7 @@
           </Key>
           <Property Name="Id" Type="Guid" Nullable="false" />
           <Property Name="Owner" Type="Int32" />
-          <Property Name="Hash" Type="String" MaxLength="32" Unicode="true" FixedLength="true" />
+          <Property Name="Hash" Type="String" MaxLength="40" Unicode="true" FixedLength="true" />
           <Property Name="Album" Type="Int32" />
           <NavigationProperty Name="Album1" Relationship="DolomiteModel.Album1" FromRole="Tracks" ToRole="Albums" />
           <NavigationProperty Name="AvailableQualities" Relationship="DolomiteModel.FK_AVAILABLEQUALITIES_TRACK" FromRole="Tracks" ToRole="AvailableQualities" />
@@ -885,8 +887,9 @@
           <EntitySetMapping Name="MetadataFields">
             <EntityTypeMapping TypeName="DolomiteModel.MetadataField">
               <MappingFragment StoreEntitySet="MetadataFields">
+                <ScalarProperty Name="DisplayName" ColumnName="DisplayName" />
+                <ScalarProperty Name="TagName" ColumnName="TagName" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
-                <ScalarProperty Name="Field" ColumnName="Field" />
                 <ScalarProperty Name="AllowedRules" ColumnName="AllowedRules" />
               </MappingFragment>
             </EntityTypeMapping>
