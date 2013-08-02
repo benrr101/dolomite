@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading;
 using DolomiteWcfService.Exceptions;
@@ -155,10 +157,44 @@ namespace DolomiteWcfService.Threads
             // Generate the mimetype of the track
             // Why? b/c tag lib isn't smart enough to figure it out for me,
             // except for determining it based on extension -- which is silly.
-            string mimetype = MimetypeDetector.GetMimeType(LocalStorageManager.RetrieveFile(trackGuid.ToString()));
+            FileStream localFile = LocalStorageManager.RetrieveFile(trackGuid.ToString());
+            string mimetype = MimetypeDetector.GetMimeType(localFile);
+            if (mimetype == null)
+            {
+                localFile.Close();
+                throw new UnsupportedFormatException(String.Format("The mimetype of {0} could not be determined from the file header.", trackGuid));
+            }
 
             // Retrieve the file from temporary storage
             TagLib.File file = TagLib.File.Create(LocalStorageManager.GetPath(trackGuid.ToString()), mimetype, ReadStyle.Average);
+            
+            Dictionary<int, string> metadata = new Dictionary<int, string>();
+
+            Dictionary<string, int> acceptedTags = DatabaseManager.GetAllowedMetadataFields();
+            
+            // Use reflection to iterate over the properties in the tag
+            PropertyInfo[] properties = typeof (Tag).GetProperties();
+            foreach (PropertyInfo property in properties)
+            {
+                string name = property.Name;
+                object value = property.GetValue(file.Tag);
+
+                // Strip off "First" from the tag names
+                name = name.Replace("First", string.Empty);
+
+                // Skip tags that aren't the list of acceptable tags
+                if (!acceptedTags.ContainsKey(name))
+                    continue;
+
+                // We really only want strings to store and ints
+                if(value is string)
+                    metadata.Add(acceptedTags[name], (string)value);
+                else if(value is uint && (uint)value != 0)
+                    metadata.Add(acceptedTags[name], ((uint)value).ToString());
+            }
+
+            // Send the metadata to the database
+            DatabaseManager.StoreTrackMetadata(trackGuid, metadata);
         }
 
         #endregion

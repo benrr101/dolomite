@@ -86,6 +86,21 @@ namespace DolomiteWcfService
         }
 
         /// <summary>
+        /// Fetch the allowed metadata fields from the database.
+        /// </summary>
+        /// TODO: Add caching if this is super expensive?
+        /// <returns>Dictionary of metadata field names to metadata ids</returns>
+        public Dictionary<string, int> GetAllowedMetadataFields()
+        {
+            using (var context = new Model.Entities())
+            {
+                // Grab all the metadata fields
+                return (from field in context.MetadataFields
+                        select new {field.TagName, field.Id}).ToDictionary(o => o.TagName, o => o.Id);
+            }
+        } 
+
+        /// <summary>
         /// Fetches all tracks in the database. This auto-converts all the fields
         /// </summary>
         /// <returns></returns>
@@ -103,7 +118,7 @@ namespace DolomiteWcfService
                         select new Track
                             {
                                 Id = t.Id,
-                                Metadata = t.Metadatas.AsEnumerable().ToDictionary(o => o.MetadataField.Field, o => o.Value)
+                                Metadata = t.Metadatas.AsEnumerable().ToDictionary(o => o.MetadataField.DisplayName, o => o.Value)
                             }).ToList();
             }
         }
@@ -137,6 +152,31 @@ namespace DolomiteWcfService
             {
                 // Call the stored procedure
                 context.SetTrackHash(trackId, hash);
+            }
+        }
+
+        /// <summary>
+        /// Stores the metadata for the given track
+        /// </summary>
+        /// <param name="trackId">GUID of the track</param>
+        /// <param name="metadata">Dictionary of MetadataFieldId => Value</param>
+        public void StoreTrackMetadata(Guid trackId, IDictionary<int, string> metadata)
+        {
+            using (var context = new Model.Entities())
+            {
+                // Iterate over the metadatas and store new objects for each
+                foreach (Model.Metadata md in metadata.Select(data => new Model.Metadata
+                        {
+                            Field = data.Key,
+                            Track = trackId,
+                            Value = data.Value
+                        }))
+                {
+                    context.Metadatas.Add(md);
+                }
+
+                // Commit the changes
+                context.SaveChanges();
             }
         }
 
