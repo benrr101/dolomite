@@ -55,7 +55,7 @@ namespace AntsCode.Util
                     this.Filename = filenameMatch.Value.Trim();
 
                     // Get the start & end indexes of the file contents
-                    int startIndex = contentTypeMatch.Index + contentTypeMatch.Length + "\r\n\r\n".Length + 1;
+                    int startIndex = contentTypeMatch.Index + contentTypeMatch.Length + "\r\n\r\n".Length;
 
                     byte[] delimiterBytes = encoding.GetBytes("\r\n" + delimiter);
                     int endIndex = IndexOf(data, delimiterBytes, startIndex);

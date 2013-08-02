@@ -24,7 +24,7 @@ namespace DolomiteWcfService
                 // M4A Apple Lossless
                 {new byte[] {0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70, 0x4D, 0x34, 0x41, 0x20, 0x00, 0x00, 0x00, 0x00}, "audio/mp4a-latm"},
                 // Flac
-                {new byte[] {0x66, 0x4C, 0x64, 0x43}, "audio/x-flac"},
+                {new byte[] {0x66, 0x4C, 0x61, 0x43}, "audio/x-flac"},
                 // MP2 LC-AAC
                 {new byte[] {0xFF, 0xF1}, "audio/aac"},
                 // MP4 LC-AAC
@@ -35,6 +35,18 @@ namespace DolomiteWcfService
                 {new byte[] {0x4F, 0x67, 0x67, 0x53, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, "audio/ogg"},
                 // Wav
                 {new byte[] {0x52, 0x49, 0x46, 0x46}, "audio/wav"}
+            };
+
+        /// <summary>
+        /// Whitespace hex values. Useful for detecting multipart parser fuck-ups.
+        /// </summary>
+        private static readonly byte[] WhitespaceBytes = new byte[]
+            {
+                0x09,
+                0x0A,
+                0x0B,
+                0x0C,
+                0x0D
             };
 
         /// <summary>
@@ -51,15 +63,26 @@ namespace DolomiteWcfService
                 stream.Position = 0;
                 
                 // Compare all bytes in the header of the stream to the type's header
+                bool match = true;
                 foreach (byte b in audioType.Key)
                 {
-                    if (b != stream.ReadByte())
+                    byte sb = (byte)stream.ReadByte();
+
+                    // Skip whitespace bytes (if multipart parser messes up)
+                    if (WhitespaceBytes.Contains(b))
+                        continue;
+
+                    // If the byte doesn't match, then it's not a match
+                    if (b != sb)
                     {
+                        match = false;
                         break;
                     }
-
-                    return audioType.Value;
                 }
+
+                // If we find a match, return it
+                if (match)
+                    return audioType.Value;
             }
 
             // If we make it to here, we've exhausted our possibilities
