@@ -28,6 +28,9 @@ namespace DolomiteModel
         public bool HasBeenOnboarded { get; set; }
         public bool Locked { get; set; }
         public bool TrackInTempStorage { get; set; }
+        public Nullable<int> OriginalBitrate { get; set; }
+        public Nullable<int> OriginalSampling { get; set; }
+        public string OriginalMimetype { get; set; }
     
         public virtual Album Album1 { get; set; }
         public virtual ICollection<AvailableQuality> AvailableQualities { get; set; }

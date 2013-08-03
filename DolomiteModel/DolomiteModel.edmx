@@ -200,6 +200,9 @@
           <Property Name="Owner" Type="int" />
           <Property Name="Hash" Type="nchar" MaxLength="40" />
           <Property Name="Album" Type="int" />
+          <Property Name="OriginalBitrate" Type="int" />
+          <Property Name="OriginalSampling" Type="int" />
+          <Property Name="OriginalMimetype" Type="nvarchar" MaxLength="30" />
           <Property Name="HasBeenOnboarded" Type="bit" Nullable="false" />
           <Property Name="Locked" Type="bit" Nullable="false" />
           <Property Name="TrackInTempStorage" Type="bit" Nullable="false" />
@@ -320,7 +323,9 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_METADATA_FIELD">
-          <End Role="MetadataFields" Type="DolomiteModel.Store.MetadataFields" Multiplicity="1" />
+          <End Role="MetadataFields" Type="DolomiteModel.Store.MetadataFields" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
           <End Role="Metadata" Type="DolomiteModel.Store.Metadata" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="MetadataFields">
@@ -332,7 +337,9 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_METADATA_TRACK">
-          <End Role="Tracks" Type="DolomiteModel.Store.Tracks" Multiplicity="1" />
+          <End Role="Tracks" Type="DolomiteModel.Store.Tracks" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
           <End Role="Metadata" Type="DolomiteModel.Store.Metadata" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Tracks">
@@ -620,6 +627,9 @@
           <Property Type="Boolean" Name="HasBeenOnboarded" Nullable="false" />
           <Property Type="Boolean" Name="Locked" Nullable="false" />
           <Property Type="Boolean" Name="TrackInTempStorage" Nullable="false" />
+          <Property Type="Int32" Name="OriginalBitrate" />
+          <Property Type="Int32" Name="OriginalSampling" />
+          <Property Type="String" Name="OriginalMimetype" MaxLength="30" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="User">
           <Key>
@@ -934,6 +944,9 @@
           <EntitySetMapping Name="Tracks">
             <EntityTypeMapping TypeName="DolomiteModel.Track">
               <MappingFragment StoreEntitySet="Tracks">
+                <ScalarProperty Name="OriginalMimetype" ColumnName="OriginalMimetype" />
+                <ScalarProperty Name="OriginalSampling" ColumnName="OriginalSampling" />
+                <ScalarProperty Name="OriginalBitrate" ColumnName="OriginalBitrate" />
                 <ScalarProperty Name="TrackInTempStorage" ColumnName="TrackInTempStorage" />
                 <ScalarProperty Name="Locked" ColumnName="Locked" />
                 <ScalarProperty Name="HasBeenOnboarded" ColumnName="HasBeenOnboarded" />

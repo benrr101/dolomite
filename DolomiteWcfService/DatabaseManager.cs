@@ -156,6 +156,26 @@ namespace DolomiteWcfService
         }
 
         /// <summary>
+        /// Stores the original audio information for track.
+        /// </summary>
+        /// <param name="trackId">The GUID id of the track</param>
+        /// <param name="bitrate">The bitrate for the original audio</param>
+        /// <param name="samplingFrequency">The sampling frequency of the original audio</param>
+        /// <param name="mimetype">The mimetype of the original file</param>
+        public void StoreAudioQualityInfo(Guid trackId, int bitrate, int samplingFrequency, string mimetype)
+        {
+            using (var context = new Model.Entities())
+            {
+                // Fetch the existing record for the track
+                Model.Track track = context.Tracks.First(t => t.Id == trackId);
+                track.OriginalBitrate = bitrate;
+                track.OriginalSampling = samplingFrequency;
+                track.OriginalMimetype = mimetype;
+                context.SaveChanges();
+            }
+        }
+
+        /// <summary>
         /// Stores the metadata for the given track
         /// </summary>
         /// <param name="trackId">GUID of the track</param>
