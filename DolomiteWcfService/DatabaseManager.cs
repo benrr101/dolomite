@@ -74,6 +74,15 @@ namespace DolomiteWcfService
             }
         }
 
+        public Model.Track GetTrackModelByGuid(Guid trackId)
+        {
+            using (var context = new Model.Entities())
+            {
+                // Search for the track
+                return context.Tracks.First(t => t.Id == trackId);
+            }
+        }
+
         public Track GetTrackByHash(string hash)
         {
             using (var context = new Model.Entities())
@@ -84,21 +93,6 @@ namespace DolomiteWcfService
                         select new Track {Id = track.Id}).FirstOrDefault();
             }
         }
-
-        /// <summary>
-        /// Fetch the allowed metadata fields from the database.
-        /// </summary>
-        /// TODO: Add caching if this is super expensive?
-        /// <returns>Dictionary of metadata field names to metadata ids</returns>
-        public Dictionary<string, int> GetAllowedMetadataFields()
-        {
-            using (var context = new Model.Entities())
-            {
-                // Grab all the metadata fields
-                return (from field in context.MetadataFields
-                        select new {field.TagName, field.Id}).ToDictionary(o => o.TagName, o => o.Id);
-            }
-        } 
 
         /// <summary>
         /// Fetches all tracks in the database. This auto-converts all the fields
@@ -120,6 +114,38 @@ namespace DolomiteWcfService
                                 Id = t.Id,
                                 Metadata = t.Metadatas.AsEnumerable().ToDictionary(o => o.MetadataField.DisplayName, o => o.Value)
                             }).ToList();
+            }
+        }
+
+        #endregion
+
+        #region Constant Fetching Methods
+
+        /// <summary>
+        /// Fetch the allowed metadata fields from the database.
+        /// </summary>
+        /// TODO: Add caching if this is super expensive?
+        /// <returns>Dictionary of metadata field names to metadata ids</returns>
+        public Dictionary<string, int> GetAllowedMetadataFields()
+        {
+            using (var context = new Model.Entities())
+            {
+                // Grab all the metadata fields
+                return (from field in context.MetadataFields
+                        select new { field.TagName, field.Id }).ToDictionary(o => o.TagName, o => o.Id);
+            }
+        }
+
+        /// <summary>
+        /// Fetches all supported qualities from the database
+        /// </summary>
+        /// <returns>A list of qualitites</returns>
+        public List<Model.Quality> GetAllQualities()
+        {
+            using (var context = new Model.Entities())
+            {
+                // Grab all the qualities from the db
+                return (context.Qualities.Where(quality => quality.Bitrate != null && quality.Codec != null)).ToList();
             }
         }
 
