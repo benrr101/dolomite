@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading;
-using DolomiteWcfService.Exceptions;
+using DolomiteModel;
 using TagLib;
 
 namespace DolomiteWcfService.Threads
@@ -86,6 +87,8 @@ namespace DolomiteWcfService.Threads
                         continue;
                     }
 
+                    CreateQualities(workItemId.Value);
+
                 }
                 else
                 {
@@ -142,7 +145,67 @@ namespace DolomiteWcfService.Threads
 
         private void CreateQualities(Guid trackGuid)
         {
+            // Grab the track that will be manipulated
+            var track = DatabaseManager.GetTrackModelByGuid(trackGuid);
+
+            // Fetch all supported qualities
+            var qualitites = DatabaseManager.GetAllQualities();
+            int originalQuality = track.OriginalBitrate.Value;
+
+            // Figure out what qualities to use by picking all qualities with bitrates
+            // lessthan or equal to the original (+/- 5kbps -- for lousy sources)
+            // ReSharper disable PossibleInvalidOperationException  (this isn't possible since the fetching method does not select nulls)
+            var maxQuality = qualitites.Where(q => Math.Abs(q.Bitrate.Value - originalQuality) <= 5);
+            var lessQualities = qualitites.Where(q => q.Bitrate < originalQuality);
+            var requiredQualities = lessQualities.Union(maxQuality);
+            // ReSharper restore PossibleInvalidOperationException
             
+            // Generate new audio files for each quality that is required
+            foreach (Quality quality in requiredQualities)
+            {
+                string inputFilename = LocalStorageManager.GetPath(trackGuid.ToString());
+                string outputFilename =
+                    LocalStorageManager.GetPath(String.Format("{0}.{1}.{2}", trackGuid, quality.Bitrate.Value,
+                                                              quality.Extension));
+                string arguments = String.Format("-i \"{2}\" -acodec {0} -ab {1}000 -y \"{3}\"", quality.Codec,
+                                                 quality.Bitrate.Value, inputFilename, outputFilename);
+
+                // Borrowing some code from http://stackoverflow.com/a/8726175
+                ProcessStartInfo psi = new ProcessStartInfo
+                    {
+                        FileName = @"Externals\ffmpeg.exe",
+                        Arguments = arguments,
+                        CreateNoWindow = true,
+                        ErrorDialog = false,
+                        UseShellExecute = false,
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                        RedirectStandardOutput = true,
+                        RedirectStandardInput = false,
+                        RedirectStandardError = true
+                    };
+
+                // Launch the process
+                Trace.TraceInformation("Launching {0} {1}", psi.FileName, psi.Arguments);
+                using (Process exeProcess = Process.Start(psi))
+                {
+                    string outString = string.Empty;
+                    
+                    // use ansynchronous reading for at least one of the streams
+                    // to avoid deadlock
+                    exeProcess.OutputDataReceived += (s, e) =>
+                        {
+                            outString += e.Data;
+                        };
+                    exeProcess.BeginOutputReadLine();
+                    
+                    // now read the StandardError stream to the end
+                    // this will cause our main thread to wait for the
+                    // stream to close (which is when ffmpeg quits)
+                    string errString = exeProcess.StandardError.ReadToEnd();
+                    Trace.TraceWarning(errString);
+                     
+                }
+            }
         }
 
         /// <summary>
@@ -195,6 +258,10 @@ namespace DolomiteWcfService.Threads
 
             // Send the metadata to the database
             DatabaseManager.StoreTrackMetadata(trackGuid, metadata);
+
+            // Store the audio metadata to the database
+            DatabaseManager.StoreAudioQualityInfo(trackGuid, file.Properties.AudioBitrate,
+                                                  file.Properties.AudioSampleRate, file.MimeType);
         }
 
         #endregion
