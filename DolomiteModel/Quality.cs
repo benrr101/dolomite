@@ -22,7 +22,9 @@ namespace DolomiteModel
         public int Id { get; set; }
         public string Name { get; set; }
         public string Codec { get; set; }
-        public string Bitrate { get; set; }
+        public Nullable<int> Bitrate { get; set; }
+        public string Directory { get; set; }
+        public string Extension { get; set; }
     
         public virtual ICollection<AvailableQuality> AvailableQualities { get; set; }
     }

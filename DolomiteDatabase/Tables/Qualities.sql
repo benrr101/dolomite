@@ -2,6 +2,8 @@
 (
 	[Id]		INT NOT NULL PRIMARY KEY IDENTITY(1,1), 
     [Name]		NVARCHAR(20) NOT NULL, 
-    [Codec]		NVARCHAR(10) NULL, 
-    [Bitrate]	NCHAR(10) NULL
+    [Codec]		NVARCHAR(50) NULL, 
+    [Bitrate]	INT NULL, 
+	[Extension]	NCHAR(3) NULL,
+    [Directory] NVARCHAR(50) NOT NULL
 )
