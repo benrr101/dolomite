@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
-using System.IO;
+using Microsoft.WindowsAzure.Storage.Blob;
+using IO = System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
@@ -15,6 +16,19 @@ namespace DolomiteWcfService.Threads
     class TrackOnboarding
     {
 
+        #region Internal Asynchronous Callback Object
+
+        public class AsynchronousState
+        {
+            public IO.FileStream FileStream { get; set; }
+            public string OriginalPath { get; set; }
+            public Guid TrackGuid { get; set; }
+            public bool Delete { get; set; }
+            public CloudBlockBlob Blob { get; set; }
+        }
+
+        #endregion
+
         #region Properties and Constants
 
         private const int SleepSeconds = 10;
@@ -23,13 +37,13 @@ namespace DolomiteWcfService.Threads
 
         private static LocalStorageManager LocalStorageManager { get; set; }
 
-        private static TrackManager TrackManager { get; set; }
+        private static AzureStorageManager AzureStorageManager { get; set; }
 
         #endregion
 
         #region Start/Stop Logic
 
-        private volatile bool _shouldStop = false;
+        private volatile bool _shouldStop;
 
         /// <summary>
         /// Sets the stop flag on the thread loop
@@ -46,7 +60,7 @@ namespace DolomiteWcfService.Threads
             // Set up the thread with some managers
             DatabaseManager = DatabaseManager.Instance;
             LocalStorageManager = LocalStorageManager.Instance;
-            TrackManager = TrackManager.Instance;
+            AzureStorageManager = AzureStorageManager.Instance;
 
             // Loop until the stop flag has been flown
             while (!_shouldStop)
@@ -113,7 +127,7 @@ namespace DolomiteWcfService.Threads
             try
             {
                 Trace.TraceInformation("{0} is calculating hash for {1}", GetHashCode(), trackGuid);
-                FileStream track = LocalStorageManager.RetrieveFile(trackGuid.ToString());
+                IO.FileStream track = LocalStorageManager.RetrieveFile(trackGuid.ToString());
 
                 // Calculate the hash and save it
                 RIPEMD160 hashCalculator = RIPEMD160Managed.Create();
@@ -143,6 +157,11 @@ namespace DolomiteWcfService.Threads
             }
         }
 
+        /// <summary>
+        /// Utilize FFmpeg process launching to create all the necessary qualities
+        /// of the track file
+        /// </summary>
+        /// <param name="trackGuid">The guid of the track to create a quality of</param>
         private void CreateQualities(Guid trackGuid)
         {
             // Grab the track that will be manipulated
@@ -159,10 +178,19 @@ namespace DolomiteWcfService.Threads
             var lessQualities = qualitites.Where(q => q.Bitrate < originalQuality);
             var requiredQualities = lessQualities.Union(maxQuality);
             // ReSharper restore PossibleInvalidOperationException
-            
+
             // Generate new audio files for each quality that is required
+            // @TODO Replace with parallel.foreach
             foreach (Quality quality in requiredQualities)
             {
+                // Don't waste time processing the file if we have a really close match
+                if (Math.Abs(quality.Bitrate.Value - originalQuality) <= 5)
+                {
+                    // Copy the original file to this quality's directory
+                    MoveFileToAzure(LocalStorageManager.GetPath(trackGuid.ToString()), quality.Directory, trackGuid, false);
+                    continue;
+                }
+
                 string inputFilename = LocalStorageManager.GetPath(trackGuid.ToString());
                 string outputFilename =
                     LocalStorageManager.GetPath(String.Format("{0}.{1}.{2}", trackGuid, quality.Bitrate.Value,
@@ -203,8 +231,71 @@ namespace DolomiteWcfService.Threads
                     // stream to close (which is when ffmpeg quits)
                     string errString = exeProcess.StandardError.ReadToEnd();
                     Trace.TraceWarning(errString);
-                     
                 }
+
+                // @TODO Make sure the process call succeeded
+
+                // Upload the file to azure
+                MoveFileToAzure(outputFilename, quality.Directory, trackGuid);
+            }
+
+            // Upload the original file
+            MoveFileToAzure(LocalStorageManager.GetPath(trackGuid.ToString()), "original", trackGuid);
+        }
+
+        /// <summary>
+        /// Moves the file to azure asnynchronously
+        /// </summary>
+        /// <param name="tempPath">Path of the file in local storage to move</param>
+        /// <param name="directory">Directory in Azure to store the file</param>
+        /// <param name="trackGuid">GUID of the track that is being stored</param>
+        /// <param name="deleteOnComplete">Whether or not to delete the original file when the move has completed</param>
+        private void MoveFileToAzure(string tempPath, string directory, Guid trackGuid, bool deleteOnComplete = true)
+        {
+            // Open a file stream to the file to move
+            IO.FileStream file = LocalStorageManager.RetrieveFile(tempPath);
+
+            // Construct the target destination
+            string targetPath = directory + '/' + trackGuid;
+
+            // Start the upload of the file to azure
+            AsynchronousState state = new AsynchronousState
+                {
+                    FileStream = file,
+                    Delete = deleteOnComplete,
+                    OriginalPath = tempPath,
+                    TrackGuid = trackGuid
+                };
+            AzureStorageManager.StoreBlobAsync(targetPath, TrackManager.StorageContainerKey, file, CompleteMoveFileToAzure, state);
+        }
+
+        /// <summary>
+        /// Callback for when the upload has completed.
+        /// </summary>
+        /// <param name="state">The state object from the callback</param>
+        private void CompleteMoveFileToAzure(IAsyncResult state)
+        {
+            // Make sure we have the correct info back
+            AsynchronousState asyncState = state.AsyncState as AsynchronousState;
+            if (asyncState == null)
+            {
+                // Something really went wrong. Cancel the onboarding.
+                throw new IO.InvalidDataException("Expected AsynchronousState object.");
+            }
+
+            // Close the upload
+            try
+            {
+                asyncState.Blob.EndUploadFromStream(state);
+
+                // Close the file and delete it
+                asyncState.FileStream.Close();
+                if (asyncState.Delete)
+                    IO.File.Delete(asyncState.OriginalPath);
+            }
+            catch
+            {
+                throw new OperationCanceledException("Failed.");
             }
         }
 
@@ -220,7 +311,7 @@ namespace DolomiteWcfService.Threads
             // Generate the mimetype of the track
             // Why? b/c tag lib isn't smart enough to figure it out for me,
             // except for determining it based on extension -- which is silly.
-            FileStream localFile = LocalStorageManager.RetrieveFile(trackGuid.ToString());
+            IO.FileStream localFile = LocalStorageManager.RetrieveFile(trackGuid.ToString());
             string mimetype = MimetypeDetector.GetMimeType(localFile);
             if (mimetype == null)
             {

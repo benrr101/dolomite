@@ -11,7 +11,7 @@ namespace DolomiteWcfService
 
         #region Constants
 
-        private const string StorageContainerKey = "trackStorageContainer";
+        public const string StorageContainerKey = "trackStorageContainer";
 
         private const string TempStorageDirectory = "temp/";
 

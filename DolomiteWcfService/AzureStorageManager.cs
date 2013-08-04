@@ -1,17 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
+using DolomiteWcfService.Threads;
 using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
+
+using System.Collections.Generic;
+using System.Linq;
 
 namespace DolomiteWcfService
 {
     class AzureStorageManager
     {
-
         /// <summary>
         /// Internal instance of the blob client
         /// </summary>
@@ -70,6 +71,41 @@ namespace DolomiteWcfService
             }
         }
 
+        /// <summary>
+        /// Start the upload of a blob to the blob storage
+        /// </summary>
+        /// <param name="fileName">Target name of the file in Azure</param>
+        /// <param name="containerNameKey">KEY to the container name</param>
+        /// <param name="bytes">The bytes to upload to Azure</param>
+        /// <param name="callback">The callback to perform when completed</param>
+        /// <param name="state">The object to pass to the callback</param>
+        /// @TODO Should replace the type of the asynchronous state to some inheritance thingy
+        public void StoreBlobAsync(string fileName, string containerNameKey, Stream bytes, AsyncCallback callback, TrackOnboarding.AsynchronousState state)
+        {
+            try
+            {
+                // Grab the container that is being used
+                if (Properties.Settings.Default[containerNameKey] == null)
+                {
+                    throw new InvalidDataException("Track storage container key not set in settings.");
+                }
+                string containerName = Properties.Settings.Default[containerNameKey].ToString();
+                CloudBlobContainer container = BlobClient.GetContainerReference(containerName);
+
+                Trace.TraceInformation("Attempting asynchronous upload of block blob '{0}' to container '{1}'", fileName, containerName);
+
+                // Grab the 
+                CloudBlockBlob block = container.GetBlockBlobReference(fileName);
+                state.Blob = block;
+                block.BeginUploadFromStream(bytes, callback, state);
+            }
+            catch (Exception e)
+            {
+                Trace.TraceError("Failed to start upload of block blob {0}: {1}", fileName, e.Message);
+                throw;
+            }
+        }
+
         #endregion
 
         #region Retrieve Methods
@@ -78,6 +114,7 @@ namespace DolomiteWcfService
         /// Retrieve a specific track at a the given path.
         /// </summary>
         /// <param name="path">The path to find the track</param>
+        /// <param name="containerName">Name of the container to retrieve the blob from</param>
         /// <returns>
         /// A stream that represents contains the track. 
         /// The position will be reset to the beginning.
@@ -115,7 +152,7 @@ namespace DolomiteWcfService
         /// <summary>
         /// Attempts to create a container with the specified.
         /// </summary>
-        /// <param name="container">Name of the container to create</param>
+        /// <param name="containerName">Name of the container to create</param>
         public void InitializeContainer(string containerName)
         {
             // Check for the existence of the container
