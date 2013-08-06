@@ -71,26 +71,11 @@ namespace DolomiteWcfService
         /// Retreives the info about the track and its stream (if requested)
         /// </summary>
         /// <param name="trackGuid">The guid of the track to retreive</param>
-        /// <param name="retreiveStream">
-        /// Whether or not Azure should be contacted to retreive the file's stream
-        /// </param>
         /// <returns>Object representation of the track</returns>
-        public Track GetTrack(string trackGuid, bool retreiveStream = true)
+        public Track GetTrack(Guid trackGuid)
         {
-            // TODO: Remove the temp location stuff. Replace with real quality logic
-            string trackPath = "temp/" + trackGuid;
-
-            return new Track
-                {
-                    Id = Guid.Parse(trackGuid),
-                    // TODO: Replace with metadata retrieval logic
-                    Metadata = new Dictionary<string, string>
-                        {
-                            {"Title", "Hello World"},
-                            {"Artist", "Yo Sup"}
-                        },
-                    FileStream = retreiveStream ? AzureStorageManager.GetBlob(StorageContainerKey, trackPath) : null
-                };
+            // Retrieve the track from the database
+            return DatabaseManager.GetTrackByGuid(trackGuid);
         }
 
         /// <summary>

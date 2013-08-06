@@ -9,6 +9,52 @@ namespace DolomiteWcfService
     public class Track
     {
 
+        #region Internal Track Quality Class
+
+        [DataContract]
+        public class Quality
+        {
+            #region Serializable Properties
+
+            /// <summary>
+            /// The bitrate of the track at this quality
+            /// </summary>
+            private string _bitrate;
+            [DataMember]
+            public string Bitrate
+            {
+                get { return _bitrate; }
+                set { _bitrate = value + "kbps"; }
+            }
+
+            /// <summary>
+            /// The href to the download for the quality
+            /// </summary>
+            [DataMember]
+            public string Href { get; set; }
+
+            /// <summary>
+            /// The name of the quality
+            /// </summary>
+            [DataMember]
+            public string Name { get; set; }
+
+            /// <summary>
+            /// The mimetype of the track at this quality
+            /// </summary>
+            [DataMember]
+            public string Mimetype { get; set; }
+
+            #endregion
+
+            /// <summary>
+            /// The directory of the azure container storing the track at this quality
+            /// </summary>
+            public string Directory { get; set; }
+        }
+
+        #endregion
+
         #region Properties
 
         /// <summary>
@@ -22,24 +68,8 @@ namespace DolomiteWcfService
         [DataMember]
         public Dictionary<string, string> Metadata;
 
-        /// <summary>
-        /// A stream that points to the track's blob in Storage.
-        /// It is reset to the beginning of the stream to make it readable.
-        /// </summary>
-        private Stream _fileStream;
-        public Stream FileStream
-        {
-            get { return _fileStream; }
-            set
-            {
-                // Reset the stream to be beginning
-                if (value != null)
-                {
-                    value.Position = 0;
-                }
-                _fileStream = value;
-            }
-        }
+        [DataMember]
+        public List<Quality> Qualities { get; set; } 
 
         #endregion
 

@@ -74,6 +74,52 @@ namespace DolomiteWcfService
             }
         }
 
+        public Track GetTrackByGuid(Guid trackId)
+        {
+            using (var context = new Model.Entities())
+            {
+                // Search for the track
+                Model.Track track = context.Tracks.FirstOrDefault(t => t.Id == trackId);
+                if (track == null)
+                    throw new ObjectNotFoundException(String.Format("Failed to find track with id {0}", trackId));
+
+                // Build the track with the necessary information
+                var metadata = (from m in context.Metadatas
+                                where m.Track == trackId
+                                select new {Name = m.MetadataField.DisplayName, m.Value});
+
+                var dbQualities = context.AvailableQualities.Where(q => q.Track == trackId && q.Quality1.Bitrate != null).ToList();
+                var qualities = (from q in dbQualities
+                                 where q.Track == trackId
+                                 select new Track.Quality
+                                     {
+                                         Bitrate = q.Quality1.Bitrate.ToString(),
+                                         Directory = q.Quality1.Directory,
+                                         Href = String.Format("tracks/{0}/{1}", q.Quality1.Directory, trackId),
+                                         Mimetype = q.Quality1.Mimetype,
+                                         Name = q.Quality1.Name
+                                     }).ToList();
+
+                // Add the original quality
+                var originalQuality = new Track.Quality()
+                    {
+                        Bitrate = track.OriginalBitrate.ToString(),
+                        Directory = "original",
+                        Href = String.Format("tracks/original/{0}", trackId),
+                        Mimetype = track.OriginalMimetype,
+                        Name = "Original"
+                    };
+                qualities.Add(originalQuality);
+
+                return new Track
+                    {
+                        Id = trackId,
+                        Metadata = metadata.ToDictionary(o => o.Name, o => o.Value),
+                        Qualities = qualities
+                    };
+            }
+        }
+
         public Model.Track GetTrackModelByGuid(Guid trackId)
         {
             using (var context = new Model.Entities())
