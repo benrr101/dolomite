@@ -88,7 +88,11 @@ namespace DolomiteWcfService
         public void DeleteFile(string filename)
         {
             // Delete the file
-            File.Delete(GetPath(filename));
+            string filePath = GetPath(filename);
+            if (File.Exists(filePath))
+            {
+                File.Delete(GetPath(filename));
+            }
         }
 
         #endregion

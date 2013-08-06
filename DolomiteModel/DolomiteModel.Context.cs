@@ -60,5 +60,14 @@ namespace DolomiteModel
     
             return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("SetTrackHash", trackIdParameter, hashParameter);
         }
+    
+        public virtual int ReleaseAndCompleteOnboardingItem(Nullable<System.Guid> workItem)
+        {
+            var workItemParameter = workItem.HasValue ?
+                new ObjectParameter("workItem", workItem) :
+                new ObjectParameter("workItem", typeof(System.Guid));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("ReleaseAndCompleteOnboardingItem", workItemParameter);
+        }
     }
 }

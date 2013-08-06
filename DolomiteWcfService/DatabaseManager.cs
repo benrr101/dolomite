@@ -168,6 +168,20 @@ namespace DolomiteWcfService
         }
 
         /// <summary>
+        /// Releases the lock on the work item and completes the onboarding
+        /// process via a stored procedure
+        /// </summary>
+        /// <param name="workItem">The work item to release</param>
+        public void ReleaseAndCompleteWorkItem(Guid workItem)
+        {
+            using (var context = new Model.Entities())
+            {
+                // Call the stored procedure to complete the track onboarding
+                context.ReleaseAndCompleteOnboardingItem(workItem);
+            }
+        }
+
+        /// <summary>
         /// Sets the hash value of the given track
         /// </summary>
         /// <param name="trackId">The track to set the hash of</param>
@@ -198,6 +212,36 @@ namespace DolomiteWcfService
                 track.OriginalSampling = samplingFrequency;
                 track.OriginalMimetype = mimetype;
                 context.SaveChanges();
+            }
+        }
+
+        /// <summary>
+        /// Store a new record that links a track to the quality
+        /// </summary>
+        /// <param name="trackId">The GUID of the track</param>
+        /// <param name="quality">The object representing the quality</param>
+        public void StoreAudioQualityRecord(Guid trackId, Model.Quality quality)
+        {
+            using (var context = new Model.Entities())
+            {
+                // Insert a new AvailableQuality record that ties the track to the quality
+                Model.AvailableQuality aq = new Model.AvailableQuality
+                    {
+                        Quality = quality.Id,
+                        Track = trackId
+                    };
+                context.AvailableQualities.Add(aq);
+                context.SaveChanges();
+            }
+        }
+
+        public void StoreOriginalQualityRecord(Guid trackId)
+        {
+            using (var context = new Model.Entities())
+            {
+                // Fetch the original quality record
+                Model.Quality original = context.Qualities.First(q => q.Name.Equals("original", StringComparison.OrdinalIgnoreCase));
+                StoreAudioQualityRecord(trackId, original);
             }
         }
 

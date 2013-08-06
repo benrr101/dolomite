@@ -99,6 +99,7 @@
     <Build Include="Foreign Keys\FK_AVAILABLEQUALITIES_QUALITY.sql" />
     <Build Include="StoredProcedures\GetAndLockTopOnboardingItem.sql" />
     <Build Include="StoredProcedures\SetTrackHash.sql" />
+    <Build Include="StoredProcedures\ReleaseAndCompleteOnboardingItem.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Script.PostDeployment1.sql" />

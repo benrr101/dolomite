@@ -25,8 +25,6 @@ namespace DolomiteWcfService
 
         private LocalStorageManager LocalStorageManager { get; set; }
 
-        private readonly string _trackContainerName;
-
         #endregion
 
         #region Singleton Instance Code
@@ -51,13 +49,12 @@ namespace DolomiteWcfService
             {
                 throw new InvalidDataException("Track storage container key not set in settings.");
             }
-            _trackContainerName = Properties.Settings.Default[StorageContainerKey].ToString();
 
             // Get an instance of the azure storage manager
             AzureStorageManager = AzureStorageManager.Instance;
 
             // Make sure the track container exists
-            AzureStorageManager.InitializeContainer(_trackContainerName);
+            AzureStorageManager.InitializeContainer(StorageContainerKey);
 
             // Get an instance of the database manager
             DatabaseManager = DatabaseManager.Instance;
@@ -92,7 +89,7 @@ namespace DolomiteWcfService
                             {"Title", "Hello World"},
                             {"Artist", "Yo Sup"}
                         },
-                    FileStream = retreiveStream ? AzureStorageManager.GetBlob(_trackContainerName, trackPath) : null
+                    FileStream = retreiveStream ? AzureStorageManager.GetBlob(StorageContainerKey, trackPath) : null
                 };
         }
 
@@ -153,7 +150,7 @@ namespace DolomiteWcfService
         private void UploadTrackToTempStorage(Guid guid, Stream fileStream)
         {
             string filePath = TempStorageDirectory + guid;
-            AzureStorageManager.StoreBlob(filePath, _trackContainerName, fileStream);
+            AzureStorageManager.StoreBlob(StorageContainerKey, filePath, fileStream);
         }
 
         #endregion

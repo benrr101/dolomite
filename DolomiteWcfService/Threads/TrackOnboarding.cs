@@ -75,14 +75,13 @@ namespace DolomiteWcfService.Threads
                     // Calculate the hash and look for a duplicate
                     try
                     {
-                        string hash = CalculateHash(workItemId.Value);
+                        CalculateHash(workItemId.Value);
                     }
                     catch (DuplicateNameException)
                     {
                         // There was a duplicate. Delete it from storage and delete the initial record
                         Trace.TraceError("{1} determined track {0} was a duplicate. Removing record...", workItemId, GetHashCode());
-                        DatabaseManager.DeleteTrack(workItemId.Value);
-                        LocalStorageManager.DeleteFile(workItemId.Value.ToString());
+                        CancelOnboarding(workItemId.Value);
                         continue;
                     }
                     
@@ -96,13 +95,24 @@ namespace DolomiteWcfService.Threads
                     {
                         // Failed to determine type. We don't want this file.
                         Trace.TraceError("{1} failed to determine the type of track {0}. Removing record...", workItemId, GetHashCode());
-                        DatabaseManager.DeleteTrack(workItemId.Value);
-                        LocalStorageManager.DeleteFile(workItemId.Value.ToString());
+                        CancelOnboarding(workItemId.Value);
                         continue;
                     }
 
-                    CreateQualities(workItemId.Value);
+                    // Create all the qualities for the track
+                    try
+                    {
+                        CreateQualities(workItemId.Value);
+                    }
+                    catch (Exception e)
+                    {
+                        Trace.TraceError("{1} failed to create qualities for this track {0}. Removing record...", workItemId, GetHashCode());
+                        CancelOnboarding(workItemId.Value);
+                        continue;
+                    }
 
+                    // Onboarding complete! Release the lock!
+                    DatabaseManager.ReleaseAndCompleteWorkItem(workItemId.Value);
                 }
                 else
                 {
@@ -190,13 +200,13 @@ namespace DolomiteWcfService.Threads
                     MoveFileToAzure(LocalStorageManager.GetPath(trackGuid.ToString()), quality.Directory, trackGuid, false);
                     continue;
                 }
-
+                
                 string inputFilename = LocalStorageManager.GetPath(trackGuid.ToString());
-                string outputFilename =
-                    LocalStorageManager.GetPath(String.Format("{0}.{1}.{2}", trackGuid, quality.Bitrate.Value,
-                                                              quality.Extension));
+
+                string outputFilename = String.Format("{0}.{1}.{2}", trackGuid, quality.Bitrate.Value, quality.Extension);
+                string outputFilePath = LocalStorageManager.GetPath(outputFilename);
                 string arguments = String.Format("-i \"{2}\" -acodec {0} -ab {1}000 -y \"{3}\"", quality.Codec,
-                                                 quality.Bitrate.Value, inputFilename, outputFilename);
+                                                 quality.Bitrate.Value, inputFilename, outputFilePath);
 
                 // Borrowing some code from http://stackoverflow.com/a/8726175
                 ProcessStartInfo psi = new ProcessStartInfo
@@ -236,11 +246,15 @@ namespace DolomiteWcfService.Threads
                 // @TODO Make sure the process call succeeded
 
                 // Upload the file to azure
-                MoveFileToAzure(outputFilename, quality.Directory, trackGuid);
+                MoveFileToAzure(outputFilePath, quality.Directory, trackGuid);
+
+                // Store the quality record to the database
+                DatabaseManager.StoreAudioQualityRecord(trackGuid, quality);
             }
 
             // Upload the original file
             MoveFileToAzure(LocalStorageManager.GetPath(trackGuid.ToString()), "original", trackGuid);
+            DatabaseManager.StoreOriginalQualityRecord(trackGuid);
         }
 
         /// <summary>
@@ -251,7 +265,7 @@ namespace DolomiteWcfService.Threads
         /// <param name="trackGuid">GUID of the track that is being stored</param>
         /// <param name="deleteOnComplete">Whether or not to delete the original file when the move has completed</param>
         private void MoveFileToAzure(string tempPath, string directory, Guid trackGuid, bool deleteOnComplete = true)
-        {
+        { 
             // Open a file stream to the file to move
             IO.FileStream file = LocalStorageManager.RetrieveFile(tempPath);
 
@@ -266,7 +280,7 @@ namespace DolomiteWcfService.Threads
                     OriginalPath = tempPath,
                     TrackGuid = trackGuid
                 };
-            AzureStorageManager.StoreBlobAsync(targetPath, TrackManager.StorageContainerKey, file, CompleteMoveFileToAzure, state);
+            AzureStorageManager.StoreBlobAsync(TrackManager.StorageContainerKey, targetPath, file, CompleteMoveFileToAzure, state);
         }
 
         /// <summary>
@@ -284,19 +298,12 @@ namespace DolomiteWcfService.Threads
             }
 
             // Close the upload
-            try
-            {
-                asyncState.Blob.EndUploadFromStream(state);
+            asyncState.Blob.EndUploadFromStream(state);
 
-                // Close the file and delete it
-                asyncState.FileStream.Close();
-                if (asyncState.Delete)
-                    IO.File.Delete(asyncState.OriginalPath);
-            }
-            catch
-            {
-                throw new OperationCanceledException("Failed.");
-            }
+            // Close the file and delete it
+            asyncState.FileStream.Close();
+            if (asyncState.Delete)
+                DeleteFileWithWait(IO.Path.GetFileName(asyncState.OriginalPath));
         }
 
         /// <summary>
@@ -357,5 +364,53 @@ namespace DolomiteWcfService.Threads
 
         #endregion
 
+        /// <summary>
+        /// Cancels the onboarding process by deleting all created files and
+        /// removing the record of the track.
+        /// </summary>
+        /// <param name="workItemGuid">The GUID of the onboarding work item</param>
+        private void CancelOnboarding(Guid workItemGuid)
+        {
+            // Delete the original file from the local storage
+            DeleteFileWithWait(workItemGuid.ToString());
+            AzureStorageManager.DeleteBlob(TrackManager.StorageContainerKey, String.Format("original/{0}", workItemGuid));
+
+            // Iterate over the qualities and delete them from local storage and azure
+            foreach (Quality quality in DatabaseManager.GetAllQualities())
+            {
+                // Delete the local storage instance
+                string fileName = String.Format("{0}.{1}.{2}", workItemGuid, quality.Bitrate.Value, quality.Extension);
+                DeleteFileWithWait(fileName);
+
+                // Delete the file from Azure
+                string azurePath = String.Format("{0}/{1}", quality.Directory, workItemGuid);
+                AzureStorageManager.DeleteBlob(TrackManager.StorageContainerKey, azurePath);
+            }
+
+            // Delete the track from the database
+            DatabaseManager.DeleteTrack(workItemGuid);
+        }
+            
+        /// <summary>
+        /// Attempts to delete the file. If it fails, the thread sleeps until
+        /// the file has been unlocked.
+        /// </summary>
+        /// <param name="fileName">The name of the file in onboarding storage to delete</param>
+        private static void DeleteFileWithWait(string fileName)
+        {
+            while (true)
+            {
+                try
+                {
+                    LocalStorageManager.DeleteFile(fileName);
+                    break;
+                }
+                catch(IO.IOException)
+                {
+                    Trace.TraceWarning("The file '{0}' is still in use. Sleeping until it is unlocked.", fileName);
+                    Thread.Sleep(TimeSpan.FromSeconds(5));
+                }
+            } 
+        }
     }
 }
