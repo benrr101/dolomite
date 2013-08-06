@@ -185,6 +185,7 @@
           <Property Name="Codec" Type="nvarchar" MaxLength="50" />
           <Property Name="Bitrate" Type="int" />
           <Property Name="Extension" Type="nchar" MaxLength="3" />
+          <Property Name="Mimetype" Type="nvarchar" MaxLength="30" />
           <Property Name="Directory" Type="nvarchar" Nullable="false" MaxLength="50" />
         </EntityType>
         <EntityType Name="Rules">
@@ -495,7 +496,7 @@
             <Parameter Name="hash" Mode="In" Type="String" />
           </FunctionImport>
           <FunctionImport Name="ReleaseAndCompleteOnboardingItem">
-            <Parameter Name="workItem" Mode="In" Type="Guid" />
+          <Parameter Name="workItem" Mode="In" Type="Guid" />
           </FunctionImport>
         </EntityContainer>
         <EntityType Name="Album">
@@ -614,6 +615,7 @@
           <NavigationProperty Name="AvailableQualities" Relationship="DolomiteModel.FK_AVAILABLEQUALITIES_QUALITY" FromRole="Qualities" ToRole="AvailableQualities" />
           <Property Type="String" Name="Directory" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Type="String" Name="Extension" MaxLength="3" FixedLength="true" Unicode="true" />
+          <Property Type="String" Name="Mimetype" MaxLength="30" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="Rule">
           <Key>
@@ -938,6 +940,7 @@
           <EntitySetMapping Name="Qualities">
             <EntityTypeMapping TypeName="DolomiteModel.Quality">
               <MappingFragment StoreEntitySet="Qualities">
+                <ScalarProperty Name="Mimetype" ColumnName="Mimetype" />
                 <ScalarProperty Name="Extension" ColumnName="Extension" />
                 <ScalarProperty Name="Directory" ColumnName="Directory" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
