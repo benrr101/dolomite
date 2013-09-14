@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.20617.1 PREVIEW
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{CC5FD16D-436D-48AD-A40C-5A424C6E3E79}") = "DolomiteService", "DolomiteService\DolomiteService.ccproj", "{919F1FAF-2554-436B-A6B4-DC1EDB6F745E}"
 EndProject
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "DolomiteDatabase", "DolomiteDatabase\DolomiteDatabase.sqlproj", "{DF713CE7-1B5D-4FEA-99BE-CBA5BEF33BE7}"
