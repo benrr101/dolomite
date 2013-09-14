@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Web;
@@ -9,9 +8,15 @@ namespace DolomiteWcfService
     [ServiceContract]
     public interface ITracksEndpoint
     {
+        #region Upload Operations
+
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "/", ResponseFormat = WebMessageFormat.Json)]
         string UploadTrack(Stream file);
+
+        #endregion
+
+        #region Retrieve Operations
 
         [OperationContract]
         [WebInvoke(Method = "HEAD", UriTemplate = "/{hash}")]
@@ -27,6 +32,8 @@ namespace DolomiteWcfService
 
         [OperationContract]
         [WebInvoke(Method = "GET", UriTemplate = "/", ResponseFormat = WebMessageFormat.Json)]
-        List<Track> GetTracks();
+        Message GetTracks();
+
+        #endregion
     }
 }

@@ -138,9 +138,12 @@ namespace DolomiteWcfService
         /// to any azure blob streams and only contain metadata.
         /// </summary>
         /// <returns>List of track objects from the track manager</returns>
-        public List<Track> GetTracks()
+        public Message GetTracks()
         {
-            return TrackManager.FetchAllTracks();
+            // Retrieve the track without the stream
+            List<Track> tracks = TrackManager.FetchAllTracks();
+            string trackJson = JsonConvert.SerializeObject(tracks);
+            return WebOperationContext.Current.CreateTextResponse(trackJson, "application/json", Encoding.UTF8);
         }
     }
 }
