@@ -39,9 +39,13 @@ namespace DolomiteWcfService {
         [DataMember]
         public string Guid { get; set; }
 
-        public UploadSuccessResponse(Guid guid) : base(StatusValue.Success)
+        [DataMember]
+        public string Hash { get; set; }
+
+        public UploadSuccessResponse(Guid guid, string hash) : base(StatusValue.Success)
         {
             Guid = guid.ToString();
+            Hash = hash;
         }
     }
 }

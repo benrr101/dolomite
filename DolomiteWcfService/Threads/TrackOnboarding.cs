@@ -70,22 +70,8 @@ namespace DolomiteWcfService.Threads
                 if (workItemId.HasValue)
                 {
                     // We have work to do!
-                    Trace.TraceInformation("Work item {0} picked up by {1}", workItemId.Value.ToString(), GetHashCode());
-
-                    // Calculate the hash and look for a duplicate
-                    try
-                    {
-                        CalculateHash(workItemId.Value);
-                    }
-                    catch (DuplicateNameException)
-                    {
-                        // There was a duplicate. Delete it from storage and delete the initial record
-                        Trace.TraceError("{1} determined track {0} was a duplicate. Removing record...", workItemId, GetHashCode());
-                        CancelOnboarding(workItemId.Value);
-                        continue;
-                    }
+                    Trace.TraceInformation("Work item {0} picked up by {1}", workItemId.Value, GetHashCode());
                     
-                    // The file was not a duplicate, so continue processing it
                     // Grab the metadata for the track
                     try
                     {
@@ -124,48 +110,6 @@ namespace DolomiteWcfService.Threads
         }
 
         #region Onboarding Methods
-
-        /// <summary>
-        /// Calculates the RIPEMD160 hash of the track with the given guid and
-        /// stores it to the database.
-        /// </summary>
-        /// <param name="trackGuid">The track to calculate the hash for</param>
-        /// <returns>The hah of the file</returns>
-        private string CalculateHash(Guid trackGuid)
-        {
-            // Grab an instance of the track
-            try
-            {
-                Trace.TraceInformation("{0} is calculating hash for {1}", GetHashCode(), trackGuid);
-                IO.FileStream track = LocalStorageManager.RetrieveFile(trackGuid.ToString());
-
-                // Calculate the hash and save it
-                RIPEMD160 hashCalculator = RIPEMD160Managed.Create();
-                byte[] hashBytes = hashCalculator.ComputeHash(track);
-                string hashString = BitConverter.ToString(hashBytes);
-                hashString = hashString.Replace("-", String.Empty);
-
-                // CLOSE THE STREAM!
-                track.Close();
-
-                // Is the track a duplicate?
-                if (DatabaseManager.GetTrackByHash(hashString) != null)
-                {
-                    // The track is a duplicate!
-                    throw new DuplicateNameException(String.Format("Track {0} is a duplicate as determined by hash comparison", trackGuid));
-                }
-
-                // Store that hash to the database
-                DatabaseManager.SetTrackHash(trackGuid, hashString);
-
-                return hashString;
-            }
-            catch (Exception e)
-            {
-                Trace.TraceError("Exception from {0} while calculating hash of {1}: {2}", GetHashCode(), trackGuid, e.Message);
-                throw;
-            }
-        }
 
         /// <summary>
         /// Utilize FFmpeg process launching to create all the necessary qualities

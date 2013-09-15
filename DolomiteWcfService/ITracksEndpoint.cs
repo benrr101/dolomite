@@ -19,8 +19,8 @@ namespace DolomiteWcfService
         #region Retrieve Operations
 
         [OperationContract]
-        [WebInvoke(Method = "GET", UriTemplate = "/{hash}")]
-        Message GetTrackMetadata(string hash);
+        [WebInvoke(Method = "GET", UriTemplate = "/{guid}")]
+        Message GetTrackMetadata(string guid);
 
         [OperationContract]
         [WebInvoke(Method = "GET", UriTemplate = "/{quality}/{guid}")]

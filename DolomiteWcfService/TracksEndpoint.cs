@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Net;
 using System.ServiceModel.Channels;
@@ -51,8 +52,10 @@ namespace DolomiteWcfService
                 {
                     // Upload the track
                     MemoryStream memoryStream = new MemoryStream(parser.FileContents);
-                    Guid guid = TrackManager.UploadTrack(memoryStream);
-                    WebResponse response = new UploadSuccessResponse(guid);
+                    Guid guid;
+                    string hash;
+                    TrackManager.UploadTrack(memoryStream, out guid, out hash);
+                    WebResponse response = new UploadSuccessResponse(guid, hash);
                     string responseJson = JsonConvert.SerializeObject(response);
                     return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json",
                         Encoding.UTF8);
@@ -63,6 +66,14 @@ namespace DolomiteWcfService
                 ErrorResponse fResponse = new ErrorResponse("Failed to process request.");
                 string fResponseJson = JsonConvert.SerializeObject(fResponse);
                 return WebOperationContext.Current.CreateTextResponse(fResponseJson, "application/json", Encoding.UTF8);
+            }
+            catch (DuplicateNameException)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.Conflict;
+                ErrorResponse eResponse = new ErrorResponse("The request could not be completed. A track with the same hash already exists." +
+                                                            " Duplicate tracks are not permitted");
+                string eResponseJson = JsonConvert.SerializeObject(eResponse);
+                return WebOperationContext.Current.CreateTextResponse(eResponseJson, "application/json", Encoding.UTF8);
             }
             catch (Exception e)
             {

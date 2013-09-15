@@ -92,31 +92,22 @@ namespace DolomiteWcfService
         } 
 
         /// <summary>
-        /// Checks to see a track exists based on its hash
-        /// </summary>
-        /// <param name="hash">The hash to search with</param>
-        /// <returns>True if the track exists, false otherwise</returns>
-        public bool TrackExists(string hash)
-        {
-            return DatabaseManager.GetTrackByHash(hash) != null;
-        }
-
-        /// <summary>
         /// Uploads the track to the system. Places the track in temporary
-        /// azure storage then kicks off threads to do the rest of the work.
+        /// azure storage then kicks off threads to do the rest of the work. We
+        /// detect duplicate tracks based on hash here.
         /// </summary>
         /// <param name="stream">Stream of the uploaded track</param>
+        /// <param name="guid">Output variable for the guid of the track</param>
+        /// <param name="hash">Output variable for the hash of the track</param>
         /// <returns>The guid for identifying the track</returns>
-        public Guid UploadTrack(Stream stream)
+        public void UploadTrack(Stream stream, out Guid guid, out string hash)
         {
             // Step 1: Upload the track to temporary storage in azure
-            Guid guid = Guid.NewGuid();
-            LocalStorageManager.StoreStream(stream, guid.ToString());
+            guid = Guid.NewGuid();
+            hash = LocalStorageManager.StoreStream(stream, guid.ToString());
 
             // Step 2: Create the inital record of the track in the database
-            DatabaseManager.CreateInitialTrackRecord(guid);
-
-            return guid;
+            DatabaseManager.CreateInitialTrackRecord(guid, hash);
         }
 
         

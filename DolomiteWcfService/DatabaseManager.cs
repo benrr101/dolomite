@@ -34,7 +34,7 @@ namespace DolomiteWcfService
         /// Create a stubbed out record for the track
         /// </summary>
         /// <param name="guid">The guid of the track</param>
-        public void CreateInitialTrackRecord(Guid guid)
+        public void CreateInitialTrackRecord(Guid guid, string hash)
         {
             using (var context = new Model.Entities())
             {
@@ -42,6 +42,7 @@ namespace DolomiteWcfService
                 var track = new Model.Track
                     {
                         Id = guid,
+                        Hash = hash,
                         TrackInTempStorage = true,
                         HasBeenOnboarded = false,
                         Locked = false
