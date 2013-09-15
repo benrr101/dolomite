@@ -99,6 +99,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="Responses.cs" />
     <Compile Include="Threads\TrackOnboarding.cs" />
     <Compile Include="Track.cs" />
     <Compile Include="TrackManager.cs" />

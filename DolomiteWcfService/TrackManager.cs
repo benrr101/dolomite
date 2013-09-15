@@ -110,20 +110,13 @@ namespace DolomiteWcfService
         public Guid UploadTrack(Stream stream)
         {
             // Step 1: Upload the track to temporary storage in azure
-            Guid trackGuid = Guid.NewGuid();
-            LocalStorageManager.StoreStream(stream, trackGuid.ToString());
+            Guid guid = Guid.NewGuid();
+            LocalStorageManager.StoreStream(stream, guid.ToString());
 
             // Step 2: Create the inital record of the track in the database
-            DatabaseManager.CreateInitialTrackRecord(trackGuid);
+            DatabaseManager.CreateInitialTrackRecord(guid);
 
-            // TODO: Step 2: Read the metadata from the track
-
-            // TODO: Step 3: Create a track object for the track
-
-            // TODO: Step 4: Create the various qualities of the track
-
-            // Return the guid to the calling system
-            return trackGuid;
+            return guid;
         }
 
         
