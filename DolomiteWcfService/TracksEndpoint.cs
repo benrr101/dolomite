@@ -187,9 +187,35 @@ namespace DolomiteWcfService
 
         #region Deletion Operations
 
+        /// <summary>
+        /// Attempts to delete the track with the given GUID from the database
+        /// </summary>
+        /// <param name="guid">Guid of the track to delete.</param>
+        /// <returns>A message with JSON formatted web message</returns>
         public Message DeleteTrack(string guid)
         {
-            throw new NotImplementedException();
+            try
+            {
+                // Parse the guid into a Guid and attempt to delete
+                TrackManager.DeleteTrack(Guid.Parse(guid));
+                string responseJson = JsonConvert.SerializeObject(new WebResponse(WebResponse.StatusValue.Success));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (FormatException)
+            {
+                // The guid was probably incorrect
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", guid);
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (FileNotFoundException)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
+                string message = String.Format("The track with the specified GUID '{0}' does not exist", guid);
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
         }
 
         #endregion

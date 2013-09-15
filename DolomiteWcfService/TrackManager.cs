@@ -13,8 +13,6 @@ namespace DolomiteWcfService
 
         public const string StorageContainerKey = "trackStorageContainer";
 
-        private const string TempStorageDirectory = "temp/";
-
         #endregion
 
         #region Properties and Member Variables
@@ -67,6 +65,26 @@ namespace DolomiteWcfService
 
         #region Public Methods
 
+        public void DeleteTrack(Guid trackGuid)
+        {
+            // Does the track exist?
+            Track track = DatabaseManager.GetTrackByGuid(trackGuid);
+            if (track == null)
+                throw new FileNotFoundException(String.Format("Track with guid {0} does not exist.", trackGuid));
+
+            // TODO: Verify that we can't have inconsistent states for the database
+
+            // Delete the track from Azure
+            foreach (Track.Quality quality in track.Qualities)
+            {
+                string path = quality.Directory + '/' + trackGuid;
+                AzureStorageManager.DeleteBlob(StorageContainerKey, path);
+            }
+
+            // Delete the record for the track in the database
+            DatabaseManager.DeleteTrack(trackGuid);
+        }
+
         /// <summary>
         /// Retreives the info about the track and its stream (if requested)
         /// </summary>
@@ -111,16 +129,6 @@ namespace DolomiteWcfService
         }
 
         
-
-        #endregion
-
-        #region Private Helper Methods
-
-        private void UploadTrackToTempStorage(Guid guid, Stream fileStream)
-        {
-            string filePath = TempStorageDirectory + guid;
-            AzureStorageManager.StoreBlob(StorageContainerKey, filePath, fileStream);
-        }
 
         #endregion
     }
