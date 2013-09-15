@@ -152,6 +152,7 @@ namespace DolomiteWcfService
                 // Fetch ORM version of the track from the database
                 // <remarks>Unfortunately, there isn't a better way to do this</remarks>
                 var ormTracks = (from track in context.Tracks
+                                 where track.HasBeenOnboarded
                                  select track).ToList();
 
                 // Parse them into the model version of the track
@@ -225,20 +226,6 @@ namespace DolomiteWcfService
             {
                 // Call the stored procedure to complete the track onboarding
                 context.ReleaseAndCompleteOnboardingItem(workItem);
-            }
-        }
-
-        /// <summary>
-        /// Sets the hash value of the given track
-        /// </summary>
-        /// <param name="trackId">The track to set the hash of</param>
-        /// <param name="hash">The hash to set for the track</param>
-        public void SetTrackHash(Guid trackId, string hash)
-        {
-            using (var context = new Model.Entities())
-            {
-                // Call the stored procedure
-                context.SetTrackHash(trackId, hash);
             }
         }
 
