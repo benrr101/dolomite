@@ -107,7 +107,26 @@ namespace DolomiteWcfService
 
             // Condense them into a list of tracks
             return tracks.ToList();
-        } 
+        }
+
+        public void ReplaceTrack(Stream stream, Guid guid, out string hash)
+        {
+            // Step 0: Fetch the track
+            Track track = DatabaseManager.GetTrackByGuid(guid);
+
+            // Step 1: Upload the track to temporary storage
+            hash = LocalStorageManager.StoreStream(stream, guid.ToString());
+
+            // Step 2: Delete existing blobs from azure
+            foreach (Track.Quality quality in track.Qualities)
+            {
+                string path = quality.Directory + '/' + guid;
+                AzureStorageManager.DeleteBlob(StorageContainerKey, path);
+            }
+
+            // Step 3: Mark the track as not onboarded
+            DatabaseManager.MarkTrackAsNotOnboarderd(guid, hash);
+        }
 
         /// <summary>
         /// Uploads the track to the system. Places the track in temporary

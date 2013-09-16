@@ -51,7 +51,7 @@ namespace DolomiteWcfService
                 context.SaveChanges();
             }
         }
-
+        
         /// <summary>
         /// Deletes the track with the given guid from the database.
         /// </summary>
@@ -162,6 +162,26 @@ namespace DolomiteWcfService
                                 Id = t.Id,
                                 Metadata = t.Metadatas.AsEnumerable().ToDictionary(o => o.MetadataField.DisplayName, o => o.Value)
                             }).ToList();
+            }
+        }
+
+        /// <summary>
+        /// Updates the hash of the given track and marks the track for pickup
+        /// by the onboarding processor.
+        /// </summary>
+        /// <param name="trackGuid">Guid of the track to update</param>
+        /// <param name="newHash">The new hash of the track</param>
+        public void MarkTrackAsNotOnboarderd(Guid trackGuid, string newHash)
+        {
+            using (var context = new Model.Entities())
+            {
+                // Reset the onboarding status
+                context.ResetOnboardingStatus(trackGuid);
+
+                // Store the new track hash
+                Model.Track track = context.Tracks.First(t => t.Id == trackGuid);
+                track.Hash = newHash;
+                context.SaveChanges();
             }
         }
 

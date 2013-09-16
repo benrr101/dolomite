@@ -4,95 +4,13 @@
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-    <Schema Namespace="DolomiteModel.Store" Alias="Self" Provider="System.Data.SqlClient" ProviderManifestToken="2008" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
-        <EntityContainer Name="DolomiteModelStoreContainer">
-          <EntitySet Name="Albums" EntityType="DolomiteModel.Store.Albums" store:Type="Tables" Schema="dbo" />
-          <EntitySet Name="Artists" EntityType="DolomiteModel.Store.Artists" store:Type="Tables" Schema="dbo" />
-          <EntitySet Name="AutoplaylistRules" EntityType="DolomiteModel.Store.AutoplaylistRules" store:Type="Tables" Schema="dbo" />
-          <EntitySet Name="Autoplaylists" EntityType="DolomiteModel.Store.Autoplaylists" store:Type="Tables" Schema="dbo" />
-          <EntitySet Name="AvailableQualities" EntityType="DolomiteModel.Store.AvailableQualities" store:Type="Tables" Schema="dbo" />
-          <EntitySet Name="Devices" EntityType="DolomiteModel.Store.Devices" store:Type="Tables" store:Schema="dbo" store:Name="Devices">
-            <DefiningQuery>SELECT 
-      [Devices].[Key] AS [Key], 
-      [Devices].[Owner] AS [Owner], 
-      [Devices].[PreferredQuality] AS [PreferredQuality]
-      FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
-          </EntitySet>
-          <EntitySet Name="Metadata" EntityType="DolomiteModel.Store.Metadata" store:Type="Tables" Schema="dbo" />
-          <EntitySet Name="MetadataFields" EntityType="DolomiteModel.Store.MetadataFields" store:Type="Tables" Schema="dbo" />
-          <EntitySet Name="Playlists" EntityType="DolomiteModel.Store.Playlists" store:Type="Tables" Schema="dbo" />
-          <EntitySet Name="PlaylistTracks" EntityType="DolomiteModel.Store.PlaylistTracks" store:Type="Tables" Schema="dbo" />
-          <EntitySet Name="Qualities" EntityType="DolomiteModel.Store.Qualities" store:Type="Tables" Schema="dbo" />
-          <EntitySet Name="Rules" EntityType="DolomiteModel.Store.Rules" store:Type="Tables" Schema="dbo" />
-          <EntitySet Name="Tracks" EntityType="DolomiteModel.Store.Tracks" store:Type="Tables" Schema="dbo" />
-          <EntitySet Name="Users" EntityType="DolomiteModel.Store.Users" store:Type="Tables" Schema="dbo" />
-          <AssociationSet Name="Album" Association="DolomiteModel.Store.Album">
-            <End Role="Albums" EntitySet="Albums" />
-            <End Role="Tracks" EntitySet="Tracks" />
-          </AssociationSet>
-          <AssociationSet Name="FK_ALBUMS_ARTIST" Association="DolomiteModel.Store.FK_ALBUMS_ARTIST">
-            <End Role="Artists" EntitySet="Artists" />
-            <End Role="Albums" EntitySet="Albums" />
-          </AssociationSet>
-          <AssociationSet Name="FK_AUTOPLAYLISTRULES_METADATA" Association="DolomiteModel.Store.FK_AUTOPLAYLISTRULES_METADATA">
-            <End Role="MetadataFields" EntitySet="MetadataFields" />
-            <End Role="AutoplaylistRules" EntitySet="AutoplaylistRules" />
-          </AssociationSet>
-          <AssociationSet Name="FK_AUTOPLAYLISTRULES_PLAYLIST" Association="DolomiteModel.Store.FK_AUTOPLAYLISTRULES_PLAYLIST">
-            <End Role="Autoplaylists" EntitySet="Autoplaylists" />
-            <End Role="AutoplaylistRules" EntitySet="AutoplaylistRules" />
-          </AssociationSet>
-          <AssociationSet Name="FK_AUTOPLAYLISTRULES_RULE" Association="DolomiteModel.Store.FK_AUTOPLAYLISTRULES_RULE">
-            <End Role="Rules" EntitySet="Rules" />
-            <End Role="AutoplaylistRules" EntitySet="AutoplaylistRules" />
-          </AssociationSet>
-          <AssociationSet Name="FK_AUTOPLAYLISTS_OWNER" Association="DolomiteModel.Store.FK_AUTOPLAYLISTS_OWNER">
-            <End Role="Users" EntitySet="Users" />
-            <End Role="Autoplaylists" EntitySet="Autoplaylists" />
-          </AssociationSet>
-          <AssociationSet Name="FK_AVAILABLEQUALITIES_QUALITY" Association="DolomiteModel.Store.FK_AVAILABLEQUALITIES_QUALITY">
-            <End Role="Qualities" EntitySet="Qualities" />
-            <End Role="AvailableQualities" EntitySet="AvailableQualities" />
-          </AssociationSet>
-          <AssociationSet Name="FK_AVAILABLEQUALITIES_TRACK" Association="DolomiteModel.Store.FK_AVAILABLEQUALITIES_TRACK">
-            <End Role="Tracks" EntitySet="Tracks" />
-            <End Role="AvailableQualities" EntitySet="AvailableQualities" />
-          </AssociationSet>
-          <AssociationSet Name="FK_DEVICES_OWNER" Association="DolomiteModel.Store.FK_DEVICES_OWNER">
-            <End Role="Users" EntitySet="Users" />
-            <End Role="Devices" EntitySet="Devices" />
-          </AssociationSet>
-          <AssociationSet Name="FK_METADATA_FIELD" Association="DolomiteModel.Store.FK_METADATA_FIELD">
-            <End Role="MetadataFields" EntitySet="MetadataFields" />
-            <End Role="Metadata" EntitySet="Metadata" />
-          </AssociationSet>
-          <AssociationSet Name="FK_METADATA_TRACK" Association="DolomiteModel.Store.FK_METADATA_TRACK">
-            <End Role="Tracks" EntitySet="Tracks" />
-            <End Role="Metadata" EntitySet="Metadata" />
-          </AssociationSet>
-          <AssociationSet Name="FK_PLAYLISTS_OWNER" Association="DolomiteModel.Store.FK_PLAYLISTS_OWNER">
-            <End Role="Users" EntitySet="Users" />
-            <End Role="Playlists" EntitySet="Playlists" />
-          </AssociationSet>
-          <AssociationSet Name="FK_PLAYLISTTRACKS_PLAYLISTS" Association="DolomiteModel.Store.FK_PLAYLISTTRACKS_PLAYLISTS">
-            <End Role="Playlists" EntitySet="Playlists" />
-            <End Role="PlaylistTracks" EntitySet="PlaylistTracks" />
-          </AssociationSet>
-          <AssociationSet Name="FK_PLAYLISTTRACKS_TRACKS" Association="DolomiteModel.Store.FK_PLAYLISTTRACKS_TRACKS">
-            <End Role="Tracks" EntitySet="Tracks" />
-            <End Role="PlaylistTracks" EntitySet="PlaylistTracks" />
-          </AssociationSet>
-          <AssociationSet Name="FK_TRACKS_OWNER" Association="DolomiteModel.Store.FK_TRACKS_OWNER">
-            <End Role="Users" EntitySet="Users" />
-            <End Role="Tracks" EntitySet="Tracks" />
-          </AssociationSet>
-        </EntityContainer>
+    <Schema Namespace="DolomiteModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2008" Alias="Self" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="Albums">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="Name" Type="nvarchar" Nullable="false" MaxLength="100" />
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
           <Property Name="Artist" Type="int" Nullable="false" />
           <Property Name="Art" Type="uniqueidentifier" />
         </EntityType>
@@ -100,38 +18,37 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="Name" Type="nvarchar" Nullable="false" MaxLength="100" />
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
         </EntityType>
         <EntityType Name="AutoplaylistRules">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="Autoplaylist" Type="int" Nullable="false" />
           <Property Name="Rule" Type="int" Nullable="false" />
           <Property Name="MetadataField" Type="int" Nullable="false" />
-          <Property Name="Value" Type="nvarchar" Nullable="false" MaxLength="100" />
+          <Property Name="Value" Type="nvarchar" MaxLength="100" Nullable="false" />
         </EntityType>
         <EntityType Name="Autoplaylists">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="Owner" Type="int" Nullable="false" />
-          <Property Name="Name" Type="nvarchar" Nullable="false" MaxLength="100" />
+          <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
         </EntityType>
         <EntityType Name="AvailableQualities">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="Track" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Quality" Type="int" Nullable="false" />
         </EntityType>
         <!--Errors Found During Generation:
-      warning 6002: The table/view 'Dolomite.dbo.Devices' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.
-      -->
+warning 6002: The table/view 'Dolomite.dbo.Devices' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
         <EntityType Name="Devices">
           <Key>
             <PropertyRef Name="Key" />
@@ -145,7 +62,7 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="Track" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Field" Type="int" Nullable="false" />
           <Property Name="Value" Type="text" Nullable="false" />
@@ -154,24 +71,24 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="TagName" Type="nvarchar" Nullable="false" MaxLength="20" />
-          <Property Name="DisplayName" Type="nvarchar" Nullable="false" MaxLength="20" />
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="TagName" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="DisplayName" Type="nvarchar" MaxLength="20" Nullable="false" />
           <Property Name="AllowedRules" Type="nvarchar" MaxLength="150" />
         </EntityType>
         <EntityType Name="Playlists">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="Owner" Type="int" Nullable="false" />
-          <Property Name="Name" Type="nvarchar" Nullable="false" MaxLength="100" />
+          <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
         </EntityType>
         <EntityType Name="PlaylistTracks">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="Playlist" Type="int" Nullable="false" />
           <Property Name="Track" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Order" Type="int" />
@@ -180,20 +97,20 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="Name" Type="nvarchar" Nullable="false" MaxLength="20" />
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="20" Nullable="false" />
           <Property Name="Codec" Type="nvarchar" MaxLength="50" />
           <Property Name="Bitrate" Type="int" />
           <Property Name="Extension" Type="nchar" MaxLength="3" />
           <Property Name="Mimetype" Type="nvarchar" MaxLength="30" />
-          <Property Name="Directory" Type="nvarchar" Nullable="false" MaxLength="50" />
+          <Property Name="Directory" Type="nvarchar" MaxLength="50" Nullable="false" />
         </EntityType>
         <EntityType Name="Rules">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
-          <Property Name="Name" Type="nvarchar" Nullable="false" MaxLength="10" />
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar" MaxLength="10" Nullable="false" />
         </EntityType>
         <EntityType Name="Tracks">
           <Key>
@@ -215,11 +132,11 @@
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="int" Nullable="false" />
-          <Property Name="Username" Type="nvarchar" Nullable="false" MaxLength="50" />
+          <Property Name="Username" Type="nvarchar" MaxLength="50" Nullable="false" />
         </EntityType>
         <Association Name="Album">
-          <End Role="Albums" Type="DolomiteModel.Store.Albums" Multiplicity="0..1" />
-          <End Role="Tracks" Type="DolomiteModel.Store.Tracks" Multiplicity="*" />
+          <End Role="Albums" Type="Self.Albums" Multiplicity="0..1" />
+          <End Role="Tracks" Type="Self.Tracks" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Albums">
               <PropertyRef Name="Id" />
@@ -230,8 +147,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_ALBUMS_ARTIST">
-          <End Role="Artists" Type="DolomiteModel.Store.Artists" Multiplicity="1" />
-          <End Role="Albums" Type="DolomiteModel.Store.Albums" Multiplicity="*" />
+          <End Role="Artists" Type="Self.Artists" Multiplicity="1" />
+          <End Role="Albums" Type="Self.Albums" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Artists">
               <PropertyRef Name="Id" />
@@ -242,8 +159,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_AUTOPLAYLISTRULES_METADATA">
-          <End Role="MetadataFields" Type="DolomiteModel.Store.MetadataFields" Multiplicity="1" />
-          <End Role="AutoplaylistRules" Type="DolomiteModel.Store.AutoplaylistRules" Multiplicity="*" />
+          <End Role="MetadataFields" Type="Self.MetadataFields" Multiplicity="1" />
+          <End Role="AutoplaylistRules" Type="Self.AutoplaylistRules" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="MetadataFields">
               <PropertyRef Name="Id" />
@@ -254,8 +171,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_AUTOPLAYLISTRULES_PLAYLIST">
-          <End Role="Autoplaylists" Type="DolomiteModel.Store.Autoplaylists" Multiplicity="1" />
-          <End Role="AutoplaylistRules" Type="DolomiteModel.Store.AutoplaylistRules" Multiplicity="*" />
+          <End Role="Autoplaylists" Type="Self.Autoplaylists" Multiplicity="1" />
+          <End Role="AutoplaylistRules" Type="Self.AutoplaylistRules" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Autoplaylists">
               <PropertyRef Name="Id" />
@@ -266,8 +183,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_AUTOPLAYLISTRULES_RULE">
-          <End Role="Rules" Type="DolomiteModel.Store.Rules" Multiplicity="1" />
-          <End Role="AutoplaylistRules" Type="DolomiteModel.Store.AutoplaylistRules" Multiplicity="*" />
+          <End Role="Rules" Type="Self.Rules" Multiplicity="1" />
+          <End Role="AutoplaylistRules" Type="Self.AutoplaylistRules" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Rules">
               <PropertyRef Name="Id" />
@@ -278,8 +195,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_AUTOPLAYLISTS_OWNER">
-          <End Role="Users" Type="DolomiteModel.Store.Users" Multiplicity="1" />
-          <End Role="Autoplaylists" Type="DolomiteModel.Store.Autoplaylists" Multiplicity="*" />
+          <End Role="Users" Type="Self.Users" Multiplicity="1" />
+          <End Role="Autoplaylists" Type="Self.Autoplaylists" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Users">
               <PropertyRef Name="Id" />
@@ -290,8 +207,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_AVAILABLEQUALITIES_QUALITY">
-          <End Role="Qualities" Type="DolomiteModel.Store.Qualities" Multiplicity="1" />
-          <End Role="AvailableQualities" Type="DolomiteModel.Store.AvailableQualities" Multiplicity="*" />
+          <End Role="Qualities" Type="Self.Qualities" Multiplicity="1" />
+          <End Role="AvailableQualities" Type="Self.AvailableQualities" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Qualities">
               <PropertyRef Name="Id" />
@@ -302,10 +219,10 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_AVAILABLEQUALITIES_TRACK">
-          <End Role="Tracks" Type="DolomiteModel.Store.Tracks" Multiplicity="1">
+          <End Role="Tracks" Type="Self.Tracks" Multiplicity="1">
             <OnDelete Action="Cascade" />
           </End>
-          <End Role="AvailableQualities" Type="DolomiteModel.Store.AvailableQualities" Multiplicity="*" />
+          <End Role="AvailableQualities" Type="Self.AvailableQualities" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Tracks">
               <PropertyRef Name="Id" />
@@ -316,8 +233,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_DEVICES_OWNER">
-          <End Role="Users" Type="DolomiteModel.Store.Users" Multiplicity="1" />
-          <End Role="Devices" Type="DolomiteModel.Store.Devices" Multiplicity="*" />
+          <End Role="Users" Type="Self.Users" Multiplicity="1" />
+          <End Role="Devices" Type="Self.Devices" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Users">
               <PropertyRef Name="Id" />
@@ -328,10 +245,10 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_METADATA_FIELD">
-          <End Role="MetadataFields" Type="DolomiteModel.Store.MetadataFields" Multiplicity="1">
+          <End Role="MetadataFields" Type="Self.MetadataFields" Multiplicity="1">
             <OnDelete Action="Cascade" />
           </End>
-          <End Role="Metadata" Type="DolomiteModel.Store.Metadata" Multiplicity="*" />
+          <End Role="Metadata" Type="Self.Metadata" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="MetadataFields">
               <PropertyRef Name="Id" />
@@ -342,10 +259,10 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_METADATA_TRACK">
-          <End Role="Tracks" Type="DolomiteModel.Store.Tracks" Multiplicity="1">
+          <End Role="Tracks" Type="Self.Tracks" Multiplicity="1">
             <OnDelete Action="Cascade" />
           </End>
-          <End Role="Metadata" Type="DolomiteModel.Store.Metadata" Multiplicity="*" />
+          <End Role="Metadata" Type="Self.Metadata" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Tracks">
               <PropertyRef Name="Id" />
@@ -356,8 +273,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_PLAYLISTS_OWNER">
-          <End Role="Users" Type="DolomiteModel.Store.Users" Multiplicity="1" />
-          <End Role="Playlists" Type="DolomiteModel.Store.Playlists" Multiplicity="*" />
+          <End Role="Users" Type="Self.Users" Multiplicity="1" />
+          <End Role="Playlists" Type="Self.Playlists" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Users">
               <PropertyRef Name="Id" />
@@ -368,8 +285,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_PLAYLISTTRACKS_PLAYLISTS">
-          <End Role="Playlists" Type="DolomiteModel.Store.Playlists" Multiplicity="1" />
-          <End Role="PlaylistTracks" Type="DolomiteModel.Store.PlaylistTracks" Multiplicity="*" />
+          <End Role="Playlists" Type="Self.Playlists" Multiplicity="1" />
+          <End Role="PlaylistTracks" Type="Self.PlaylistTracks" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Playlists">
               <PropertyRef Name="Id" />
@@ -380,8 +297,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_PLAYLISTTRACKS_TRACKS">
-          <End Role="Tracks" Type="DolomiteModel.Store.Tracks" Multiplicity="1" />
-          <End Role="PlaylistTracks" Type="DolomiteModel.Store.PlaylistTracks" Multiplicity="*" />
+          <End Role="Tracks" Type="Self.Tracks" Multiplicity="1" />
+          <End Role="PlaylistTracks" Type="Self.PlaylistTracks" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Tracks">
               <PropertyRef Name="Id" />
@@ -392,8 +309,8 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_TRACKS_OWNER">
-          <End Role="Users" Type="DolomiteModel.Store.Users" Multiplicity="0..1" />
-          <End Role="Tracks" Type="DolomiteModel.Store.Tracks" Multiplicity="*" />
+          <End Role="Users" Type="Self.Users" Multiplicity="0..1" />
+          <End Role="Tracks" Type="Self.Tracks" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Users">
               <PropertyRef Name="Id" />
@@ -407,10 +324,95 @@
         <Function Name="ReleaseAndCompleteOnboardingItem" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="workItem" Type="uniqueidentifier" Mode="In" />
         </Function>
+        <Function Name="ResetOnboardingStatus" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="guid" Type="uniqueidentifier" Mode="In" />
+        </Function>
         <Function Name="SetTrackHash" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="trackId" Type="uniqueidentifier" Mode="In" />
           <Parameter Name="hash" Type="text" Mode="In" />
         </Function>
+        <EntityContainer Name="DolomiteModelStoreContainer">
+          <EntitySet Name="Albums" EntityType="Self.Albums" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
+          <EntitySet Name="Artists" EntityType="Self.Artists" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
+          <EntitySet Name="AutoplaylistRules" EntityType="Self.AutoplaylistRules" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
+          <EntitySet Name="Autoplaylists" EntityType="Self.Autoplaylists" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
+          <EntitySet Name="AvailableQualities" EntityType="Self.AvailableQualities" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
+          <EntitySet Name="Metadata" EntityType="Self.Metadata" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
+          <EntitySet Name="MetadataFields" EntityType="Self.MetadataFields" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
+          <EntitySet Name="Playlists" EntityType="Self.Playlists" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
+          <EntitySet Name="PlaylistTracks" EntityType="Self.PlaylistTracks" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
+          <EntitySet Name="Qualities" EntityType="Self.Qualities" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
+          <EntitySet Name="Rules" EntityType="Self.Rules" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
+          <EntitySet Name="Tracks" EntityType="Self.Tracks" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
+          <EntitySet Name="Users" EntityType="Self.Users" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
+          <EntitySet Name="Devices" EntityType="Self.Devices" p3:Type="Tables" p3:Schema="dbo" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator">
+            <DefiningQuery>SELECT 
+[Devices].[Key] AS [Key], 
+[Devices].[Owner] AS [Owner], 
+[Devices].[PreferredQuality] AS [PreferredQuality]
+FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
+          </EntitySet>
+          <AssociationSet Name="Album" Association="Self.Album">
+            <End Role="Albums" EntitySet="Albums" />
+            <End Role="Tracks" EntitySet="Tracks" />
+          </AssociationSet>
+          <AssociationSet Name="FK_ALBUMS_ARTIST" Association="Self.FK_ALBUMS_ARTIST">
+            <End Role="Artists" EntitySet="Artists" />
+            <End Role="Albums" EntitySet="Albums" />
+          </AssociationSet>
+          <AssociationSet Name="FK_AUTOPLAYLISTRULES_METADATA" Association="Self.FK_AUTOPLAYLISTRULES_METADATA">
+            <End Role="MetadataFields" EntitySet="MetadataFields" />
+            <End Role="AutoplaylistRules" EntitySet="AutoplaylistRules" />
+          </AssociationSet>
+          <AssociationSet Name="FK_AUTOPLAYLISTRULES_PLAYLIST" Association="Self.FK_AUTOPLAYLISTRULES_PLAYLIST">
+            <End Role="Autoplaylists" EntitySet="Autoplaylists" />
+            <End Role="AutoplaylistRules" EntitySet="AutoplaylistRules" />
+          </AssociationSet>
+          <AssociationSet Name="FK_AUTOPLAYLISTRULES_RULE" Association="Self.FK_AUTOPLAYLISTRULES_RULE">
+            <End Role="Rules" EntitySet="Rules" />
+            <End Role="AutoplaylistRules" EntitySet="AutoplaylistRules" />
+          </AssociationSet>
+          <AssociationSet Name="FK_AUTOPLAYLISTS_OWNER" Association="Self.FK_AUTOPLAYLISTS_OWNER">
+            <End Role="Users" EntitySet="Users" />
+            <End Role="Autoplaylists" EntitySet="Autoplaylists" />
+          </AssociationSet>
+          <AssociationSet Name="FK_AVAILABLEQUALITIES_QUALITY" Association="Self.FK_AVAILABLEQUALITIES_QUALITY">
+            <End Role="Qualities" EntitySet="Qualities" />
+            <End Role="AvailableQualities" EntitySet="AvailableQualities" />
+          </AssociationSet>
+          <AssociationSet Name="FK_AVAILABLEQUALITIES_TRACK" Association="Self.FK_AVAILABLEQUALITIES_TRACK">
+            <End Role="Tracks" EntitySet="Tracks" />
+            <End Role="AvailableQualities" EntitySet="AvailableQualities" />
+          </AssociationSet>
+          <AssociationSet Name="FK_DEVICES_OWNER" Association="Self.FK_DEVICES_OWNER">
+            <End Role="Users" EntitySet="Users" />
+            <End Role="Devices" EntitySet="Devices" />
+          </AssociationSet>
+          <AssociationSet Name="FK_METADATA_FIELD" Association="Self.FK_METADATA_FIELD">
+            <End Role="MetadataFields" EntitySet="MetadataFields" />
+            <End Role="Metadata" EntitySet="Metadata" />
+          </AssociationSet>
+          <AssociationSet Name="FK_METADATA_TRACK" Association="Self.FK_METADATA_TRACK">
+            <End Role="Tracks" EntitySet="Tracks" />
+            <End Role="Metadata" EntitySet="Metadata" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PLAYLISTS_OWNER" Association="Self.FK_PLAYLISTS_OWNER">
+            <End Role="Users" EntitySet="Users" />
+            <End Role="Playlists" EntitySet="Playlists" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PLAYLISTTRACKS_PLAYLISTS" Association="Self.FK_PLAYLISTTRACKS_PLAYLISTS">
+            <End Role="Playlists" EntitySet="Playlists" />
+            <End Role="PlaylistTracks" EntitySet="PlaylistTracks" />
+          </AssociationSet>
+          <AssociationSet Name="FK_PLAYLISTTRACKS_TRACKS" Association="Self.FK_PLAYLISTTRACKS_TRACKS">
+            <End Role="Tracks" EntitySet="Tracks" />
+            <End Role="PlaylistTracks" EntitySet="PlaylistTracks" />
+          </AssociationSet>
+          <AssociationSet Name="FK_TRACKS_OWNER" Association="Self.FK_TRACKS_OWNER">
+            <End Role="Users" EntitySet="Users" />
+            <End Role="Tracks" EntitySet="Tracks" />
+          </AssociationSet>
+        </EntityContainer>
       </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
@@ -497,6 +499,9 @@
           </FunctionImport>
           <FunctionImport Name="ReleaseAndCompleteOnboardingItem">
           <Parameter Name="workItem" Mode="In" Type="Guid" />
+          </FunctionImport>
+          <FunctionImport Name="ResetOnboardingStatus">
+            <Parameter Name="guid" Mode="In" Type="Guid" />
           </FunctionImport>
         </EntityContainer>
         <EntityType Name="Album">
@@ -985,6 +990,7 @@
           <FunctionImportMapping FunctionImportName="GetAndLockTopOnboardingItem" FunctionName="DolomiteModel.Store.GetAndLockTopOnboardingItem" />
           <FunctionImportMapping FunctionImportName="SetTrackHash" FunctionName="DolomiteModel.Store.SetTrackHash" />
           <FunctionImportMapping FunctionImportName="ReleaseAndCompleteOnboardingItem" FunctionName="DolomiteModel.Store.ReleaseAndCompleteOnboardingItem" />
+          <FunctionImportMapping FunctionImportName="ResetOnboardingStatus" FunctionName="DolomiteModel.Store.ResetOnboardingStatus" />
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

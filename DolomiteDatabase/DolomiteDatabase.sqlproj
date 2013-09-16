@@ -100,6 +100,7 @@
     <Build Include="StoredProcedures\GetAndLockTopOnboardingItem.sql" />
     <Build Include="StoredProcedures\SetTrackHash.sql" />
     <Build Include="StoredProcedures\ReleaseAndCompleteOnboardingItem.sql" />
+    <Build Include="StoredProcedures\ResetOnboardingStatus.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Script.PostDeployment1.sql" />

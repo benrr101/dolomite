@@ -69,5 +69,14 @@ namespace DolomiteModel
     
             return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("ReleaseAndCompleteOnboardingItem", workItemParameter);
         }
+    
+        public virtual int ResetOnboardingStatus(Nullable<System.Guid> guid)
+        {
+            var guidParameter = guid.HasValue ?
+                new ObjectParameter("guid", guid) :
+                new ObjectParameter("guid", typeof(System.Guid));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("ResetOnboardingStatus", guidParameter);
+        }
     }
 }

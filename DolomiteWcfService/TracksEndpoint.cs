@@ -45,27 +45,37 @@ namespace DolomiteWcfService
         {
             try
             {
-                // Parse the file out of the request body. There's some content metadata in here that we don't really want
-                // TODO: Use the content-disposition to do first-pass content-type filtering
-                MultipartParser parser = new MultipartParser(file);
-                if (parser.Success)
+                MemoryStream memoryStream;
+                if (WebOperationContext.Current.IncomingRequest.ContentType.StartsWith("multipart/form-data"))
                 {
-                    // Upload the track
-                    MemoryStream memoryStream = new MemoryStream(parser.FileContents);
-                    Guid guid;
-                    string hash;
-                    TrackManager.UploadTrack(memoryStream, out guid, out hash);
-                    WebResponse response = new UploadSuccessResponse(guid, hash);
-                    string responseJson = JsonConvert.SerializeObject(response);
-                    return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json",
-                        Encoding.UTF8);
+                    // We need to process out other form data for the stuff we want
+                    MultipartParser parser = new MultipartParser(file);
+                    if (parser.Success)
+                    {
+                        memoryStream = new MemoryStream(parser.FileContents);
+                    }
+                    else
+                    {
+                        // Failure of one kind or another
+                        WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                        ErrorResponse fResponse = new ErrorResponse("Failed to process request.");
+                        string fResponseJson = JsonConvert.SerializeObject(fResponse);
+                        return WebOperationContext.Current.CreateTextResponse(fResponseJson, "application/json", Encoding.UTF8);
+                    }
+                }
+                else
+                {
+                    // There's no need to process out anything else. The body is the file.
+                    memoryStream = new MemoryStream(ToByteArray(file));
                 }
 
-                // Failure of one kind or another
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
-                ErrorResponse fResponse = new ErrorResponse("Failed to process request.");
-                string fResponseJson = JsonConvert.SerializeObject(fResponse);
-                return WebOperationContext.Current.CreateTextResponse(fResponseJson, "application/json", Encoding.UTF8);
+                // Upload the track
+                Guid guid;
+                string hash;
+                TrackManager.UploadTrack(memoryStream, out guid, out hash);
+                WebResponse response = new UploadSuccessResponse(guid, hash);
+                string responseJson = JsonConvert.SerializeObject(response);
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
             }
             catch (DuplicateNameException)
             {
@@ -155,7 +165,7 @@ namespace DolomiteWcfService
                 string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
                 return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
             }
-            catch (FileNotFoundException)
+            catch (ObjectNotFoundException)
             {
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
                 string message = String.Format("The track with the specified GUID '{0}' does not exist", guid);
@@ -168,9 +178,65 @@ namespace DolomiteWcfService
 
         #region Update Operations
 
-        public Message ReplaceTrack(Stream file, string guid)
+        /// <summary>
+        /// Attempts to replace the track with the given guid with a new stream
+        /// </summary>
+        /// <param name="file">The file stream that is to be replaced</param>
+        /// <param name="trackGuid">The guid of the track to replace</param>
+        /// <returns>A message representing the success or failure</returns>
+        public Message ReplaceTrack(Stream file, string trackGuid)
         {
-            throw new NotImplementedException();
+            try
+            {
+                MemoryStream memoryStream;
+                if(WebOperationContext.Current.IncomingRequest.ContentType.StartsWith("multipart/form-data"))
+                {
+                    // Attempt to replace the track with the new file
+                    MultipartParser parser = new MultipartParser(file);
+                    if (parser.Success)
+                    {
+                        // Upload the track
+                        memoryStream = new MemoryStream(parser.FileContents);
+                    }
+                    else
+                    {
+                        // Failure of one kind or another
+                        WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                        ErrorResponse fResponse = new ErrorResponse("Failed to process request.");
+                        string fResponseJson = JsonConvert.SerializeObject(fResponse);
+                        return WebOperationContext.Current.CreateTextResponse(fResponseJson, "application/json",
+                            Encoding.UTF8);
+                    }
+                } 
+                else
+                {
+                    // There's no need to process out anything else. The body is the file.
+                    memoryStream = new MemoryStream(ToByteArray(file));
+                }
+                
+                // Replace the file
+                string hash;
+                Guid guid = Guid.Parse(trackGuid);
+                TrackManager.ReplaceTrack(memoryStream, guid, out hash);
+                WebResponse response = new UploadSuccessResponse(guid, hash);
+                string responseJson = JsonConvert.SerializeObject(response);
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (FormatException)
+            {
+                // The guid was probably incorrect
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", trackGuid);
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (ObjectNotFoundException)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
+                string message = String.Format("The track with the specified GUID '{0}' does not exist", trackGuid);
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
         }
 
         public Message ReplaceMetadata(string body, string guid)
@@ -218,6 +284,23 @@ namespace DolomiteWcfService
             }
         }
 
+        #endregion
+
+        #region Helper Methods
+        private byte[] ToByteArray(Stream stream)
+        {
+            byte[] buffer = new byte[32768];
+            using (MemoryStream ms = new MemoryStream())
+            {
+                while (true)
+                {
+                    int read = stream.Read(buffer, 0, buffer.Length);
+                    if (read <= 0)
+                        return ms.ToArray();
+                    ms.Write(buffer, 0, read);
+                }
+            }
+        }
         #endregion
 
         #endregion

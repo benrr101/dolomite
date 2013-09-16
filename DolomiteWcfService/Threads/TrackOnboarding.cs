@@ -90,7 +90,7 @@ namespace DolomiteWcfService.Threads
                     {
                         CreateQualities(workItemId.Value);
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         Trace.TraceError("{1} failed to create qualities for this track {0}. Removing record...", workItemId, GetHashCode());
                         CancelOnboarding(workItemId.Value);

@@ -30,3 +30,9 @@ VALUES
 	('MP3 256Kbps', 'mp3', 256, 'mp3', 'mp3_256'),
 	('MP3 320Kbps', 'mp3', 320, 'mp3', 'mp3_320'),
 	('Original', NULL, NULL, NULL, 'original');
+GO;
+
+-- Add important error messages
+EXEC sp_addmessage 50010, 13, 
+   N'The track that has been requested is currently locked.';
+GO
