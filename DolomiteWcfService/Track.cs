@@ -28,6 +28,12 @@ namespace DolomiteWcfService
             }
 
             /// <summary>
+            /// The file extension of the quality
+            /// </summary>
+            [DataMember]
+            public string Extension { get; set; }
+
+            /// <summary>
             /// The href to the download for the quality
             /// </summary>
             [DataMember]
@@ -51,6 +57,11 @@ namespace DolomiteWcfService
             /// The directory of the azure container storing the track at this quality
             /// </summary>
             public string Directory { get; set; }
+
+            /// <summary>
+            /// The stream representing this quality of the track. Normally set to null.
+            /// </summary>
+            public Stream FileStream { get; set; }
         }
 
         #endregion

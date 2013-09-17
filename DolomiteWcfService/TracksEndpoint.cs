@@ -6,8 +6,10 @@ using System.Net;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Web;
 using System.Text;
+using DolomiteModel;
 using Newtonsoft.Json;
 using AntsCode.Util;
+using TagLib;
 
 namespace DolomiteWcfService
 {
@@ -109,12 +111,23 @@ namespace DolomiteWcfService
             try
             {
                 // Retrieve the track and return the stream
-                throw new NotImplementedException("haha.");
-                //return TrackManager.GetTrack(Guid.Parse(guid));
+                Track track = TrackManager.GetTrack(Guid.Parse(guid));
+                Track.Quality qualityObj = TrackManager.GetTrackStream(track, quality);
+
+                // Set special headers that tell the client to download the file
+                // and what filename to give it
+                string disposition = String.Format("attachment; filename=\"{0}.{1}\";", guid, qualityObj.Extension);
+                WebOperationContext.Current.OutgoingResponse.Headers.Add("Content-Disposition", disposition);
+                return qualityObj.FileStream;
             }
             catch (FormatException)
             {
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                return null;
+            }
+            catch (UnsupportedFormatException)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
                 return null;
             }
             catch (FileNotFoundException)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using Model = DolomiteModel;
 
@@ -96,6 +97,7 @@ namespace DolomiteWcfService
                                      {
                                          Bitrate = q.Quality1.Bitrate.ToString(),
                                          Directory = q.Quality1.Directory,
+                                         Extension = q.Quality1.Extension,
                                          Href = String.Format("tracks/{0}/{1}", q.Quality1.Directory, trackId),
                                          Mimetype = q.Quality1.Mimetype,
                                          Name = q.Quality1.Name
@@ -106,6 +108,7 @@ namespace DolomiteWcfService
                     {
                         Bitrate = track.OriginalBitrate.ToString(),
                         Directory = "original",
+                        Extension = track.OriginalExtension,
                         Href = String.Format("tracks/original/{0}", trackId),
                         Mimetype = track.OriginalMimetype,
                         Name = "Original"
@@ -255,8 +258,9 @@ namespace DolomiteWcfService
         /// <param name="trackId">The GUID id of the track</param>
         /// <param name="bitrate">The bitrate for the original audio</param>
         /// <param name="samplingFrequency">The sampling frequency of the original audio</param>
+        /// <param name="extension">The extension of the file</param>
         /// <param name="mimetype">The mimetype of the original file</param>
-        public void StoreAudioQualityInfo(Guid trackId, int bitrate, int samplingFrequency, string mimetype)
+        public void StoreAudioQualityInfo(Guid trackId, int bitrate, int samplingFrequency, string mimetype, string extension)
         {
             using (var context = new Model.Entities())
             {
@@ -265,6 +269,7 @@ namespace DolomiteWcfService
                 track.OriginalBitrate = bitrate;
                 track.OriginalSampling = samplingFrequency;
                 track.OriginalMimetype = mimetype;
+                track.OriginalExtension = extension;
                 context.SaveChanges();
             }
         }

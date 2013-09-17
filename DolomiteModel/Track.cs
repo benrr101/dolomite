@@ -31,6 +31,7 @@ namespace DolomiteModel
         public Nullable<int> OriginalBitrate { get; set; }
         public Nullable<int> OriginalSampling { get; set; }
         public string OriginalMimetype { get; set; }
+        public string OriginalExtension { get; set; }
     
         public virtual Album Album1 { get; set; }
         public virtual ICollection<AvailableQuality> AvailableQualities { get; set; }

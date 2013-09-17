@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using TagLib;
 using Model = DolomiteModel;
 
 namespace DolomiteWcfService
@@ -86,7 +87,7 @@ namespace DolomiteWcfService
         }
 
         /// <summary>
-        /// Retreives the info about the track and its stream (if requested)
+        /// Retreives the info about the track
         /// </summary>
         /// <param name="trackGuid">The guid of the track to retreive</param>
         /// <returns>Object representation of the track</returns>
@@ -94,6 +95,26 @@ namespace DolomiteWcfService
         {
             // Retrieve the track from the database
             return DatabaseManager.GetTrackByGuid(trackGuid);
+        }
+
+        /// <summary>
+        /// Fetches the stream representing a track with a specific quality
+        /// from the database.
+        /// </summary>
+        /// <param name="trackGuid">The guid of the track to fetch</param>
+        /// <param name="quality">The quality of the track to fetch</param>
+        /// <returns>A stream for the matching guid and quality</returns>
+        public Track.Quality GetTrackStream(Track track, string quality)
+        {
+            // Find the correct quality
+            var qualityObj = track.Qualities.FirstOrDefault(q => q.Directory == quality);
+            if (qualityObj == null)
+                throw new UnsupportedFormatException(
+                    String.Format("The track with guid {0} and quality {1} does not exist", track.Id, quality));
+
+            // Fetch the file from Azure
+            qualityObj.FileStream = AzureStorageManager.GetBlob(StorageContainerKey, qualityObj.Directory + "/" + track.Id);
+            return qualityObj;
         }
 
         /// <summary>

@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
 using Microsoft.WindowsAzure.Storage.Blob;
 using IO = System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography;
 using System.Threading;
 using DolomiteModel;
 using TagLib;
@@ -271,7 +269,7 @@ namespace DolomiteWcfService.Threads
             }
 
             // Retrieve the file from temporary storage
-            TagLib.File file = TagLib.File.Create(LocalStorageManager.GetPath(trackGuid.ToString()), mimetype, ReadStyle.Average);
+            File file = File.Create(LocalStorageManager.GetPath(trackGuid.ToString()), mimetype, ReadStyle.Average);
             
             Dictionary<int, string> metadata = new Dictionary<int, string>();
 
@@ -303,7 +301,7 @@ namespace DolomiteWcfService.Threads
 
             // Store the audio metadata to the database
             DatabaseManager.StoreAudioQualityInfo(trackGuid, file.Properties.AudioBitrate,
-                                                  file.Properties.AudioSampleRate, file.MimeType);
+                file.Properties.AudioSampleRate, file.MimeType, MimetypeDetector.GetExtension(file.MimeType));
         }
 
         #endregion

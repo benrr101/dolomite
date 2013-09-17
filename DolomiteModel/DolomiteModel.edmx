@@ -126,6 +126,7 @@ warning 6002: The table/view 'Dolomite.dbo.Devices' does not have a primary key 
           <Property Name="HasBeenOnboarded" Type="bit" Nullable="false" />
           <Property Name="Locked" Type="bit" Nullable="false" />
           <Property Name="TrackInTempStorage" Type="bit" Nullable="false" />
+          <Property Name="OriginalExtension" Type="nvarchar" MaxLength="10" />
         </EntityType>
         <EntityType Name="Users">
           <Key>
@@ -501,7 +502,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <Parameter Name="workItem" Mode="In" Type="Guid" />
           </FunctionImport>
           <FunctionImport Name="ResetOnboardingStatus">
-            <Parameter Name="guid" Mode="In" Type="Guid" />
+          <Parameter Name="guid" Mode="In" Type="Guid" />
           </FunctionImport>
         </EntityContainer>
         <EntityType Name="Album">
@@ -649,6 +650,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <Property Type="Int32" Name="OriginalBitrate" />
           <Property Type="Int32" Name="OriginalSampling" />
           <Property Type="String" Name="OriginalMimetype" MaxLength="30" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="OriginalExtension" MaxLength="10" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="User">
           <Key>
@@ -966,6 +968,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <EntitySetMapping Name="Tracks">
             <EntityTypeMapping TypeName="DolomiteModel.Track">
               <MappingFragment StoreEntitySet="Tracks">
+                <ScalarProperty Name="OriginalExtension" ColumnName="OriginalExtension" />
                 <ScalarProperty Name="OriginalMimetype" ColumnName="OriginalMimetype" />
                 <ScalarProperty Name="OriginalSampling" ColumnName="OriginalSampling" />
                 <ScalarProperty Name="OriginalBitrate" ColumnName="OriginalBitrate" />
