@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using Microsoft.WindowsAzure.Storage.Blob;
 using IO = System.IO;
 using System.Linq;
@@ -271,9 +272,7 @@ namespace DolomiteWcfService.Threads
             // Retrieve the file from temporary storage
             File file = File.Create(LocalStorageManager.GetPath(trackGuid.ToString()), mimetype, ReadStyle.Average);
             
-            Dictionary<int, string> metadata = new Dictionary<int, string>();
-
-            Dictionary<string, int> acceptedTags = DatabaseManager.GetAllowedMetadataFields();
+            Dictionary<string, string> metadata = new Dictionary<string, string>();
             
             // Use reflection to iterate over the properties in the tag
             PropertyInfo[] properties = typeof (Tag).GetProperties();
@@ -285,15 +284,11 @@ namespace DolomiteWcfService.Threads
                 // Strip off "First" from the tag names
                 name = name.Replace("First", string.Empty);
 
-                // Skip tags that aren't the list of acceptable tags
-                if (!acceptedTags.ContainsKey(name))
-                    continue;
-
                 // We really only want strings to store and ints
                 if(value is string)
-                    metadata.Add(acceptedTags[name], (string)value);
+                    metadata.Add(name, (string)value);
                 else if(value is uint && (uint)value != 0)
-                    metadata.Add(acceptedTags[name], ((uint)value).ToString());
+                    metadata.Add(name, ((uint)value).ToString(CultureInfo.CurrentCulture));
             }
 
             // Send the metadata to the database

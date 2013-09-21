@@ -6,7 +6,6 @@ using System.Net;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Web;
 using System.Text;
-using DolomiteModel;
 using Newtonsoft.Json;
 using AntsCode.Util;
 using TagLib;
@@ -87,10 +86,10 @@ namespace DolomiteWcfService
                 string eResponseJson = JsonConvert.SerializeObject(eResponse);
                 return WebOperationContext.Current.CreateTextResponse(eResponseJson, "application/json", Encoding.UTF8);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
-                ErrorResponse eResponse = new ErrorResponse("An internal server error occurred: " + e.Message);
+                ErrorResponse eResponse = new ErrorResponse("An internal server error occurred");
                 string eResponseJson = JsonConvert.SerializeObject(eResponse);
                 return WebOperationContext.Current.CreateTextResponse(eResponseJson, "application/json", Encoding.UTF8);
             }
@@ -185,6 +184,13 @@ namespace DolomiteWcfService
                 string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
                 return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
             }
+            catch (Exception)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
+                string message = String.Format("An internal server error occurred");
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
         }
 
         #endregion
@@ -250,16 +256,122 @@ namespace DolomiteWcfService
                 string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
                 return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
             }
+            catch (Exception)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
+                string message = String.Format("An internal server error occurred");
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
         }
 
-        public Message ReplaceMetadata(string body, string guid)
+        /// <summary>
+        /// Replaces one or more metadata records for a given track
+        /// </summary>
+        /// <param name="body">The JSON passed to in as part of the POST request</param>
+        /// <param name="guid">The track GUID passed in as part of the URI</param>
+        /// <returns>A message for success or failure</returns>
+        public Message ReplaceMetadata(Stream body, string guid)
         {
-            throw new NotImplementedException();
+            try
+            {
+                // Translate the body and guid
+                Guid trackGuid = Guid.Parse(guid);
+                string bodyStr = Encoding.Default.GetString(ToByteArray(body));
+                var metadata = JsonConvert.DeserializeObject<Dictionary<string, string>>(bodyStr);
+
+                // Pass it along to the track manager
+                TrackManager.ReplaceMetadata(trackGuid, metadata);
+
+                // Sucess
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.OK;
+                string responseJson = JsonConvert.SerializeObject(new WebResponse(WebResponse.StatusValue.Success));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (FormatException)
+            {
+                // The guid was probably incorrect
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", guid);
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (JsonReaderException)
+            {
+                // The json was formatted poorly
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse("The JSON is invalid."));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (ObjectNotFoundException)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
+                string message = String.Format("The track with the specified GUID '{0}' does not exist", guid);
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (Exception)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
+                string message = String.Format("An internal server error occurred");
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
         }
 
-        public Message ReplaceAllMetadata(string body, string guid)
+        /// <summary>
+        /// Replaces all metadata records for a given track. If a metadata field
+        /// is not provided, then it will be deleted.
+        /// </summary>
+        /// <param name="body">The JSON passed to in as part of the POST request</param>
+        /// <param name="guid">The track GUID passed in as part of the URI</param>
+        /// <returns>A message for success or failure</returns>
+        public Message ReplaceAllMetadata(Stream body, string guid)
         {
-            throw new NotImplementedException();
+            try
+            {
+                // Translate the body and guid
+                Guid trackGuid = Guid.Parse(guid);
+                string bodyStr = Encoding.Default.GetString(ToByteArray(body));
+                var metadata = JsonConvert.DeserializeObject<Dictionary<string, string>>(bodyStr);
+
+                // Pass it along to the track manager
+                TrackManager.ReplaceMetadata(trackGuid, metadata, true);
+
+                // Sucess
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.OK;
+                string responseJson = JsonConvert.SerializeObject(new WebResponse(WebResponse.StatusValue.Success));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (FormatException)
+            {
+                // The guid was probably incorrect
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", guid);
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (JsonReaderException)
+            {
+                // The json was formatted poorly
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse("The JSON is invalid."));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (ObjectNotFoundException)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
+                string message = String.Format("The track with the specified GUID '{0}' does not exist", guid);
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (Exception)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
+                string message = String.Format("An internal server error occurred");
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
         }
 
         #endregion

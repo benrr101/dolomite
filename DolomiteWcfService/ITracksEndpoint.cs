@@ -40,11 +40,11 @@ namespace DolomiteWcfService
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "/{guid}")]
-        Message ReplaceMetadata(string body, string guid);
+        Message ReplaceMetadata(Stream body, string guid);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "/{guid}?clear")]
-        Message ReplaceAllMetadata(string body, string guid);
+        Message ReplaceAllMetadata(Stream body, string guid);
 
         #endregion
 

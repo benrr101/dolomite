@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 
 namespace DolomiteWcfService
@@ -102,15 +101,10 @@ namespace DolomiteWcfService
                 // If it matches, we need to check for mp3 vs flac
                 if (match)
                 {
-                    if (audioType.Value == "audio/mpeg")
-                    {
-                        if (streamString.Contains(FlacBytes))
-                            return "audio/x-flac";
-                    }
-                    else
-                    {
-                        return audioType.Value;
-                    }
+                    if (audioType.Value == "audio/mpeg" && streamString.Contains(FlacBytes))
+                        return "audio/x-flac";
+
+                    return audioType.Value;
                 }
             }
 

@@ -66,6 +66,10 @@ namespace DolomiteWcfService
 
         #region Public Methods
 
+        /// <summary>
+        /// Deletes the track with the given GUID from the database and Azure storage
+        /// </summary>
+        /// <param name="trackGuid">The GUID of the track to delete.</param>
         public void DeleteTrack(Guid trackGuid)
         {
             // Does the track exist?
@@ -101,7 +105,7 @@ namespace DolomiteWcfService
         /// Fetches the stream representing a track with a specific quality
         /// from the database.
         /// </summary>
-        /// <param name="trackGuid">The guid of the track to fetch</param>
+        /// <param name="track">The track to fetch</param>
         /// <param name="quality">The quality of the track to fetch</param>
         /// <returns>A stream for the matching guid and quality</returns>
         public Track.Quality GetTrackStream(Track track, string quality)
@@ -130,6 +134,16 @@ namespace DolomiteWcfService
             return tracks.ToList();
         }
 
+        /// <summary>
+        /// Replaces the track with the given guid with the given stream.
+        /// This essentially deletes all the blobs in Azure storage for the
+        /// old track and relaunches the onboarding process.
+        /// </summary>
+        /// <remarks>The hash could be returned, but I opted to use an out param
+        /// b/c it follows the precedent of the uploader.</remarks>
+        /// <param name="stream">The bytes to replace the track with</param>
+        /// <param name="guid">The guid of the track to replace</param>
+        /// <param name="hash">The hash of the stream to be calculated by this method</param>
         public void ReplaceTrack(Stream stream, Guid guid, out string hash)
         {
             // Step 0: Fetch the track
@@ -147,6 +161,29 @@ namespace DolomiteWcfService
 
             // Step 3: Mark the track as not onboarded
             DatabaseManager.MarkTrackAsNotOnboarderd(guid, hash);
+        }
+
+        /// <summary>
+        /// Deletes and reinserts all the metadata in the dictionary of metadatas
+        /// </summary>
+        /// <param name="guid">GUID for the track to replace metadata for</param>
+        /// <param name="metadata">The metadata to replace the existing records with</param>
+        /// <param name="clearAll">Whether to delete everything and start over (true) or to
+        /// only replace the values that are provided (false, default)</param>
+        public void ReplaceMetadata(Guid guid, Dictionary<string, string> metadata, bool clearAll = false)
+        {
+            // Grab the track
+            Track track = DatabaseManager.GetTrackByGuid(guid);
+
+            // Only delete the fields that need to be deleted
+            IEnumerable<string> fieldsToDelete = clearAll ? track.Metadata.Keys : metadata.Keys;
+            foreach (string field in fieldsToDelete)
+            {
+                DatabaseManager.DeleteMetadata(guid, field);
+            }
+
+            // Store the new values
+            DatabaseManager.StoreTrackMetadata(guid, metadata);
         }
 
         /// <summary>

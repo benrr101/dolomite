@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.Linq;
 using Model = DolomiteModel;
 
@@ -35,6 +34,7 @@ namespace DolomiteWcfService
         /// Create a stubbed out record for the track
         /// </summary>
         /// <param name="guid">The guid of the track</param>
+        /// <param name="hash">The hash of the track</param>
         public void CreateInitialTrackRecord(Guid guid, string hash)
         {
             using (var context = new Model.Entities())
@@ -104,7 +104,7 @@ namespace DolomiteWcfService
                                      }).ToList();
 
                 // Add the original quality
-                var originalQuality = new Track.Quality()
+                var originalQuality = new Track.Quality
                     {
                         Bitrate = track.OriginalBitrate.ToString(),
                         Directory = "original",
@@ -141,6 +141,31 @@ namespace DolomiteWcfService
                 return (from track in context.Tracks
                         where track.Hash == hash
                         select new Track {Id = track.Id}).FirstOrDefault();
+            }
+        }
+
+        /// <summary>
+        /// Deletes the given metadata record from the metadatas for the
+        /// given track guid
+        /// </summary>
+        /// <param name="trackGuid">The guid of the track to delete a metadata from</param>
+        /// <param name="metadataField">The metadatafield to delete</param>
+        public void DeleteMetadata(Guid trackGuid, string metadataField)
+        {
+            using (var context = new Model.Entities())
+            {
+                // Search for the metadata record for the track with the field
+                var field = (from v in context.Metadatas
+                             where v.Track == trackGuid && v.MetadataField.DisplayName == metadataField
+                             select v).FirstOrDefault();
+
+                // If it doesn't exist, we succeeeded in deleting it, right?
+                if (field == null)
+                    return;
+
+                // Delete the record
+                context.Metadatas.Remove(field);
+                context.SaveChanges();
             }
         }
 
@@ -308,19 +333,27 @@ namespace DolomiteWcfService
         /// Stores the metadata for the given track
         /// </summary>
         /// <param name="trackId">GUID of the track</param>
-        /// <param name="metadata">Dictionary of MetadataFieldId => Value</param>
-        public void StoreTrackMetadata(Guid trackId, IDictionary<int, string> metadata)
+        /// <param name="metadatas">Dictionary of MetadataFieldId => Value</param>
+        public void StoreTrackMetadata(Guid trackId, IDictionary<string, string> metadatas)
         {
             using (var context = new Model.Entities())
             {
                 // Iterate over the metadatas and store new objects for each
-                foreach (Model.Metadata md in metadata.Select(data => new Model.Metadata
-                        {
-                            Field = data.Key,
-                            Track = trackId,
-                            Value = data.Value
-                        }))
+                // Skip values that are null (ie, they should be deleted)
+                foreach (var metadata in metadatas.Where(m => m.Value != null))
                 {
+                    // Skip metadata that doesn't have fields
+                    var field = context.MetadataFields.FirstOrDefault(f => f.TagName == metadata.Key);
+                    if (field == null)
+                        continue;
+
+                    Model.Metadata md = new Model.Metadata
+                    {
+                        Field = field.Id,
+                        Track = trackId,
+                        Value = metadata.Value
+                    };
+
                     context.Metadatas.Add(md);
                 }
 
