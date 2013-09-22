@@ -116,8 +116,12 @@ namespace DolomiteWcfService
                     };
                 qualities.Add(originalQuality);
 
+                // Build the art path
+                string artHref = track.Art.HasValue ? String.Format("tracks/art/{0}", track.Art.Value) : null;
+
                 return new Track
                     {
+                        ArtHref = artHref,
                         Id = trackId,
                         Metadata = metadata.ToDictionary(o => o.Name, o => o.Value),
                         Qualities = qualities

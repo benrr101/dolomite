@@ -69,6 +69,13 @@ namespace DolomiteWcfService
         #region Properties
 
         /// <summary>
+        /// The href to the track's art file (if it has one -- it will be null
+        /// otherwise)
+        /// </summary>
+        [DataMember]
+        public string ArtHref { get; set; }
+
+        /// <summary>
         /// The unique identifier for the track
         /// </summary>
         [DataMember] public Guid Id;
@@ -79,8 +86,11 @@ namespace DolomiteWcfService
         [DataMember]
         public Dictionary<string, string> Metadata;
 
+        /// <summary>
+        /// List of qualities that are available for the given track.
+        /// </summary>
         [DataMember]
-        public List<Quality> Qualities { get; set; } 
+        public List<Quality> Qualities { get; set; }
 
         #endregion
 
