@@ -22,14 +22,14 @@ VALUES
 	('DiscCount', 'Disc Count');
 
 -- Add some supported audio qualities for transcoding
-INSERT INTO Qualities (Name, Codec, Bitrate, Extension, Directory) 
+INSERT INTO Qualities (Name, Codec, Bitrate, Extension, Directory, Mimetype) 
 VALUES
 	--('AAC 64Kbps', 'libfdk_aac -aprofile aac_he', 64, 'aac', 'aac_64'),
-	('MP3 128Kbps', 'mp3', 128, 'mp3', 'mp3_128'),
-	('MP3 160Kbps', 'mp3', 160, 'mp3', 'mp3_160'),
-	('MP3 192Kbps', 'mp3', 192, 'mp3', 'mp3_192'),
-	('MP3 256Kbps', 'mp3', 256, 'mp3', 'mp3_256'),
-	('MP3 320Kbps', 'mp3', 320, 'mp3', 'mp3_320'),
+	('MP3 128Kbps', 'mp3', 128, 'mp3', 'mp3_128', 'audio/mpeg'),
+	('MP3 160Kbps', 'mp3', 160, 'mp3', 'mp3_160', 'audio/mpeg'),
+	('MP3 192Kbps', 'mp3', 192, 'mp3', 'mp3_192', 'audio/mpeg'),
+	('MP3 256Kbps', 'mp3', 256, 'mp3', 'mp3_256', 'audio/mpeg'),
+	('MP3 320Kbps', 'mp3', 320, 'mp3', 'mp3_320', 'audio/mpeg'),
 	('Original', NULL, NULL, NULL, 'original');
 GO
 
