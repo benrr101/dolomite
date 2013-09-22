@@ -124,6 +124,22 @@ namespace DolomiteWcfService
         }
 
         /// <summary>
+        /// Retrieves the stream and mimetype of the track art object
+        /// </summary>
+        /// <param name="artGuid">The guid of the art object</param>
+        /// <param name="mimetype">The mimetype of the art is returned via this param</param>
+        /// <returns>The stream for the art from Azure</returns>
+        public Stream GetTrackArt(Guid artGuid, out string mimetype)
+        {
+            // Grab the art object from the database
+            var art = DatabaseManager.GetArtModelByGuid(artGuid);
+
+            mimetype = art.Mimetype;
+            string path = ArtDirectory + "/" + art.Id;
+            return AzureStorageManager.GetBlob(StorageContainerKey, path);
+        }
+
+        /// <summary>
         /// Retrieve an index of all the tracks in the database
         /// </summary>
         /// <returns>List of track objects in the database</returns>

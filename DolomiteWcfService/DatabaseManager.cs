@@ -138,6 +138,26 @@ namespace DolomiteWcfService
             }
         }
 
+        /// <summary>
+        /// Retrieves the art object from the database
+        /// </summary>
+        /// <param name="artGuid">GUID of the art object to retrieve</param>
+        /// <exception cref="ObjectNotFoundException">Thrown if the art object with the given GUID does not exist.</exception>
+        /// <returns>A art object with the given guid</returns>
+        public Model.Art GetArtModelByGuid(Guid artGuid)
+        {
+            using (var context = new Model.Entities())
+            {
+                // Search for the art record
+                Model.Art art = context.Arts.FirstOrDefault(a => a.Id == artGuid);
+                if (art == null)
+                    throw new ObjectNotFoundException(
+                        String.Format("Track art with the given guid {0} could not be found.", artGuid));
+
+                return art;
+            }
+        }
+
         public Track GetTrackByHash(string hash)
         {
             using (var context = new Model.Entities())

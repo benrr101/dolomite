@@ -100,7 +100,8 @@ namespace DolomiteWcfService
         #region Retrieval Operations
 
         /// <summary>
-        /// Downloads the given track's file stream from azure
+        /// Downloads the given track's file stream from azure. Also handles
+        /// downloading the art for a given track.
         /// </summary>
         /// <param name="quality">The name of the quality to download</param>
         /// <param name="guid">The hash for the track</param>
@@ -109,6 +110,21 @@ namespace DolomiteWcfService
         {
             try
             {
+                // Are we fetching an art object?
+                if (quality == TrackManager.ArtDirectory)
+                {
+                    // Fetch the art with the given GUID
+                    string artMime;
+                    Stream artStream = TrackManager.GetTrackArt(Guid.Parse(guid), out artMime);
+                    
+                    // Set the headers
+                    string contentDisp = String.Format("attachment; filename=\"{0}\";", guid);
+                    WebOperationContext.Current.OutgoingResponse.Headers.Add("Content-Disposition", contentDisp);
+                    WebOperationContext.Current.OutgoingResponse.ContentType = artMime;
+
+                    return artStream;
+                }
+
                 // Retrieve the track and return the stream
                 Track track = TrackManager.GetTrack(Guid.Parse(guid));
                 Track.Quality qualityObj = TrackManager.GetTrackStream(track, quality);
@@ -117,6 +133,7 @@ namespace DolomiteWcfService
                 // and what filename to give it
                 string disposition = String.Format("attachment; filename=\"{0}.{1}\";", guid, qualityObj.Extension);
                 WebOperationContext.Current.OutgoingResponse.Headers.Add("Content-Disposition", disposition);
+                WebOperationContext.Current.OutgoingResponse.ContentType = qualityObj.Mimetype;
                 return qualityObj.FileStream;
             }
             catch (FormatException)
@@ -129,7 +146,7 @@ namespace DolomiteWcfService
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
                 return null;
             }
-            catch (FileNotFoundException)
+            catch (ObjectNotFoundException)
             {
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
                 return null;
