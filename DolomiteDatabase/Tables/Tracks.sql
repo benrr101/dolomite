@@ -4,6 +4,7 @@
 	[Owner] INT NULL,
 	[Hash]	NCHAR(40) NULL, 
     [Album] INT NULL,
+	[Art] UNIQUEIDENTIFIER NULL,
 	[OriginalBitrate] INT NULL,
 	[OriginalSampling] INT NULL,
 	[OriginalMimetype] NVARCHAR(30) NULL,

@@ -49,6 +49,9 @@
     <Compile Include="Album.cs">
       <DependentUpon>DolomiteModel.tt</DependentUpon>
     </Compile>
+    <Compile Include="Art.cs">
+      <DependentUpon>DolomiteModel.tt</DependentUpon>
+    </Compile>
     <Compile Include="Artist.cs">
       <DependentUpon>DolomiteModel.tt</DependentUpon>
     </Compile>

@@ -14,6 +14,14 @@
           <Property Name="Artist" Type="int" Nullable="false" />
           <Property Name="Art" Type="uniqueidentifier" />
         </EntityType>
+        <EntityType Name="Art">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Mimetype" Type="nvarchar" MaxLength="30" Nullable="false" />
+          <Property Name="Hash" Type="nchar" MaxLength="40" Nullable="false" />
+        </EntityType>
         <EntityType Name="Artists">
           <Key>
             <PropertyRef Name="Id" />
@@ -120,13 +128,14 @@ warning 6002: The table/view 'Dolomite.dbo.Devices' does not have a primary key 
           <Property Name="Owner" Type="int" />
           <Property Name="Hash" Type="nchar" MaxLength="40" />
           <Property Name="Album" Type="int" />
+          <Property Name="Art" Type="uniqueidentifier" />
           <Property Name="OriginalBitrate" Type="int" />
           <Property Name="OriginalSampling" Type="int" />
           <Property Name="OriginalMimetype" Type="nvarchar" MaxLength="30" />
+          <Property Name="OriginalExtension" Type="nvarchar" MaxLength="10" />
           <Property Name="HasBeenOnboarded" Type="bit" Nullable="false" />
           <Property Name="Locked" Type="bit" Nullable="false" />
           <Property Name="TrackInTempStorage" Type="bit" Nullable="false" />
-          <Property Name="OriginalExtension" Type="nvarchar" MaxLength="10" />
         </EntityType>
         <EntityType Name="Users">
           <Key>
@@ -309,6 +318,18 @@ warning 6002: The table/view 'Dolomite.dbo.Devices' does not have a primary key 
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_TRACKS_ART">
+          <End Role="Art" Type="Self.Art" Multiplicity="0..1" />
+          <End Role="Tracks" Type="Self.Tracks" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Art">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Tracks">
+              <PropertyRef Name="Art" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_TRACKS_OWNER">
           <End Role="Users" Type="Self.Users" Multiplicity="0..1" />
           <End Role="Tracks" Type="Self.Tracks" Multiplicity="*" />
@@ -334,6 +355,7 @@ warning 6002: The table/view 'Dolomite.dbo.Devices' does not have a primary key 
         </Function>
         <EntityContainer Name="DolomiteModelStoreContainer">
           <EntitySet Name="Albums" EntityType="Self.Albums" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
+          <EntitySet Name="Art" EntityType="Self.Art" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
           <EntitySet Name="Artists" EntityType="Self.Artists" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
           <EntitySet Name="AutoplaylistRules" EntityType="Self.AutoplaylistRules" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
           <EntitySet Name="Autoplaylists" EntityType="Self.Autoplaylists" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
@@ -408,6 +430,10 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <AssociationSet Name="FK_PLAYLISTTRACKS_TRACKS" Association="Self.FK_PLAYLISTTRACKS_TRACKS">
             <End Role="Tracks" EntitySet="Tracks" />
             <End Role="PlaylistTracks" EntitySet="PlaylistTracks" />
+          </AssociationSet>
+          <AssociationSet Name="FK_TRACKS_ART" Association="Self.FK_TRACKS_ART">
+            <End Role="Art" EntitySet="Art" />
+            <End Role="Tracks" EntitySet="Tracks" />
           </AssociationSet>
           <AssociationSet Name="FK_TRACKS_OWNER" Association="Self.FK_TRACKS_OWNER">
             <End Role="Users" EntitySet="Users" />
@@ -504,6 +530,11 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <FunctionImport Name="ResetOnboardingStatus">
           <Parameter Name="guid" Mode="In" Type="Guid" />
           </FunctionImport>
+          <EntitySet Name="Arts" EntityType="DolomiteModel.Art" />
+          <AssociationSet Name="FK_TRACKS_ART" Association="DolomiteModel.FK_TRACKS_ART">
+            <End Role="Art" EntitySet="Arts" />
+            <End Role="Track" EntitySet="Tracks" />
+          </AssociationSet>
         </EntityContainer>
         <EntityType Name="Album">
           <Key>
@@ -651,6 +682,8 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <Property Type="Int32" Name="OriginalSampling" />
           <Property Type="String" Name="OriginalMimetype" MaxLength="30" FixedLength="false" Unicode="true" />
           <Property Type="String" Name="OriginalExtension" MaxLength="10" FixedLength="false" Unicode="true" />
+          <Property Type="Guid" Name="Art" Nullable="true" />
+          <NavigationProperty Name="Art1" Relationship="DolomiteModel.FK_TRACKS_ART" FromRole="Track" ToRole="Art" />
         </EntityType>
         <EntityType Name="User">
           <Key>
@@ -843,6 +876,27 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <EntityType Name="Art">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Type="Guid" Name="Id" Nullable="false" />
+          <Property Type="String" Name="Mimetype" Nullable="false" MaxLength="30" FixedLength="false" Unicode="true" />
+          <Property Type="String" Name="Hash" Nullable="false" MaxLength="40" FixedLength="true" Unicode="true" />
+          <NavigationProperty Name="Tracks" Relationship="DolomiteModel.FK_TRACKS_ART" FromRole="Art" ToRole="Track" />
+        </EntityType>
+        <Association Name="FK_TRACKS_ART">
+          <End Type="DolomiteModel.Art" Role="Art" Multiplicity="0..1" />
+          <End Type="DolomiteModel.Track" Role="Track" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Art">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Track">
+              <PropertyRef Name="Art" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -968,6 +1022,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <EntitySetMapping Name="Tracks">
             <EntityTypeMapping TypeName="DolomiteModel.Track">
               <MappingFragment StoreEntitySet="Tracks">
+                <ScalarProperty Name="Art" ColumnName="Art" />
                 <ScalarProperty Name="OriginalExtension" ColumnName="OriginalExtension" />
                 <ScalarProperty Name="OriginalMimetype" ColumnName="OriginalMimetype" />
                 <ScalarProperty Name="OriginalSampling" ColumnName="OriginalSampling" />
@@ -994,6 +1049,15 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <FunctionImportMapping FunctionImportName="SetTrackHash" FunctionName="DolomiteModel.Store.SetTrackHash" />
           <FunctionImportMapping FunctionImportName="ReleaseAndCompleteOnboardingItem" FunctionName="DolomiteModel.Store.ReleaseAndCompleteOnboardingItem" />
           <FunctionImportMapping FunctionImportName="ResetOnboardingStatus" FunctionName="DolomiteModel.Store.ResetOnboardingStatus" />
+          <EntitySetMapping Name="Arts">
+            <EntityTypeMapping TypeName="DolomiteModel.Art">
+              <MappingFragment StoreEntitySet="Art">
+                <ScalarProperty Name="Hash" ColumnName="Hash" />
+                <ScalarProperty Name="Mimetype" ColumnName="Mimetype" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

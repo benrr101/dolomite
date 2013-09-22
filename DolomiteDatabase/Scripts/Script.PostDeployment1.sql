@@ -18,7 +18,8 @@ VALUES
 	('Lyrics', 'Lyrics'),
 	('BeatsPerMinute', 'BPM'),
 	('Conductor', 'Conductor'),
-	('Copyright', 'Copyright');
+	('Copyright', 'Copyright'),
+	('DiscCount', 'Disc Count');
 
 -- Add some supported audio qualities for transcoding
 INSERT INTO Qualities (Name, Codec, Bitrate, Extension, Directory) 
@@ -30,7 +31,7 @@ VALUES
 	('MP3 256Kbps', 'mp3', 256, 'mp3', 'mp3_256'),
 	('MP3 320Kbps', 'mp3', 320, 'mp3', 'mp3_320'),
 	('Original', NULL, NULL, NULL, 'original');
-GO;
+GO
 
 -- Add important error messages
 EXEC sp_addmessage 50010, 13, 

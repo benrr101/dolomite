@@ -1,0 +1,4 @@
+﻿ALTER TABLE [dbo].[Tracks]
+	ADD CONSTRAINT [FK_TRACKS_ART]
+	FOREIGN KEY (Art)
+	REFERENCES [Art] (Id)

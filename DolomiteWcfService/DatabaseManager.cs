@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Security.Cryptography;
 using Model = DolomiteModel;
 
 namespace DolomiteWcfService
@@ -213,6 +214,21 @@ namespace DolomiteWcfService
             }
         }
 
+        /// <summary>
+        /// Fetches the GUID for an art object with the given hash
+        /// </summary>
+        /// <param name="hash">The hash of the art</param>
+        /// <returns>A GUID if found, empty GUID otherwise</returns>
+        public Guid GetArtIdByHash(string hash)
+        {
+            using (var context = new Model.Entities())
+            {
+                return (from art in context.Arts
+                    where art.Hash == hash
+                    select art.Id).FirstOrDefault();
+            }
+        }
+
         #endregion
 
         #region Constant Fetching Methods
@@ -326,6 +342,45 @@ namespace DolomiteWcfService
                 // Fetch the original quality record
                 Model.Quality original = context.Qualities.First(q => q.Name.Equals("original", StringComparison.OrdinalIgnoreCase));
                 StoreAudioQualityRecord(trackId, original);
+            }
+        }
+
+        /// <summary>
+        /// Stores a new art record.
+        /// </summary>
+        /// <param name="guid">GUID for the art item (the ID)</param>
+        /// <param name="mimetype">Mimetype of the art file</param>
+        /// <param name="hash">Hash of the file</param>
+        public void StoreArtRecord(Guid guid, string mimetype, string hash)
+        {
+            using (var context = new Model.Entities())
+            {
+                // Create a new art object
+                Model.Art artObj = new Model.Art
+                {
+                    Id = guid,
+                    Hash = hash,
+                    Mimetype = mimetype
+                };
+                context.Arts.Add(artObj);
+                context.SaveChanges();
+            }
+        }
+
+        /// <summary>
+        /// Sets the art record for the given track to the given artGuid. It is
+        /// permissible to set it to null.
+        /// </summary>
+        /// <param name="trackGuid">The GUID of the track</param>
+        /// <param name="artGuid">The GUID of the art record. Can be null.</param>
+        public void SetTrackArt(Guid trackGuid, Guid? artGuid)
+        {
+            using (var context = new Model.Entities())
+            {
+                // Search out the track, store art
+                Model.Track track = context.Tracks.First(t => t.Id == trackGuid);
+                track.Art = artGuid;
+                context.SaveChanges();
             }
         }
 

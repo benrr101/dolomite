@@ -109,7 +109,7 @@ namespace DolomiteWcfService
         /// </summary>
         /// <param name="stream">The stream to calculate the hash of</param>
         /// <returns>The hash of the file</returns>
-        private string CalculateHash(Stream stream)
+        public string CalculateHash(Stream stream)
         {
             stream.Position = 0;
 
@@ -118,6 +118,8 @@ namespace DolomiteWcfService
             byte[] hashBytes = hashCalculator.ComputeHash(stream);
             string hashString = BitConverter.ToString(hashBytes);
             hashString = hashString.Replace("-", String.Empty);
+
+            stream.Position = 0;
 
             // Is the track a duplicate?
             if (DatabaseManager.Instance.GetTrackByHash(hashString) != null)

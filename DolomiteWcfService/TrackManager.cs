@@ -12,6 +12,8 @@ namespace DolomiteWcfService
 
         #region Constants
 
+        public const string ArtDirectory = "art";
+
         public const string StorageContainerKey = "trackStorageContainer";
 
         #endregion
@@ -204,8 +206,6 @@ namespace DolomiteWcfService
             // Step 2: Create the inital record of the track in the database
             DatabaseManager.CreateInitialTrackRecord(guid, hash);
         }
-
-        
 
         #endregion
     }

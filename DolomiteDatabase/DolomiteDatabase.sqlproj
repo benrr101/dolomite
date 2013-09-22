@@ -101,6 +101,8 @@
     <Build Include="StoredProcedures\SetTrackHash.sql" />
     <Build Include="StoredProcedures\ReleaseAndCompleteOnboardingItem.sql" />
     <Build Include="StoredProcedures\ResetOnboardingStatus.sql" />
+    <Build Include="Tables\Art.sql" />
+    <Build Include="Foreign Keys\FK_TRACKS_ART.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Script.PostDeployment1.sql" />

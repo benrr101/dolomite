@@ -297,9 +297,46 @@ namespace DolomiteWcfService.Threads
             // Store the audio metadata to the database
             DatabaseManager.StoreAudioQualityInfo(trackGuid, file.Properties.AudioBitrate,
                 file.Properties.AudioSampleRate, file.MimeType, MimetypeDetector.GetExtension(file.MimeType));
+
+            // Rip out the album art (or whatever is the first art in the file)
+            if (file.Tag.Pictures.Length > 0)
+            {
+                StoreAlbumArt(trackGuid, file.Tag.Pictures[0]);
+            }
         }
 
         #endregion
+
+        /// <summary>
+        /// Stores the album art for the track using the IPicture object from
+        /// the taglib file. If it does not exist (based on hash of the file)
+        /// the file is stored to azure and a new record is added to the database.
+        /// </summary>
+        /// <param name="trackGuid">The guid of the track to store the art for</param>
+        /// <param name="art">The art object to store</param>
+        private void StoreAlbumArt(Guid trackGuid, IPicture art)
+        {
+            // Grab the info
+            var artMime = art.MimeType;
+            var artFile = new IO.MemoryStream(art.Data.ToArray());
+
+            // Calculate the hash of the album art
+            string hash = LocalStorageManager.CalculateHash(artFile);
+            var artGuid = DatabaseManager.GetArtIdByHash(hash);
+            if (artGuid == Guid.Empty)
+            {
+                // We need to store the art and create a new db record for it
+                string artPath = TrackManager.ArtDirectory + "/" + trackGuid;
+                AzureStorageManager.StoreBlob(TrackManager.StorageContainerKey, artPath, artFile);
+
+                // The art guid is the guid of the track
+                artGuid = trackGuid;
+                DatabaseManager.StoreArtRecord(artGuid, artMime, hash);
+            }
+
+            // Store the art record to the track
+            DatabaseManager.SetTrackArt(trackGuid, artGuid);
+        }
 
         /// <summary>
         /// Cancels the onboarding process by deleting all created files and

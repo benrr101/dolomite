@@ -42,6 +42,7 @@ namespace DolomiteModel
         public DbSet<Rule> Rules { get; set; }
         public DbSet<Track> Tracks { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Art> Arts { get; set; }
     
         public virtual ObjectResult<Nullable<System.Guid>> GetAndLockTopOnboardingItem()
         {

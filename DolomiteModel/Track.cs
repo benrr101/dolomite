@@ -32,11 +32,13 @@ namespace DolomiteModel
         public Nullable<int> OriginalSampling { get; set; }
         public string OriginalMimetype { get; set; }
         public string OriginalExtension { get; set; }
+        public Nullable<System.Guid> Art { get; set; }
     
         public virtual Album Album1 { get; set; }
         public virtual ICollection<AvailableQuality> AvailableQualities { get; set; }
         public virtual ICollection<Metadata> Metadatas { get; set; }
         public virtual ICollection<PlaylistTrack> PlaylistTracks { get; set; }
         public virtual User User { get; set; }
+        public virtual Art Art1 { get; set; }
     }
 }
