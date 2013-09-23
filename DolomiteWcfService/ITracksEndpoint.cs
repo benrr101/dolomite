@@ -46,6 +46,10 @@ namespace DolomiteWcfService
         [WebInvoke(Method = "POST", UriTemplate = "/{guid}?clear")]
         Message ReplaceAllMetadata(Stream body, string guid);
 
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "/{guid}/art")]
+        Message ReplaceTrackArt(Stream body, string guid);
+
         #endregion
 
         #region Deletion Operations

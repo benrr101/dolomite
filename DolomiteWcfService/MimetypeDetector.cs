@@ -40,6 +40,17 @@ namespace DolomiteWcfService
         };
 
         /// <summary>
+        /// Mapping of header signatures to mimetypes -- this time for images!
+        /// </summary>
+        private static readonly Dictionary<byte[], string> ImageTypes = new Dictionary<byte[], string>
+        {
+            // JPEG
+            {new byte[] {0xff, 0xd8, 0xff, 0xe0}, "image/jpeg" },
+            // PNG
+            {new byte[] {0x89, 0x50, 0x4e, 0x47}, "image/png"}
+        }; 
+
+        /// <summary>
         /// Mapping of mimetype to extension. This is useful for determining the original
         /// extension of the uploaded file.
         /// </summary>
@@ -81,7 +92,7 @@ namespace DolomiteWcfService
         /// </summary>
         /// <param name="stream">The stream to determine the mimetype of</param>
         /// <returns>A string mimetype on successful lookup. Null otherwise</returns>
-        public static string GetMimeType(FileStream stream)
+        public static string GetAudioMimetype(FileStream stream)
         {
             // Read the file into a string
             byte[] bytes = new byte[stream.Length];
@@ -109,6 +120,36 @@ namespace DolomiteWcfService
             }
 
             // If we make it to here, we've exhausted our possibilities
+            return null;
+        }
+
+        /// <summary>
+        /// Searches the list of supported image types to find the matching
+        /// mimetype of the provided stream. The comparison works via comparing
+        /// the first bytes of the stream with known file headers.
+        /// </summary>
+        /// <param name="stream">The stream to identify</param>
+        /// <returns>A mimetype on success, null if no match was found</returns>
+        public static string GetImageMimetype(Stream stream)
+        {
+            // Read the file into a string
+            byte[] bytes = new byte[stream.Length];
+            stream.Read(bytes, 0, Convert.ToInt32(stream.Length));
+            string streamString = Encoding.Default.GetString(bytes);
+            streamString = streamString.TrimStart(WhitespaceBytes);
+
+            // Iterate over the available image types
+            foreach (var imageType in ImageTypes)
+            {
+                // Turn it into a string
+                string typeString = Encoding.Default.GetString(imageType.Key);
+
+                // The header of the file must start with this
+                if (streamString.StartsWith(typeString))
+                    return imageType.Value;
+            }
+
+            // If we make it here, we've exhausted our possibilities
             return null;
         }
     }

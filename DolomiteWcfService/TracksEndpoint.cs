@@ -391,6 +391,84 @@ namespace DolomiteWcfService
             }
         }
 
+        /// <summary>
+        /// Replaces the given track's art with the given stream.
+        /// </summary>
+        /// <param name="body">A stream of the art file that is being uploaded</param>
+        /// <param name="guid">The guid of the track to replace the art for</param>
+        /// <returns>Message of the status of the request</returns>
+        public Message ReplaceTrackArt(Stream body, string guid)
+        {
+            try
+            {
+                // Translate the body and guid
+                Guid trackGuid = Guid.Parse(guid);
+
+                MemoryStream memoryStream;
+                if (WebOperationContext.Current.IncomingRequest.ContentLength == 0)
+                {
+                    memoryStream = new MemoryStream();
+                }
+                else
+                {
+                    if (WebOperationContext.Current.IncomingRequest.ContentType.StartsWith("multipart/form-data"))
+                    {
+                        // Attempt to replace the track with the new file
+                        MultipartParser parser = new MultipartParser(body);
+                        if (parser.Success)
+                        {
+                            // Upload the track
+                            memoryStream = new MemoryStream(parser.FileContents);
+                        }
+                        else
+                        {
+                            // Failure of one kind or another
+                            WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                            ErrorResponse fResponse = new ErrorResponse("Failed to process request.");
+                            string fResponseJson = JsonConvert.SerializeObject(fResponse);
+                            return WebOperationContext.Current.CreateTextResponse(fResponseJson, "application/json",
+                                Encoding.UTF8);
+                        }
+                    }
+                    else
+                    {
+                        // There's no need to process out anything else. The body is the file.
+                        memoryStream = new MemoryStream(ToByteArray(body));
+                    }
+                }
+
+                // Pass it along to the track manager
+                TrackManager.ReplaceTrackArt(trackGuid, memoryStream);
+
+                // Sucess
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.OK;
+                string responseJson = JsonConvert.SerializeObject(new WebResponse(WebResponse.StatusValue.Success));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (FormatException)
+            {
+                // The guid was probably incorrect
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", guid);
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (ObjectNotFoundException)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
+                string message = String.Format("The track with the specified GUID '{0}' does not exist", guid);
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (Exception)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
+                string message = String.Format("An internal server error occurred");
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+        }
+
         #endregion
 
         #region Deletion Operations

@@ -76,6 +76,12 @@ namespace DolomiteWcfService
         public string ArtHref { get; set; }
 
         /// <summary>
+        /// The Guid for the art object for this track. Not intented for use
+        /// by clients.
+        /// </summary>
+        public Guid? ArtId { get; set; }
+
+        /// <summary>
         /// The unique identifier for the track
         /// </summary>
         [DataMember] public Guid Id;

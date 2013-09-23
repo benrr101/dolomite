@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Security.Cryptography;
 using Model = DolomiteModel;
 
 namespace DolomiteWcfService
@@ -122,6 +121,7 @@ namespace DolomiteWcfService
                 return new Track
                     {
                         ArtHref = artHref,
+                        ArtId = track.Art,
                         Id = trackId,
                         Metadata = metadata.ToDictionary(o => o.Name, o => o.Value),
                         Qualities = qualities
@@ -250,6 +250,42 @@ namespace DolomiteWcfService
                 return (from art in context.Arts
                     where art.Hash == hash
                     select art.Id).FirstOrDefault();
+            }
+        }
+
+        /// <summary>
+        /// Determines if the art that the given track uses is still in use. If
+        /// it is not, the track's art is reset to null, and the art record is
+        /// deleted. Whether the deletion occurred or not is returned.
+        /// </summary>
+        /// <param name="trackGuid">The guid for the track with art to check if in use.</param>
+        /// <returns>False if the art is not in use and can be safely deleted. True otherwise.</returns>
+        public bool DeleteAlbumArtByUsage(Guid trackGuid)
+        {
+            using (var context = new Model.Entities())
+            {
+                // Grab the track
+                var track = context.Tracks.First(t => t.Id == trackGuid);
+                if (!track.Art.HasValue)
+                    return false;
+                
+                // Search for uses of it's image
+                bool inUse = context.Tracks.Any(t => t.Art == track.Art && t.Id != track.Id);
+                
+                // Delete the art from the database if its not in use any more
+                if (!inUse)
+                {
+                    // Reset the existing track to null first to avoid FK contstraints
+                    Guid trackArt = track.Art.Value;
+                    track.Art = null;
+                    context.SaveChanges();
+
+                    // Delete the art
+                    context.Arts.Remove(context.Arts.First(a => a.Id == trackArt));
+                    context.SaveChanges();
+                }
+
+                return inUse;
             }
         }
 

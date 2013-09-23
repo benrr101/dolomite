@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using TagLib;
@@ -202,6 +203,48 @@ namespace DolomiteWcfService
 
             // Store the new values
             DatabaseManager.StoreTrackMetadata(guid, metadata);
+        }
+
+        public void ReplaceTrackArt(Guid guid, Stream stream)
+        {
+            // Does the track have art?
+            Track track = DatabaseManager.GetTrackByGuid(guid);
+            if (track.ArtId.HasValue && !DatabaseManager.DeleteAlbumArtByUsage(track.Id))
+            {
+                // Delete the file from Azure -- it's been deleted from the db already
+                string path = ArtDirectory + "/" + track.ArtId.Value;
+                AzureStorageManager.DeleteBlob(StorageContainerKey, path);
+            }
+
+            // Was there even an art file attached?
+            if (stream.Length == 0)
+            {
+                DatabaseManager.SetTrackArt(guid, null);
+                return;
+            }
+
+            // Determine the type of the file
+            string mimetype = MimetypeDetector.GetImageMimetype(stream);
+            if(mimetype == null)
+                throw new UnsupportedFormatException("The image format provided was either invalid or not supported.");
+
+            // Calculate the hash
+            string hash = LocalStorageManager.CalculateHash(stream);
+            var artGuid = DatabaseManager.GetArtIdByHash(hash);
+            if (artGuid == Guid.Empty)
+            {
+                // Create a new guid for the art (not sure if the track's guid
+                // would suffice or cause conflicts)
+                artGuid = Guid.NewGuid();
+
+                // We need to store the art and create a new db record for it
+                string artPath = ArtDirectory + "/" + artGuid;
+                AzureStorageManager.StoreBlob(StorageContainerKey, artPath, stream);
+                DatabaseManager.StoreArtRecord(artGuid, mimetype, hash);
+            }
+
+            // Store the art record to the track
+            DatabaseManager.SetTrackArt(guid, artGuid);
         }
 
         /// <summary>

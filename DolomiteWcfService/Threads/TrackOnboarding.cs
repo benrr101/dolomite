@@ -262,7 +262,7 @@ namespace DolomiteWcfService.Threads
             // Why? b/c tag lib isn't smart enough to figure it out for me,
             // except for determining it based on extension -- which is silly.
             IO.FileStream localFile = LocalStorageManager.RetrieveFile(trackGuid.ToString());
-            string mimetype = MimetypeDetector.GetMimeType(localFile);
+            string mimetype = MimetypeDetector.GetAudioMimetype(localFile);
             if (mimetype == null)
             {
                 localFile.Close();
