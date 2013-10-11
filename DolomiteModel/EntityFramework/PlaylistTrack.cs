@@ -7,21 +7,19 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DolomiteModel
+namespace DolomiteModel.EntityFramework
 {
     using System;
     using System.Collections.Generic;
     
-    public partial class Artist
+    public partial class PlaylistTrack
     {
-        public Artist()
-        {
-            this.Albums = new HashSet<Album>();
-        }
-    
         public int Id { get; set; }
-        public string Name { get; set; }
+        public int Playlist { get; set; }
+        public System.Guid Track { get; set; }
+        public Nullable<int> Order { get; set; }
     
-        public virtual ICollection<Album> Albums { get; set; }
+        public virtual Playlist Playlist1 { get; set; }
+        public virtual Track Track1 { get; set; }
     }
 }

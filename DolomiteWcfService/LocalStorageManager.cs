@@ -2,6 +2,7 @@
 using System.Data;
 using System.IO;
 using System.Security.Cryptography;
+using DolomiteModel;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
 namespace DolomiteWcfService
@@ -122,7 +123,7 @@ namespace DolomiteWcfService
             stream.Position = 0;
 
             // Is the track a duplicate?
-            if (DatabaseManager.Instance.GetTrackByHash(hashString) != null)
+            if (TrackDbManager.Instance.GetTrackByHash(hashString) != null)
             {
                 // The track is a duplicate!
                 throw new DuplicateNameException("Track is a duplicate as determined by hash comparison");

@@ -30,7 +30,7 @@ VALUES
 	('MP3 192Kbps', 'mp3', 192, 'mp3', 'mp3_192', 'audio/mpeg'),
 	('MP3 256Kbps', 'mp3', 256, 'mp3', 'mp3_256', 'audio/mpeg'),
 	('MP3 320Kbps', 'mp3', 320, 'mp3', 'mp3_320', 'audio/mpeg'),
-	('Original', NULL, NULL, NULL, 'original');
+	('Original', NULL, NULL, NULL, 'original', NULL);
 GO
 
 -- Add important error messages

@@ -7,27 +7,22 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DolomiteModel
+namespace DolomiteModel.EntityFramework
 {
     using System;
     using System.Collections.Generic;
     
-    public partial class User
+    public partial class Art
     {
-        public User()
+        public Art()
         {
-            this.Autoplaylists = new HashSet<Autoplaylist>();
-            this.Devices = new HashSet<Device>();
-            this.Playlists = new HashSet<Playlist>();
             this.Tracks = new HashSet<Track>();
         }
     
-        public int Id { get; set; }
-        public string Username { get; set; }
+        public System.Guid Id { get; set; }
+        public string Mimetype { get; set; }
+        public string Hash { get; set; }
     
-        public virtual ICollection<Autoplaylist> Autoplaylists { get; set; }
-        public virtual ICollection<Device> Devices { get; set; }
-        public virtual ICollection<Playlist> Playlists { get; set; }
         public virtual ICollection<Track> Tracks { get; set; }
     }
 }

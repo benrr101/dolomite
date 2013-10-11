@@ -7,19 +7,21 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DolomiteModel
+namespace DolomiteModel.EntityFramework
 {
     using System;
     using System.Collections.Generic;
     
-    public partial class Metadata
+    public partial class AutoplaylistRule
     {
         public int Id { get; set; }
-        public System.Guid Track { get; set; }
-        public int Field { get; set; }
+        public int Autoplaylist { get; set; }
+        public int Rule { get; set; }
+        public int MetadataField { get; set; }
         public string Value { get; set; }
     
-        public virtual MetadataField MetadataField { get; set; }
-        public virtual Track Track1 { get; set; }
+        public virtual MetadataField MetadataField1 { get; set; }
+        public virtual Autoplaylist Autoplaylist1 { get; set; }
+        public virtual Rule Rule1 { get; set; }
     }
 }

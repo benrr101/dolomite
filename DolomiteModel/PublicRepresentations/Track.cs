@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
 
-namespace DolomiteWcfService
+namespace DolomiteModel.PublicRepresentations
 {
     [DataContract]
     public class Track
@@ -19,12 +19,10 @@ namespace DolomiteWcfService
             /// <summary>
             /// The bitrate of the track at this quality
             /// </summary>
-            private string _bitrate;
             [DataMember]
             public string Bitrate
             {
-                get { return _bitrate; }
-                set { _bitrate = value + "kbps"; }
+                get { return BitrateKbps + "kbps"; }
             }
 
             /// <summary>
@@ -52,6 +50,11 @@ namespace DolomiteWcfService
             public string Mimetype { get; set; }
 
             #endregion
+
+            /// <summary>
+            /// Numeric representation of the bitrate in kbps
+            /// </summary>
+            public int BitrateKbps { get; set; }
 
             /// <summary>
             /// The directory of the azure container storing the track at this quality
@@ -84,7 +87,8 @@ namespace DolomiteWcfService
         /// <summary>
         /// The unique identifier for the track
         /// </summary>
-        [DataMember] public Guid Id;
+        [DataMember]
+        public Guid Id;
 
         /// <summary>
         /// The metadata about the track
@@ -102,3 +106,4 @@ namespace DolomiteWcfService
 
     }
 }
+

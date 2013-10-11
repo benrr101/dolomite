@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using DolomiteModel.PublicRepresentations;
 using Microsoft.WindowsAzure.Storage.Blob;
 using IO = System.IO;
 using System.Linq;
@@ -32,7 +33,7 @@ namespace DolomiteWcfService.Threads
 
         private const int SleepSeconds = 10;
 
-        private static DatabaseManager DatabaseManager { get; set; }
+        private static TrackDbManager DatabaseManager { get; set; }
 
         private static LocalStorageManager LocalStorageManager { get; set; }
 
@@ -57,7 +58,7 @@ namespace DolomiteWcfService.Threads
         public void Run()
         {
             // Set up the thread with some managers
-            DatabaseManager = DatabaseManager.Instance;
+            DatabaseManager = TrackDbManager.Instance;
             LocalStorageManager = LocalStorageManager.Instance;
             AzureStorageManager = AzureStorageManager.Instance;
 
@@ -118,16 +119,16 @@ namespace DolomiteWcfService.Threads
         private void CreateQualities(Guid trackGuid)
         {
             // Grab the track that will be manipulated
-            var track = DatabaseManager.GetTrackModelByGuid(trackGuid);
+            var track = DatabaseManager.GetTrackByGuid(trackGuid);
 
             // Fetch all supported qualities
             var qualitites = DatabaseManager.GetAllQualities();
-            int originalQuality = track.OriginalBitrate.Value;
+            int originalQuality = track.Qualities.First(q => q.Name == "Original").BitrateKbps;
 
             // Figure out what qualities to use by picking all qualities with bitrates
             // lessthan or equal to the original (+/- 5kbps -- for lousy sources)
             // ReSharper disable PossibleInvalidOperationException  (this isn't possible since the fetching method does not select nulls)
-            var maxQuality = qualitites.Where(q => Math.Abs(q.Bitrate.Value - originalQuality) <= 5);
+            var maxQuality = qualitites.Where(q => Math.Abs(q.Bitrate - originalQuality) <= 5);
             var lessQualities = qualitites.Where(q => q.Bitrate < originalQuality);
             var requiredQualities = lessQualities.Union(maxQuality);
             // ReSharper restore PossibleInvalidOperationException
@@ -137,7 +138,7 @@ namespace DolomiteWcfService.Threads
             foreach (Quality quality in requiredQualities)
             {
                 // Don't waste time processing the file if we have a really close match
-                if (Math.Abs(quality.Bitrate.Value - originalQuality) <= 5)
+                if (Math.Abs(quality.Bitrate - originalQuality) <= 5)
                 {
                     // Copy the original file to this quality's directory
                     MoveFileToAzure(LocalStorageManager.GetPath(trackGuid.ToString()), quality.Directory, trackGuid, false);
@@ -146,10 +147,10 @@ namespace DolomiteWcfService.Threads
                 
                 string inputFilename = LocalStorageManager.GetPath(trackGuid.ToString());
 
-                string outputFilename = String.Format("{0}.{1}.{2}", trackGuid, quality.Bitrate.Value, quality.Extension);
+                string outputFilename = String.Format("{0}.{1}.{2}", trackGuid, quality.Bitrate, quality.Extension);
                 string outputFilePath = LocalStorageManager.GetPath(outputFilename);
                 string arguments = String.Format("-i \"{2}\" -acodec {0} -ab {1}000 -y \"{3}\"", quality.Codec,
-                                                 quality.Bitrate.Value, inputFilename, outputFilePath);
+                                                 quality.Bitrate, inputFilename, outputFilePath);
 
                 // Borrowing some code from http://stackoverflow.com/a/8726175
                 ProcessStartInfo psi = new ProcessStartInfo
@@ -192,12 +193,12 @@ namespace DolomiteWcfService.Threads
                 MoveFileToAzure(outputFilePath, quality.Directory, trackGuid);
 
                 // Store the quality record to the database
-                DatabaseManager.StoreAudioQualityRecord(trackGuid, quality);
+                DatabaseManager.AddAvailableQualityRecord(trackGuid, quality);
             }
 
             // Upload the original file
             MoveFileToAzure(LocalStorageManager.GetPath(trackGuid.ToString()), "original", trackGuid);
-            DatabaseManager.StoreOriginalQualityRecord(trackGuid);
+            DatabaseManager.AddAvailableOriginalQualityRecord(trackGuid);
         }
 
         /// <summary>
@@ -295,7 +296,7 @@ namespace DolomiteWcfService.Threads
             DatabaseManager.StoreTrackMetadata(trackGuid, metadata);
 
             // Store the audio metadata to the database
-            DatabaseManager.StoreAudioQualityInfo(trackGuid, file.Properties.AudioBitrate,
+            DatabaseManager.SetAudioQualityInfo(trackGuid, file.Properties.AudioBitrate,
                 file.Properties.AudioSampleRate, file.MimeType, MimetypeDetector.GetExtension(file.MimeType));
 
             // Rip out the album art (or whatever is the first art in the file)
@@ -331,7 +332,7 @@ namespace DolomiteWcfService.Threads
 
                 // The art guid is the guid of the track
                 artGuid = trackGuid;
-                DatabaseManager.StoreArtRecord(artGuid, artMime, hash);
+                DatabaseManager.CreateArtRecord(artGuid, artMime, hash);
             }
 
             // Store the art record to the track
@@ -353,7 +354,7 @@ namespace DolomiteWcfService.Threads
             foreach (Quality quality in DatabaseManager.GetAllQualities())
             {
                 // Delete the local storage instance
-                string fileName = String.Format("{0}.{1}.{2}", workItemGuid, quality.Bitrate.Value, quality.Extension);
+                string fileName = String.Format("{0}.{1}.{2}", workItemGuid, quality.Bitrate, quality.Extension);
                 DeleteFileWithWait(fileName);
 
                 // Delete the file from Azure

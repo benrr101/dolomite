@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using TagLib;
-using Model = DolomiteModel;
+using DolomiteModel;
+using DolomiteModel.PublicRepresentations;
 
 namespace DolomiteWcfService
 {
@@ -23,7 +23,7 @@ namespace DolomiteWcfService
 
         private AzureStorageManager AzureStorageManager { get; set; }
 
-        private DatabaseManager DatabaseManager { get; set; }
+        private TrackDbManager DatabaseManager { get; set; }
 
         private LocalStorageManager LocalStorageManager { get; set; }
 
@@ -59,7 +59,7 @@ namespace DolomiteWcfService
             AzureStorageManager.InitializeContainer(StorageContainerKey);
 
             // Get an instance of the database manager
-            DatabaseManager = DatabaseManager.Instance;
+            DatabaseManager = TrackDbManager.Instance;
 
             // Get an instance of the local storage manager
             LocalStorageManager = LocalStorageManager.Instance;
@@ -133,7 +133,7 @@ namespace DolomiteWcfService
         public Stream GetTrackArt(Guid artGuid, out string mimetype)
         {
             // Grab the art object from the database
-            var art = DatabaseManager.GetArtModelByGuid(artGuid);
+            var art = DatabaseManager.GetArtByGuid(artGuid);
 
             mimetype = art.Mimetype;
             string path = ArtDirectory + "/" + art.Id;
@@ -147,7 +147,7 @@ namespace DolomiteWcfService
         public List<Track> FetchAllTracks()
         {
             // Get the tracks from the database
-            var tracks = DatabaseManager.FetchAllTracks();
+            var tracks = DatabaseManager.GetAllTracks();
 
             // Condense them into a list of tracks
             return tracks.ToList();
@@ -205,11 +205,18 @@ namespace DolomiteWcfService
             DatabaseManager.StoreTrackMetadata(guid, metadata);
         }
 
+        /// <summary>
+        /// Replaces the art for a given track. This also performs checks
+        /// to see if the old track art has been freed. If it has been freed
+        /// then it can safely be deleted.
+        /// </summary>
+        /// <param name="guid">The guid of the track to set the art for</param>
+        /// <param name="stream">The stream representing the art file</param>
         public void ReplaceTrackArt(Guid guid, Stream stream)
         {
             // Does the track have art?
             Track track = DatabaseManager.GetTrackByGuid(guid);
-            if (track.ArtId.HasValue && !DatabaseManager.DeleteAlbumArtByUsage(track.Id))
+            if (track.ArtId.HasValue && !DatabaseManager.DeleteArtByUsage(track.Id))
             {
                 // Delete the file from Azure -- it's been deleted from the db already
                 string path = ArtDirectory + "/" + track.ArtId.Value;
@@ -240,7 +247,7 @@ namespace DolomiteWcfService
                 // We need to store the art and create a new db record for it
                 string artPath = ArtDirectory + "/" + artGuid;
                 AzureStorageManager.StoreBlob(StorageContainerKey, artPath, stream);
-                DatabaseManager.StoreArtRecord(artGuid, mimetype, hash);
+                DatabaseManager.CreateArtRecord(artGuid, mimetype, hash);
             }
 
             // Store the art record to the track

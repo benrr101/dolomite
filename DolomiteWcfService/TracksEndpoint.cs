@@ -6,6 +6,7 @@ using System.Net;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Web;
 using System.Text;
+using DolomiteModel.PublicRepresentations;
 using Newtonsoft.Json;
 using AntsCode.Util;
 using TagLib;

@@ -7,7 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DolomiteModel
+namespace DolomiteModel.EntityFramework
 {
     using System;
     using System.Data.Entity;
@@ -16,10 +16,10 @@ namespace DolomiteModel
     using System.Data.Objects.DataClasses;
     using System.Linq;
     
-    public partial class Entities : DbContext
+    internal partial class DbEntities : DbContext
     {
-        public Entities()
-            : base("name=Entities")
+        public DbEntities()
+            : base("name=DbEntities")
         {
         }
     
@@ -29,11 +29,11 @@ namespace DolomiteModel
         }
     
         public DbSet<Album> Albums { get; set; }
+        public DbSet<Art> Arts { get; set; }
         public DbSet<Artist> Artists { get; set; }
         public DbSet<AutoplaylistRule> AutoplaylistRules { get; set; }
         public DbSet<Autoplaylist> Autoplaylists { get; set; }
         public DbSet<AvailableQuality> AvailableQualities { get; set; }
-        public DbSet<Device> Devices { get; set; }
         public DbSet<Metadata> Metadatas { get; set; }
         public DbSet<MetadataField> MetadataFields { get; set; }
         public DbSet<Playlist> Playlists { get; set; }
@@ -42,24 +42,11 @@ namespace DolomiteModel
         public DbSet<Rule> Rules { get; set; }
         public DbSet<Track> Tracks { get; set; }
         public DbSet<User> Users { get; set; }
-        public DbSet<Art> Arts { get; set; }
+        public DbSet<Device> Devices { get; set; }
     
         public virtual ObjectResult<Nullable<System.Guid>> GetAndLockTopOnboardingItem()
         {
             return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<Nullable<System.Guid>>("GetAndLockTopOnboardingItem");
-        }
-    
-        public virtual int SetTrackHash(Nullable<System.Guid> trackId, string hash)
-        {
-            var trackIdParameter = trackId.HasValue ?
-                new ObjectParameter("trackId", trackId) :
-                new ObjectParameter("trackId", typeof(System.Guid));
-    
-            var hashParameter = hash != null ?
-                new ObjectParameter("hash", hash) :
-                new ObjectParameter("hash", typeof(string));
-    
-            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("SetTrackHash", trackIdParameter, hashParameter);
         }
     
         public virtual int ReleaseAndCompleteOnboardingItem(Nullable<System.Guid> workItem)
@@ -78,6 +65,19 @@ namespace DolomiteModel
                 new ObjectParameter("guid", typeof(System.Guid));
     
             return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("ResetOnboardingStatus", guidParameter);
+        }
+    
+        public virtual int SetTrackHash(Nullable<System.Guid> trackId, string hash)
+        {
+            var trackIdParameter = trackId.HasValue ?
+                new ObjectParameter("trackId", trackId) :
+                new ObjectParameter("trackId", typeof(System.Guid));
+    
+            var hashParameter = hash != null ?
+                new ObjectParameter("hash", hash) :
+                new ObjectParameter("hash", typeof(string));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("SetTrackHash", trackIdParameter, hashParameter);
         }
     }
 }

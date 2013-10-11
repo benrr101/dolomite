@@ -7,19 +7,17 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DolomiteModel
+namespace DolomiteModel.EntityFramework
 {
     using System;
     using System.Collections.Generic;
     
-    public partial class PlaylistTrack
+    public partial class Device
     {
-        public int Id { get; set; }
-        public int Playlist { get; set; }
-        public System.Guid Track { get; set; }
-        public Nullable<int> Order { get; set; }
+        public System.Guid Key { get; set; }
+        public int Owner { get; set; }
+        public Nullable<int> PreferredQuality { get; set; }
     
-        public virtual Playlist Playlist1 { get; set; }
-        public virtual Track Track1 { get; set; }
+        public virtual User User { get; set; }
     }
 }

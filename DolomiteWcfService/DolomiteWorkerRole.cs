@@ -36,6 +36,7 @@ namespace DolomiteWcfService
                 Thread.Sleep(TimeSpan.FromMinutes(10));
                 Trace.TraceInformation("Infinite loop 10 minute checkin.");
             }
+            // ReSharper disable once FunctionNeverReturns
         }
 
         /// <summary>
@@ -53,7 +54,7 @@ namespace DolomiteWcfService
 
             // Grab the base address from the role manager
             IPEndPoint endpoint = RoleEnvironment.CurrentRoleInstance.InstanceEndpoints["DolomiteRest"].IPEndpoint;
-            WebHttpBinding webBinding = new WebHttpBinding()
+            WebHttpBinding webBinding = new WebHttpBinding
                 {
                     MaxReceivedMessageSize = 200*1024*2024 // 200Mb
                 };

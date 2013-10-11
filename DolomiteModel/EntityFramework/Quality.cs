@@ -7,23 +7,26 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DolomiteModel
+namespace DolomiteModel.EntityFramework
 {
     using System;
     using System.Collections.Generic;
     
-    public partial class Playlist
+    public partial class Quality
     {
-        public Playlist()
+        public Quality()
         {
-            this.PlaylistTracks = new HashSet<PlaylistTrack>();
+            this.AvailableQualities = new HashSet<AvailableQuality>();
         }
     
         public int Id { get; set; }
-        public int Owner { get; set; }
         public string Name { get; set; }
+        public string Codec { get; set; }
+        public Nullable<int> Bitrate { get; set; }
+        public string Extension { get; set; }
+        public string Mimetype { get; set; }
+        public string Directory { get; set; }
     
-        public virtual User User { get; set; }
-        public virtual ICollection<PlaylistTrack> PlaylistTracks { get; set; }
+        public virtual ICollection<AvailableQuality> AvailableQualities { get; set; }
     }
 }

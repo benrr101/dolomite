@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="2dc9665eb3cd443ba7cabcc2f47e2b53" Name="Diagram1" ZoomLevel="82">
+        <EntityTypeShape EntityType="EntityFramework.Album" Width="1.5" PointX="8" PointY="11.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Art" Width="1.5" PointX="10.125" PointY="6.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Artist" Width="1.5" PointX="8" PointY="14.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.AutoplaylistRule" Width="1.5" PointX="2.875" PointY="4.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Autoplaylist" Width="1.5" PointX="0.625" PointY="4.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.AvailableQuality" Width="1.5" PointX="10.25" PointY="8.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Metadata" Width="1.5" PointX="8" PointY="3.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.MetadataField" Width="1.5" PointX="3" PointY="1.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Playlist" Width="1.5" PointX="3.125" PointY="7.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.PlaylistTrack" Width="1.5" PointX="5.625" PointY="7.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Quality" Width="1.5" PointX="12.75" PointY="8.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Rule" Width="1.5" PointX="5" PointY="4.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Track" Width="1.5" PointX="8" PointY="6.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.User" Width="1.5" PointX="0.625" PointY="8.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Device" Width="1.5" PointX="0.625" PointY="12.25" IsExpanded="true" />
+        <AssociationConnector Association="EntityFramework.Album1" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_ALBUMS_ARTIST" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_TRACKS_ART" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_AUTOPLAYLISTRULES_METADATA" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_AUTOPLAYLISTRULES_PLAYLIST" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_AUTOPLAYLISTRULES_RULE" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_AUTOPLAYLISTS_OWNER" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_AVAILABLEQUALITIES_QUALITY" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_AVAILABLEQUALITIES_TRACK" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_METADATA_FIELD" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_METADATA_TRACK" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_PLAYLISTS_OWNER" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_PLAYLISTTRACKS_PLAYLISTS" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_PLAYLISTTRACKS_TRACKS" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_TRACKS_OWNER" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_DEVICES_OWNER" ManuallyRouted="false" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

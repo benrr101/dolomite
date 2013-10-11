@@ -7,25 +7,18 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace DolomiteModel
+namespace DolomiteModel.EntityFramework
 {
     using System;
     using System.Collections.Generic;
     
-    public partial class MetadataField
+    public partial class AvailableQuality
     {
-        public MetadataField()
-        {
-            this.AutoplaylistRules = new HashSet<AutoplaylistRule>();
-            this.Metadatas = new HashSet<Metadata>();
-        }
-    
         public int Id { get; set; }
-        public string AllowedRules { get; set; }
-        public string TagName { get; set; }
-        public string DisplayName { get; set; }
+        public System.Guid Track { get; set; }
+        public int Quality { get; set; }
     
-        public virtual ICollection<AutoplaylistRule> AutoplaylistRules { get; set; }
-        public virtual ICollection<Metadata> Metadatas { get; set; }
+        public virtual Quality Quality1 { get; set; }
+        public virtual Track Track1 { get; set; }
     }
 }
