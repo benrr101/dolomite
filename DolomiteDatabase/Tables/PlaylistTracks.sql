@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [dbo].[PlaylistTracks]
 (
 	[Id]		INT NOT NULL PRIMARY KEY IDENTITY(1,1),
-	[Playlist]	INT NOT NULL,
+	[Playlist]	UNIQUEIDENTIFIER NOT NULL,
 	[Track]		UNIQUEIDENTIFIER NOT NULL,
 	[Order]		INT NULL,
 )

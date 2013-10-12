@@ -4,7 +4,7 @@
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-    <Schema Namespace="EntityFramework.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2008" Alias="Self" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+    <Schema Namespace="DolomiteModel.EntityFramework.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2008" Alias="Self" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="Albums">
           <Key>
             <PropertyRef Name="Id" />
@@ -34,7 +34,7 @@
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="Autoplaylist" Type="int" Nullable="false" />
+          <Property Name="Autoplaylist" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Rule" Type="int" Nullable="false" />
           <Property Name="MetadataField" Type="int" Nullable="false" />
           <Property Name="Value" Type="nvarchar" MaxLength="100" Nullable="false" />
@@ -43,7 +43,7 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Id" Type="uniqueidentifier" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="Owner" Type="int" Nullable="false" />
           <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
         </EntityType>
@@ -88,8 +88,8 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="Owner" Type="int" Nullable="false" />
+          <Property Name="Id" Type="uniqueidentifier" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Owner" Type="int" />
           <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
         </EntityType>
         <EntityType Name="PlaylistTracks">
@@ -97,7 +97,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="Playlist" Type="int" Nullable="false" />
+          <Property Name="Playlist" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Track" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Order" Type="int" />
         </EntityType>
@@ -283,7 +283,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_PLAYLISTS_OWNER">
-          <End Role="Users" Type="Self.Users" Multiplicity="1" />
+          <End Role="Users" Type="Self.Users" Multiplicity="0..1" />
           <End Role="Playlists" Type="Self.Playlists" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Users">
@@ -353,7 +353,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Parameter Name="trackId" Type="uniqueidentifier" Mode="In" />
           <Parameter Name="hash" Type="text" Mode="In" />
         </Function>
-        <EntityContainer Name="EntityFrameworkStoreContainer">
+        <EntityContainer Name="DolomiteModelEntityFrameworkStoreContainer">
           <EntitySet Name="Albums" EntityType="Self.Albums" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
           <EntitySet Name="Art" EntityType="Self.Art" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
           <EntitySet Name="Artists" EntityType="Self.Artists" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
@@ -443,8 +443,8 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
       </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
-      <Schema Namespace="EntityFramework" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
-        <EntityType Name="Album" a:TypeAccess="Public" xmlns:a="http://schemas.microsoft.com/ado/2006/04/codegeneration">
+      <Schema Namespace="DolomiteModel.EntityFramework" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityType Name="Album">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
@@ -455,7 +455,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <NavigationProperty Name="Tracks" Relationship="Self.Album1" FromRole="Albums" ToRole="Tracks" />
           <NavigationProperty Name="Artist1" Relationship="Self.FK_ALBUMS_ARTIST" FromRole="Albums" ToRole="Artists" />
         </EntityType>
-        <EntityType Name="Art" a:TypeAccess="Public" xmlns:a="http://schemas.microsoft.com/ado/2006/04/codegeneration">
+        <EntityType Name="Art">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
@@ -464,7 +464,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <Property Name="Hash" Type="String" MaxLength="40" FixedLength="true" Unicode="true" Nullable="false" />
           <NavigationProperty Name="Tracks" Relationship="Self.FK_TRACKS_ART" FromRole="Art" ToRole="Tracks" />
         </EntityType>
-        <EntityType Name="Artist" a:TypeAccess="Public" xmlns:a="http://schemas.microsoft.com/ado/2006/04/codegeneration">
+        <EntityType Name="Artist">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
@@ -472,12 +472,12 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <Property Name="Name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
           <NavigationProperty Name="Albums" Relationship="Self.FK_ALBUMS_ARTIST" FromRole="Artists" ToRole="Albums" />
         </EntityType>
-        <EntityType Name="AutoplaylistRule" a:TypeAccess="Public" xmlns:a="http://schemas.microsoft.com/ado/2006/04/codegeneration">
+        <EntityType Name="AutoplaylistRule">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="Autoplaylist" Type="Int32" Nullable="false" />
+          <Property Name="Autoplaylist" Type="Guid" Nullable="false" />
           <Property Name="Rule" Type="Int32" Nullable="false" />
           <Property Name="MetadataField" Type="Int32" Nullable="false" />
           <Property Name="Value" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
@@ -485,17 +485,17 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <NavigationProperty Name="Autoplaylist1" Relationship="Self.FK_AUTOPLAYLISTRULES_PLAYLIST" FromRole="AutoplaylistRules" ToRole="Autoplaylists" />
           <NavigationProperty Name="Rule1" Relationship="Self.FK_AUTOPLAYLISTRULES_RULE" FromRole="AutoplaylistRules" ToRole="Rules" />
         </EntityType>
-        <EntityType Name="Autoplaylist" a:TypeAccess="Public" xmlns:a="http://schemas.microsoft.com/ado/2006/04/codegeneration">
+        <EntityType Name="Autoplaylist">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Id" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="Owner" Type="Int32" Nullable="false" />
           <Property Name="Name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
           <NavigationProperty Name="AutoplaylistRules" Relationship="Self.FK_AUTOPLAYLISTRULES_PLAYLIST" FromRole="Autoplaylists" ToRole="AutoplaylistRules" />
           <NavigationProperty Name="User" Relationship="Self.FK_AUTOPLAYLISTS_OWNER" FromRole="Autoplaylists" ToRole="Users" />
         </EntityType>
-        <EntityType Name="AvailableQuality" a:TypeAccess="Public" xmlns:a="http://schemas.microsoft.com/ado/2006/04/codegeneration">
+        <EntityType Name="AvailableQuality">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
@@ -505,7 +505,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <NavigationProperty Name="Quality1" Relationship="Self.FK_AVAILABLEQUALITIES_QUALITY" FromRole="AvailableQualities" ToRole="Qualities" />
           <NavigationProperty Name="Track1" Relationship="Self.FK_AVAILABLEQUALITIES_TRACK" FromRole="AvailableQualities" ToRole="Tracks" />
         </EntityType>
-        <EntityType Name="Metadata" a:TypeAccess="Public" xmlns:a="http://schemas.microsoft.com/ado/2006/04/codegeneration">
+        <EntityType Name="Metadata">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
@@ -516,7 +516,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <NavigationProperty Name="MetadataField" Relationship="Self.FK_METADATA_FIELD" FromRole="Metadata" ToRole="MetadataFields" />
           <NavigationProperty Name="Track1" Relationship="Self.FK_METADATA_TRACK" FromRole="Metadata" ToRole="Tracks" />
         </EntityType>
-        <EntityType Name="MetadataField" a:TypeAccess="Public" xmlns:a="http://schemas.microsoft.com/ado/2006/04/codegeneration">
+        <EntityType Name="MetadataField">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
@@ -527,28 +527,28 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <NavigationProperty Name="AutoplaylistRules" Relationship="Self.FK_AUTOPLAYLISTRULES_METADATA" FromRole="MetadataFields" ToRole="AutoplaylistRules" />
           <NavigationProperty Name="Metadatas" Relationship="Self.FK_METADATA_FIELD" FromRole="MetadataFields" ToRole="Metadata" />
         </EntityType>
-        <EntityType Name="Playlist" a:TypeAccess="Public" xmlns:a="http://schemas.microsoft.com/ado/2006/04/codegeneration">
+        <EntityType Name="Playlist">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="Owner" Type="Int32" Nullable="false" />
+          <Property Name="Id" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Owner" Type="Int32" />
           <Property Name="Name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
           <NavigationProperty Name="User" Relationship="Self.FK_PLAYLISTS_OWNER" FromRole="Playlists" ToRole="Users" />
           <NavigationProperty Name="PlaylistTracks" Relationship="Self.FK_PLAYLISTTRACKS_PLAYLISTS" FromRole="Playlists" ToRole="PlaylistTracks" />
         </EntityType>
-        <EntityType Name="PlaylistTrack" a:TypeAccess="Public" xmlns:a="http://schemas.microsoft.com/ado/2006/04/codegeneration">
+        <EntityType Name="PlaylistTrack">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="Playlist" Type="Int32" Nullable="false" />
+          <Property Name="Playlist" Type="Guid" Nullable="false" />
           <Property Name="Track" Type="Guid" Nullable="false" />
           <Property Name="Order" Type="Int32" />
           <NavigationProperty Name="Playlist1" Relationship="Self.FK_PLAYLISTTRACKS_PLAYLISTS" FromRole="PlaylistTracks" ToRole="Playlists" />
           <NavigationProperty Name="Track1" Relationship="Self.FK_PLAYLISTTRACKS_TRACKS" FromRole="PlaylistTracks" ToRole="Tracks" />
         </EntityType>
-        <EntityType Name="Quality" a:TypeAccess="Public" xmlns:a="http://schemas.microsoft.com/ado/2006/04/codegeneration">
+        <EntityType Name="Quality">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
@@ -561,7 +561,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <Property Name="Directory" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
           <NavigationProperty Name="AvailableQualities" Relationship="Self.FK_AVAILABLEQUALITIES_QUALITY" FromRole="Qualities" ToRole="AvailableQualities" />
         </EntityType>
-        <EntityType Name="Rule" a:TypeAccess="Public" xmlns:a="http://schemas.microsoft.com/ado/2006/04/codegeneration">
+        <EntityType Name="Rule">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
@@ -569,7 +569,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <Property Name="Name" Type="String" MaxLength="10" FixedLength="false" Unicode="true" Nullable="false" />
           <NavigationProperty Name="AutoplaylistRules" Relationship="Self.FK_AUTOPLAYLISTRULES_RULE" FromRole="Rules" ToRole="AutoplaylistRules" />
         </EntityType>
-        <EntityType Name="Track" a:TypeAccess="Public" xmlns:a="http://schemas.microsoft.com/ado/2006/04/codegeneration">
+        <EntityType Name="Track">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
@@ -592,7 +592,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <NavigationProperty Name="PlaylistTracks" Relationship="Self.FK_PLAYLISTTRACKS_TRACKS" FromRole="Tracks" ToRole="PlaylistTracks" />
           <NavigationProperty Name="User" Relationship="Self.FK_TRACKS_OWNER" FromRole="Tracks" ToRole="Users" />
         </EntityType>
-        <EntityType Name="User" a:TypeAccess="Public" xmlns:a="http://schemas.microsoft.com/ado/2006/04/codegeneration">
+        <EntityType Name="User">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
@@ -603,7 +603,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <NavigationProperty Name="Tracks" Relationship="Self.FK_TRACKS_OWNER" FromRole="Users" ToRole="Tracks" />
           <NavigationProperty Name="Devices" Relationship="Self.FK_DEVICES_OWNER" FromRole="Users" ToRole="Devices" />
         </EntityType>
-        <EntityType Name="Device" a:TypeAccess="Public" xmlns:a="http://schemas.microsoft.com/ado/2006/04/codegeneration">
+        <EntityType Name="Device">
           <Key>
             <PropertyRef Name="Key" />
             <PropertyRef Name="Owner" />
@@ -752,7 +752,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_PLAYLISTS_OWNER">
-          <End Role="Users" Type="Self.User" Multiplicity="1" />
+          <End Role="Users" Type="Self.User" Multiplicity="0..1" />
           <End Role="Playlists" Type="Self.Playlist" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Users">
@@ -811,22 +811,22 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <EntityContainer Name="DbEntities" annotation:LazyLoadingEnabled="true" a:TypeAccess="Internal" xmlns:a="http://schemas.microsoft.com/ado/2006/04/codegeneration">
-          <EntitySet Name="Albums" EntityType="Self.Album" a:GetterAccess="Internal" />
-          <EntitySet Name="Arts" EntityType="Self.Art" a:GetterAccess="Internal" />
-          <EntitySet Name="Artists" EntityType="Self.Artist" a:GetterAccess="Internal" />
-          <EntitySet Name="AutoplaylistRules" EntityType="Self.AutoplaylistRule" a:GetterAccess="Internal" />
-          <EntitySet Name="Autoplaylists" EntityType="Self.Autoplaylist" a:GetterAccess="Internal" />
-          <EntitySet Name="AvailableQualities" EntityType="Self.AvailableQuality" a:GetterAccess="Internal" />
-          <EntitySet Name="Metadatas" EntityType="Self.Metadata" a:GetterAccess="Internal" />
-          <EntitySet Name="MetadataFields" EntityType="Self.MetadataField" a:GetterAccess="Internal" />
-          <EntitySet Name="Playlists" EntityType="Self.Playlist" a:GetterAccess="Internal" />
-          <EntitySet Name="PlaylistTracks" EntityType="Self.PlaylistTrack" a:GetterAccess="Internal" />
-          <EntitySet Name="Qualities" EntityType="Self.Quality" a:GetterAccess="Internal" />
-          <EntitySet Name="Rules" EntityType="Self.Rule" a:GetterAccess="Internal" />
-          <EntitySet Name="Tracks" EntityType="Self.Track" a:GetterAccess="Internal" />
-          <EntitySet Name="Users" EntityType="Self.User" a:GetterAccess="Internal" />
-          <EntitySet Name="Devices" EntityType="Self.Device" a:GetterAccess="Internal" />
+        <EntityContainer Name="DbEntities" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Albums" EntityType="Self.Album" />
+          <EntitySet Name="Arts" EntityType="Self.Art" />
+          <EntitySet Name="Artists" EntityType="Self.Artist" />
+          <EntitySet Name="AutoplaylistRules" EntityType="Self.AutoplaylistRule" />
+          <EntitySet Name="Autoplaylists" EntityType="Self.Autoplaylist" />
+          <EntitySet Name="AvailableQualities" EntityType="Self.AvailableQuality" />
+          <EntitySet Name="Metadatas" EntityType="Self.Metadata" />
+          <EntitySet Name="MetadataFields" EntityType="Self.MetadataField" />
+          <EntitySet Name="Playlists" EntityType="Self.Playlist" />
+          <EntitySet Name="PlaylistTracks" EntityType="Self.PlaylistTrack" />
+          <EntitySet Name="Qualities" EntityType="Self.Quality" />
+          <EntitySet Name="Rules" EntityType="Self.Rule" />
+          <EntitySet Name="Tracks" EntityType="Self.Track" />
+          <EntitySet Name="Users" EntityType="Self.User" />
+          <EntitySet Name="Devices" EntityType="Self.Device" />
           <AssociationSet Name="Album" Association="Self.Album1">
             <End Role="Albums" EntitySet="Albums" />
             <End Role="Tracks" EntitySet="Tracks" />
@@ -908,9 +908,9 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
     <!-- C-S mapping content -->
     <edmx:Mappings>
       <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
-        <EntityContainerMapping StorageEntityContainer="EntityFrameworkStoreContainer" CdmEntityContainer="DbEntities">
+        <EntityContainerMapping StorageEntityContainer="DolomiteModelEntityFrameworkStoreContainer" CdmEntityContainer="DbEntities">
           <EntitySetMapping Name="Albums">
-            <EntityTypeMapping TypeName="EntityFramework.Album">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Album">
               <MappingFragment StoreEntitySet="Albums">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
@@ -920,7 +920,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Arts">
-            <EntityTypeMapping TypeName="EntityFramework.Art">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Art">
               <MappingFragment StoreEntitySet="Art">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Mimetype" ColumnName="Mimetype" />
@@ -929,7 +929,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Artists">
-            <EntityTypeMapping TypeName="EntityFramework.Artist">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Artist">
               <MappingFragment StoreEntitySet="Artists">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
@@ -937,7 +937,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="AutoplaylistRules">
-            <EntityTypeMapping TypeName="EntityFramework.AutoplaylistRule">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.AutoplaylistRule">
               <MappingFragment StoreEntitySet="AutoplaylistRules">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Autoplaylist" ColumnName="Autoplaylist" />
@@ -948,7 +948,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Autoplaylists">
-            <EntityTypeMapping TypeName="EntityFramework.Autoplaylist">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Autoplaylist">
               <MappingFragment StoreEntitySet="Autoplaylists">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Owner" ColumnName="Owner" />
@@ -957,7 +957,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="AvailableQualities">
-            <EntityTypeMapping TypeName="EntityFramework.AvailableQuality">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.AvailableQuality">
               <MappingFragment StoreEntitySet="AvailableQualities">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Track" ColumnName="Track" />
@@ -966,7 +966,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Metadatas">
-            <EntityTypeMapping TypeName="EntityFramework.Metadata">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Metadata">
               <MappingFragment StoreEntitySet="Metadata">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Track" ColumnName="Track" />
@@ -976,7 +976,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="MetadataFields">
-            <EntityTypeMapping TypeName="EntityFramework.MetadataField">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.MetadataField">
               <MappingFragment StoreEntitySet="MetadataFields">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="TagName" ColumnName="TagName" />
@@ -986,7 +986,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Playlists">
-            <EntityTypeMapping TypeName="EntityFramework.Playlist">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Playlist">
               <MappingFragment StoreEntitySet="Playlists">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Owner" ColumnName="Owner" />
@@ -995,7 +995,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="PlaylistTracks">
-            <EntityTypeMapping TypeName="EntityFramework.PlaylistTrack">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.PlaylistTrack">
               <MappingFragment StoreEntitySet="PlaylistTracks">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Playlist" ColumnName="Playlist" />
@@ -1005,7 +1005,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Qualities">
-            <EntityTypeMapping TypeName="EntityFramework.Quality">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Quality">
               <MappingFragment StoreEntitySet="Qualities">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
@@ -1018,7 +1018,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Rules">
-            <EntityTypeMapping TypeName="EntityFramework.Rule">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Rule">
               <MappingFragment StoreEntitySet="Rules">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
@@ -1026,7 +1026,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Tracks">
-            <EntityTypeMapping TypeName="EntityFramework.Track">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Track">
               <MappingFragment StoreEntitySet="Tracks">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Owner" ColumnName="Owner" />
@@ -1044,7 +1044,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Users">
-            <EntityTypeMapping TypeName="EntityFramework.User">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.User">
               <MappingFragment StoreEntitySet="Users">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Username" ColumnName="Username" />
@@ -1052,7 +1052,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Devices">
-            <EntityTypeMapping TypeName="EntityFramework.Device">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Device">
               <MappingFragment StoreEntitySet="Devices">
                 <ScalarProperty Name="Key" ColumnName="Key" />
                 <ScalarProperty Name="Owner" ColumnName="Owner" />
@@ -1060,10 +1060,10 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <FunctionImportMapping FunctionImportName="GetAndLockTopOnboardingItem" FunctionName="EntityFramework.Store.GetAndLockTopOnboardingItem" />
-          <FunctionImportMapping FunctionImportName="ReleaseAndCompleteOnboardingItem" FunctionName="EntityFramework.Store.ReleaseAndCompleteOnboardingItem" />
-          <FunctionImportMapping FunctionImportName="ResetOnboardingStatus" FunctionName="EntityFramework.Store.ResetOnboardingStatus" />
-          <FunctionImportMapping FunctionImportName="SetTrackHash" FunctionName="EntityFramework.Store.SetTrackHash" />
+          <FunctionImportMapping FunctionImportName="GetAndLockTopOnboardingItem" FunctionName="DolomiteModel.EntityFramework.Store.GetAndLockTopOnboardingItem" />
+          <FunctionImportMapping FunctionImportName="ReleaseAndCompleteOnboardingItem" FunctionName="DolomiteModel.EntityFramework.Store.ReleaseAndCompleteOnboardingItem" />
+          <FunctionImportMapping FunctionImportName="ResetOnboardingStatus" FunctionName="DolomiteModel.EntityFramework.Store.ResetOnboardingStatus" />
+          <FunctionImportMapping FunctionImportName="SetTrackHash" FunctionName="DolomiteModel.EntityFramework.Store.SetTrackHash" />
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

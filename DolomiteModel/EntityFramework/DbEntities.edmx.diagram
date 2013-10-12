@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="fec77083ff0642cbb5fd35b18ef3d13f" Name="Diagram1">
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Album" Width="1.5" PointX="5.75" PointY="18" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Art" Width="1.5" PointX="5.75" PointY="11.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Artist" Width="1.5" PointX="3.5" PointY="18.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.AutoplaylistRule" Width="1.5" PointX="5.25" PointY="4.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Autoplaylist" Width="1.5" PointX="3" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.AvailableQuality" Width="1.5" PointX="10.25" PointY="7.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Metadata" Width="1.5" PointX="10.25" PointY="4.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.MetadataField" Width="1.5" PointX="3" PointY="1.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Playlist" Width="1.5" PointX="3" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.PlaylistTrack" Width="1.5" PointX="5.25" PointY="8.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Quality" Width="1.5" PointX="8" PointY="2.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Rule" Width="1.5" PointX="3" PointY="10.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Track" Width="1.5" PointX="8" PointY="6.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.User" Width="1.5" PointX="0.75" PointY="7.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Device" Width="1.5" PointX="3" PointY="15.375" IsExpanded="true" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.Album1" ManuallyRouted="false" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_ALBUMS_ARTIST" ManuallyRouted="false" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_TRACKS_ART" ManuallyRouted="false" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTRULES_METADATA" ManuallyRouted="false" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTRULES_PLAYLIST" ManuallyRouted="false" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTRULES_RULE" ManuallyRouted="false" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTS_OWNER" ManuallyRouted="false" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_AVAILABLEQUALITIES_QUALITY" ManuallyRouted="false" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_AVAILABLEQUALITIES_TRACK" ManuallyRouted="false" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_METADATA_FIELD" ManuallyRouted="false" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_METADATA_TRACK" ManuallyRouted="false" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_PLAYLISTS_OWNER" ManuallyRouted="false" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_PLAYLISTTRACKS_PLAYLISTS" ManuallyRouted="false" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_PLAYLISTTRACKS_TRACKS" ManuallyRouted="false" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_TRACKS_OWNER" ManuallyRouted="false" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_DEVICES_OWNER" ManuallyRouted="false" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

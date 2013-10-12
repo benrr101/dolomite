@@ -47,64 +47,64 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EntityFramework\Album.cs">
-      <DependentUpon>Entities.tt</DependentUpon>
+      <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\Art.cs">
-      <DependentUpon>Entities.tt</DependentUpon>
+      <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\Artist.cs">
-      <DependentUpon>Entities.tt</DependentUpon>
+      <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\Autoplaylist.cs">
-      <DependentUpon>Entities.tt</DependentUpon>
+      <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\AutoplaylistRule.cs">
-      <DependentUpon>Entities.tt</DependentUpon>
+      <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\AvailableQuality.cs">
-      <DependentUpon>Entities.tt</DependentUpon>
+      <DependentUpon>DbEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EntityFramework\DbEntities.Context.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DbEntities.Context.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EntityFramework\DbEntities.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DbEntities.tt</DependentUpon>
+    </Compile>
+    <Compile Include="EntityFramework\DbEntities.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DbEntities.edmx</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\Device.cs">
-      <DependentUpon>Entities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="EntityFramework\Entities.Context.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Entities.Context.tt</DependentUpon>
-    </Compile>
-    <Compile Include="EntityFramework\Entities.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Entities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="EntityFramework\Entities.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Entities.edmx</DependentUpon>
+      <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\Metadata.cs">
-      <DependentUpon>Entities.tt</DependentUpon>
+      <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\MetadataField.cs">
-      <DependentUpon>Entities.tt</DependentUpon>
+      <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\Playlist.cs">
-      <DependentUpon>Entities.tt</DependentUpon>
+      <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\PlaylistTrack.cs">
-      <DependentUpon>Entities.tt</DependentUpon>
+      <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\Quality.cs">
-      <DependentUpon>Entities.tt</DependentUpon>
+      <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\Rule.cs">
-      <DependentUpon>Entities.tt</DependentUpon>
+      <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\Track.cs">
-      <DependentUpon>Entities.tt</DependentUpon>
+      <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\User.cs">
-      <DependentUpon>Entities.tt</DependentUpon>
+      <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublicRepresentations\Art.cs" />
@@ -113,23 +113,23 @@
     <Compile Include="TrackDbManager.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-    <EntityDeploy Include="EntityFramework\Entities.edmx">
+    <EntityDeploy Include="EntityFramework\DbEntities.edmx">
       <Generator>EntityModelCodeGenerator</Generator>
-      <LastGenOutput>Entities.Designer.cs</LastGenOutput>
+      <LastGenOutput>DbEntities.Designer.cs</LastGenOutput>
     </EntityDeploy>
-    <None Include="EntityFramework\Entities.Context.tt">
+    <None Include="App.Config" />
+    <None Include="EntityFramework\DbEntities.Context.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <DependentUpon>Entities.edmx</DependentUpon>
-      <LastGenOutput>Entities.Context.cs</LastGenOutput>
+      <DependentUpon>DbEntities.edmx</DependentUpon>
+      <LastGenOutput>DbEntities.Context.cs</LastGenOutput>
     </None>
-    <None Include="EntityFramework\Entities.edmx.diagram">
-      <DependentUpon>Entities.edmx</DependentUpon>
+    <None Include="EntityFramework\DbEntities.edmx.diagram">
+      <DependentUpon>DbEntities.edmx</DependentUpon>
     </None>
-    <None Include="EntityFramework\Entities.tt">
+    <None Include="EntityFramework\DbEntities.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
-      <DependentUpon>Entities.edmx</DependentUpon>
-      <LastGenOutput>Entities.cs</LastGenOutput>
+      <DependentUpon>DbEntities.edmx</DependentUpon>
+      <LastGenOutput>DbEntities.cs</LastGenOutput>
     </None>
     <None Include="packages.config" />
   </ItemGroup>

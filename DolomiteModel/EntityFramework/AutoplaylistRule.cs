@@ -15,7 +15,7 @@ namespace DolomiteModel.EntityFramework
     public partial class AutoplaylistRule
     {
         public int Id { get; set; }
-        public int Autoplaylist { get; set; }
+        public System.Guid Autoplaylist { get; set; }
         public int Rule { get; set; }
         public int MetadataField { get; set; }
         public string Value { get; set; }

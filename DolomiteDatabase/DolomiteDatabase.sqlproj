@@ -110,4 +110,7 @@
   <ItemGroup>
     <RefactorLog Include="DolomiteDatabase.refactorlog" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="DolomiteDatabaseRecreate.publish.xml" />
+  </ItemGroup>
 </Project>

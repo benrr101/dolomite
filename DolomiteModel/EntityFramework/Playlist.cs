@@ -19,8 +19,8 @@ namespace DolomiteModel.EntityFramework
             this.PlaylistTracks = new HashSet<PlaylistTrack>();
         }
     
-        public int Id { get; set; }
-        public int Owner { get; set; }
+        public System.Guid Id { get; set; }
+        public Nullable<int> Owner { get; set; }
         public string Name { get; set; }
     
         public virtual User User { get; set; }

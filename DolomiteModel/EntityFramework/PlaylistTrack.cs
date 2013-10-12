@@ -15,7 +15,7 @@ namespace DolomiteModel.EntityFramework
     public partial class PlaylistTrack
     {
         public int Id { get; set; }
-        public int Playlist { get; set; }
+        public System.Guid Playlist { get; set; }
         public System.Guid Track { get; set; }
         public Nullable<int> Order { get; set; }
     

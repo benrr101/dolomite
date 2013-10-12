@@ -16,7 +16,7 @@ namespace DolomiteModel.EntityFramework
     using System.Data.Objects.DataClasses;
     using System.Linq;
     
-    internal partial class DbEntities : DbContext
+    public partial class DbEntities : DbContext
     {
         public DbEntities()
             : base("name=DbEntities")

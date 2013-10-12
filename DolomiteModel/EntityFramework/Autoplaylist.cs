@@ -19,7 +19,7 @@ namespace DolomiteModel.EntityFramework
             this.AutoplaylistRules = new HashSet<AutoplaylistRule>();
         }
     
-        public int Id { get; set; }
+        public System.Guid Id { get; set; }
         public int Owner { get; set; }
         public string Name { get; set; }
     
