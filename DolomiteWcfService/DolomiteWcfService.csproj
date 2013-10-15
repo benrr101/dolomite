@@ -71,10 +71,12 @@
   <ItemGroup>
     <Compile Include="AzureStorageManager.cs" />
     <Compile Include="Exceptions\DuplicateTrackException.cs" />
+    <Compile Include="IPlaylistEndpoint.cs" />
     <Compile Include="ITracksEndpoint.cs" />
     <Compile Include="LocalStorageManager.cs" />
     <Compile Include="MimetypeDetector.cs" />
     <Compile Include="MultipartParser.cs" />
+    <Compile Include="PlaylistEndpoint.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DolomiteWorkerRole.cs" />
     <Compile Include="Properties\Settings.Designer.cs">

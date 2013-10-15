@@ -5,12 +5,18 @@ using System.Runtime.Serialization;
 namespace DolomiteModel.PublicRepresentations
 {
     [DataContract]
-    class Playlist
+    public class Playlist
     {
         /// <summary>
         /// Id of the playlist
         /// </summary>
         public Guid Id { get; set; }
+
+        /// <summary>
+        /// The name of the playlist
+        /// </summary>
+        [DataMember]
+        public string Name { get; set; }
 
         /// <summary>
         /// The type of the playlist. Should only ever be "Normal" or "Auto"

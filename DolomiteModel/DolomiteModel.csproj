@@ -106,8 +106,12 @@
     <Compile Include="EntityFramework\User.cs">
       <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
+    <Compile Include="PlaylistDbManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublicRepresentations\Art.cs" />
+    <Compile Include="PublicRepresentations\AutoPlaylist.cs" />
+    <Compile Include="PublicRepresentations\AutoPlaylistRule.cs" />
+    <Compile Include="PublicRepresentations\Playlist.cs" />
     <Compile Include="PublicRepresentations\Quality.cs" />
     <Compile Include="PublicRepresentations\Track.cs" />
     <Compile Include="TrackDbManager.cs" />

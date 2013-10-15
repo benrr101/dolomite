@@ -3,7 +3,7 @@
 namespace DolomiteModel.PublicRepresentations
 {
     [DataContract]
-    class AutoPlaylistRule
+    public class AutoPlaylistRule
     {
         /// <summary>
         /// The metadata field the rule is based on

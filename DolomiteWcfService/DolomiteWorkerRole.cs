@@ -18,7 +18,9 @@ namespace DolomiteWcfService
         /// <summary>
         /// Instance of the service host for the dolomite wcf endpoint
         /// </summary>
-        private WebServiceHost _serviceHost;
+        private WebServiceHost _tracksHost;
+
+        private WebServiceHost _playlistHost;
 
         #endregion
 
@@ -63,8 +65,11 @@ namespace DolomiteWcfService
             // Spin up a service end point
             try
             {
-                _serviceHost = new WebServiceHost(typeof (TracksEndpoint), baseAddress);
-                _serviceHost.AddServiceEndpoint(typeof (ITracksEndpoint), webBinding, "/tracks/");
+                _tracksHost = new WebServiceHost(typeof (TracksEndpoint), baseAddress);
+                _tracksHost.AddServiceEndpoint(typeof (ITracksEndpoint), webBinding, "/tracks/");
+
+                _playlistHost = new WebServiceHost(typeof(PlaylistEndpoint), baseAddress);
+                _playlistHost.AddServiceEndpoint(typeof (IPlaylistEndpoint), webBinding, "/playlists/");
 
                 // Enable the http metadata output
                 ServiceMetadataBehavior smb = new ServiceMetadataBehavior
@@ -72,8 +77,11 @@ namespace DolomiteWcfService
                         HttpGetEnabled = true,
                         MetadataExporter = {PolicyVersion = PolicyVersion.Policy15},
                     };
-                _serviceHost.Description.Behaviors.Add(smb);
-                _serviceHost.Open();
+                _tracksHost.Description.Behaviors.Add(smb);
+                _tracksHost.Open();
+
+                _playlistHost.Description.Behaviors.Add(smb);
+                _playlistHost.Open();
 
                 Trace.TraceInformation("Started Dolomite WCF Endpoint on {0}", baseAddress.AbsoluteUri);
             }
@@ -113,8 +121,8 @@ namespace DolomiteWcfService
             try
             {
                 // Shut down the service host, gracefully
-                if (_serviceHost != null)
-                    _serviceHost.Close(TimeSpan.FromSeconds(10));
+                if (_tracksHost != null)
+                    _tracksHost.Close(TimeSpan.FromSeconds(10));
             }
             catch (TimeoutException)
             {

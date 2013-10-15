@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace DolomiteModel.PublicRepresentations
 {
     [DataContract]
-    class AutoPlaylist : Playlist
+    public class AutoPlaylist : Playlist
     {
         /// <summary>
         /// Limit the playlist to a certain number of tracks. Can be null.
