@@ -43,7 +43,7 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="uniqueidentifier" Nullable="false" StoreGeneratedPattern="None" />
+          <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Owner" Type="int" Nullable="false" />
           <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
         </EntityType>
@@ -88,7 +88,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="uniqueidentifier" Nullable="false" StoreGeneratedPattern="None" />
+          <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Owner" Type="int" />
           <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
         </EntityType>
@@ -295,7 +295,9 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_PLAYLISTTRACKS_PLAYLISTS">
-          <End Role="Playlists" Type="Self.Playlists" Multiplicity="1" />
+          <End Role="Playlists" Type="Self.Playlists" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
           <End Role="PlaylistTracks" Type="Self.PlaylistTracks" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Playlists">
@@ -307,7 +309,9 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_PLAYLISTTRACKS_TRACKS">
-          <End Role="Tracks" Type="Self.Tracks" Multiplicity="1" />
+          <End Role="Tracks" Type="Self.Tracks" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
           <End Role="PlaylistTracks" Type="Self.PlaylistTracks" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Tracks">
@@ -343,6 +347,10 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           </ReferentialConstraint>
         </Association>
         <Function Name="GetAndLockTopOnboardingItem" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
+        <Function Name="IncrementPlaylistTrackOrder" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="playlist" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="position" Type="int" Mode="In" />
+        </Function>
         <Function Name="ReleaseAndCompleteOnboardingItem" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="workItem" Type="uniqueidentifier" Mode="In" />
         </Function>
@@ -902,6 +910,10 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             <Parameter Name="trackId" Mode="In" Type="Guid" />
             <Parameter Name="hash" Mode="In" Type="String" />
           </FunctionImport>
+          <FunctionImport Name="IncrementPlaylistTrackOrder">
+            <Parameter Name="playlist" Mode="In" Type="Guid" />
+            <Parameter Name="position" Mode="In" Type="Int32" />
+          </FunctionImport>
         </EntityContainer>
       </Schema>
     </edmx:ConceptualModels>
@@ -1064,6 +1076,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <FunctionImportMapping FunctionImportName="ReleaseAndCompleteOnboardingItem" FunctionName="DolomiteModel.EntityFramework.Store.ReleaseAndCompleteOnboardingItem" />
           <FunctionImportMapping FunctionImportName="ResetOnboardingStatus" FunctionName="DolomiteModel.EntityFramework.Store.ResetOnboardingStatus" />
           <FunctionImportMapping FunctionImportName="SetTrackHash" FunctionName="DolomiteModel.EntityFramework.Store.SetTrackHash" />
+          <FunctionImportMapping FunctionImportName="IncrementPlaylistTrackOrder" FunctionName="DolomiteModel.EntityFramework.Store.IncrementPlaylistTrackOrder" />
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

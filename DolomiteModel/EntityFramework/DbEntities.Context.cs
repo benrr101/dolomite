@@ -79,5 +79,18 @@ namespace DolomiteModel.EntityFramework
     
             return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("SetTrackHash", trackIdParameter, hashParameter);
         }
+    
+        public virtual int IncrementPlaylistTrackOrder(Nullable<System.Guid> playlist, Nullable<int> position)
+        {
+            var playlistParameter = playlist.HasValue ?
+                new ObjectParameter("playlist", playlist) :
+                new ObjectParameter("playlist", typeof(System.Guid));
+    
+            var positionParameter = position.HasValue ?
+                new ObjectParameter("position", position) :
+                new ObjectParameter("position", typeof(int));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("IncrementPlaylistTrackOrder", playlistParameter, positionParameter);
+        }
     }
 }

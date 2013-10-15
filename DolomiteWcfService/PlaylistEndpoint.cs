@@ -54,7 +54,7 @@ namespace DolomiteWcfService
                     {
                         foreach (Guid trackId in playlist.Tracks)
                         {
-                            // TODO: Add to the playlist
+                            PlaylistDbManager.AddTrackToPlaylist(id, trackId);
                         }
                     }
                 }
