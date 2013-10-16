@@ -19,13 +19,13 @@ namespace DolomiteWcfService
 
         #region Properties
 
-        private PlaylistDbManager PlaylistDbManager { get; set; }
+        private PlaylistManager PlaylistManager { get; set; }
 
         #endregion
 
         public PlaylistEndpoint()
         {
-            PlaylistDbManager = PlaylistDbManager.Instance;
+            PlaylistManager = PlaylistManager.Instance;
         }
 
         /// <summary>
@@ -44,41 +44,23 @@ namespace DolomiteWcfService
                 Playlist playlist = JsonConvert.DeserializeObject<Playlist>(bodyStr);
 
                 // Determine what type of processing to do
+                Guid id;
                 if (playlist.PlaylistType.Equals("standard", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Create the playlist
-                    Guid id = PlaylistDbManager.CreateStandardPlaylist(playlist.Name);
-
-                    // Did they send tracks to add to the playlist?
-                    if (playlist.Tracks != null && playlist.Tracks.Any())
-                    {
-                        foreach (Guid trackId in playlist.Tracks)
-                        {
-                            PlaylistDbManager.AddTrackToPlaylist(id, trackId);
-                        }
-                    }
+                    id = PlaylistManager.CreateStandardPlaylist(playlist);
                 }
                 else if (playlist.PlaylistType.Equals("auto", StringComparison.OrdinalIgnoreCase))
                 {
                     // Try to parse it as an auto playlist
                     AutoPlaylist autoPlaylist = JsonConvert.DeserializeObject<AutoPlaylist>(bodyStr);
-                    Guid id = PlaylistDbManager.CreateAutoPlaylist(autoPlaylist.Name);
-
-                    // Did they send rules to add to the playlist?
-                    if (autoPlaylist.Rules != null && autoPlaylist.Rules.Any())
-                    {
-                        foreach (AutoPlaylistRule rule in autoPlaylist.Rules)
-                        {
-                            // TODO: Add to the playlist
-                        }
-                    }
+                    id = PlaylistManager.CreateAutoPlaylist(autoPlaylist);
                 }
                 else
                 {
                     throw new ArgumentOutOfRangeException();
                 }
 
-                string responseJson = JsonConvert.SerializeObject(new WebResponse(WebResponse.StatusValue.Success));
+                string responseJson = JsonConvert.SerializeObject(new PlaylistCreationSuccessResponse(id));
                 return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
             }
             catch (JsonSerializationException)
@@ -135,6 +117,37 @@ namespace DolomiteWcfService
         public Message DeleteFromPlaylist(string guid, string id)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="guid"></param>
+        /// <returns></returns>
+        public Message DeletePlaylist(string guid)
+        {
+            try
+            {
+                // Parse the guid into a Guid and attempt to delete
+                PlaylistManager.DeletePlaylist(Guid.Parse(guid));
+                string responseJson = JsonConvert.SerializeObject(new WebResponse(WebResponse.StatusValue.Success));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (FormatException)
+            {
+                // The guid was probably incorrect
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", guid);
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (FileNotFoundException)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
+                string message = String.Format("The track with the specified GUID '{0}' does not exist", guid);
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
         }
 
         #region Helper Methods

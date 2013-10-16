@@ -147,6 +147,40 @@ namespace DolomiteModel
 
         #endregion
 
+        #region Deletion Methods
+
+        /// <summary>
+        /// Tries to delete the playlist from the database. It doesn't matter
+        /// what type of playlist it is. Non-existing playlist errors are swallowed.
+        /// </summary>
+        /// <remarks>
+        /// Since GUIDs are supposed to be unique, we don't have to worry about
+        /// accidentally deleting the wrong playlist.
+        /// </remarks>
+        /// <param name="playlistGuid">GUID of the playlist to delete</param>
+        public void DeletePlaylist(Guid playlistGuid)
+        {
+            if (playlistGuid == Guid.Empty)
+                return;
+
+            using (var context = new DbEntities())
+            {
+                // Try to delete the playlist from the autoplaylists
+                Autoplaylist autoplaylist = context.Autoplaylists.FirstOrDefault(ap => ap.Id == playlistGuid);
+                if (autoplaylist != null)
+                    context.Autoplaylists.Remove(autoplaylist);
+
+                // Try to delete the playlist from the playlists
+                Playlist playlist = context.Playlists.FirstOrDefault(p => p.Id == playlistGuid);
+                if (playlist != null)
+                    context.Playlists.Remove(playlist);
+
+                context.SaveChanges();
+            } 
+        }
+
+        #endregion
+
         #endregion
 
     }

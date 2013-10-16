@@ -45,6 +45,10 @@ namespace DolomiteWcfService
         [WebInvoke(Method = "DELETE", UriTemplate = "/{guid}/{id}")]
         Message DeleteFromPlaylist(string guid, string id);
 
+        [OperationContract]
+        [WebInvoke(Method = "DELETE", UriTemplate = "/{guid}/")]
+        Message DeletePlaylist(string guid);
+
         #endregion
 
     }

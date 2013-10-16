@@ -48,4 +48,15 @@ namespace DolomiteWcfService {
             Hash = hash;
         }
     }
+
+    public class PlaylistCreationSuccessResponse : WebResponse
+    {
+        [DataMember]
+        public string Guid { get; set; }
+
+        public PlaylistCreationSuccessResponse(Guid guid) : base(StatusValue.Success)
+        {
+            Guid = guid.ToString();
+        }
+    }
 }
