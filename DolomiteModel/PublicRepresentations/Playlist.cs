@@ -10,6 +10,7 @@ namespace DolomiteModel.PublicRepresentations
         /// <summary>
         /// Id of the playlist
         /// </summary>
+        [DataMember]
         public Guid Id { get; set; }
 
         /// <summary>

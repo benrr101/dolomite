@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
-using System.Linq;
+using System.Collections.Generic;
 using System.Net;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Web;
@@ -99,9 +99,16 @@ namespace DolomiteWcfService
             }
         }
 
+        /// <summary>
+        /// Fetches all the playlists from the database. This does not include
+        /// their corresponding rules or tracks.
+        /// </summary>
+        /// <returns>A json seriailized version of the list of playlists</returns>
         public Message GetAllPlaylists()
         {
-            throw new NotImplementedException();
+            List<Playlist> playlists = PlaylistManager.GetAllPlaylists();
+            string playlistsJson = JsonConvert.SerializeObject(playlists);
+            return WebOperationContext.Current.CreateTextResponse(playlistsJson, "application/json", Encoding.UTF8);
         }
 
         public Message GetPlaylist(string guid)

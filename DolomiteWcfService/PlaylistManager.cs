@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using DolomiteModel;
 using DolomiteModel.PublicRepresentations;
@@ -118,7 +119,15 @@ namespace DolomiteWcfService
 
         #region Retrieve Methods
 
-
+        /// <summary>
+        /// Retrieves a list of all playlists from the database
+        /// </summary>
+        /// <returns>List of all playlists</returns>
+        public List<Playlist> GetAllPlaylists()
+        {
+            // Simple, pass it off to the db wrangler
+            return PlaylistDbManager.GetAllPlaylists();
+        }
 
         #endregion
 

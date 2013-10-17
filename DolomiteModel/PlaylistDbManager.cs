@@ -12,6 +12,14 @@ namespace DolomiteModel
     public class PlaylistDbManager
     {
 
+        #region Constants
+
+        private const string AutoPlaylist = "auto";
+
+        private const string StandardPlaylist = "standard";
+
+        #endregion
+
         #region Singleton Instance Code
 
         private static PlaylistDbManager _instance;
@@ -101,6 +109,40 @@ namespace DolomiteModel
                 return guid;
             }
         }
+
+        #endregion
+
+        #region Retrieval Methods
+
+        /// <summary>
+        /// Creates a list of all the playlists in the database.
+        /// </summary>
+        /// <returns>The list of playlists (auto and standard) without tracks or rules</returns>
+        public List<Pub.Playlist> GetAllPlaylists()
+        {
+            using (var context = new DbEntities())
+            {
+                // Select all the regular playlists 
+                List<Pub.Playlist> playlists = (from p in context.Playlists
+                    select new Pub.Playlist
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        PlaylistType = StandardPlaylist
+                    }).ToList();
+
+                // Select all the auto playlists
+                playlists.AddRange(from ap in context.Autoplaylists
+                    select new Pub.Playlist
+                    {
+                        Id = ap.Id,
+                        Name = ap.Name,
+                        PlaylistType = AutoPlaylist
+                    });
+
+                return playlists;
+            }
+        } 
 
         #endregion
 
