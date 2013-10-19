@@ -44,8 +44,9 @@
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
-          <Property Name="Owner" Type="int" Nullable="false" />
+          <Property Name="Owner" Type="int" />
           <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
+          <Property Name="Limit" Type="int" />
         </EntityType>
         <EntityType Name="AvailableQualities">
           <Key>
@@ -82,7 +83,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="TagName" Type="nvarchar" MaxLength="20" Nullable="false" />
           <Property Name="DisplayName" Type="nvarchar" MaxLength="20" Nullable="false" />
-          <Property Name="AllowedRules" Type="nvarchar" MaxLength="150" />
+          <Property Name="Type" Type="nvarchar" MaxLength="20" Nullable="false" />
         </EntityType>
         <EntityType Name="Playlists">
           <Key>
@@ -205,7 +206,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_AUTOPLAYLISTS_OWNER">
-          <End Role="Users" Type="Self.Users" Multiplicity="1" />
+          <End Role="Users" Type="Self.Users" Multiplicity="0..1" />
           <End Role="Autoplaylists" Type="Self.Autoplaylists" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Users">
@@ -498,10 +499,11 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="None" />
-          <Property Name="Owner" Type="Int32" Nullable="false" />
+          <Property Name="Owner" Type="Int32" />
           <Property Name="Name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
           <NavigationProperty Name="AutoplaylistRules" Relationship="Self.FK_AUTOPLAYLISTRULES_PLAYLIST" FromRole="Autoplaylists" ToRole="AutoplaylistRules" />
           <NavigationProperty Name="User" Relationship="Self.FK_AUTOPLAYLISTS_OWNER" FromRole="Autoplaylists" ToRole="Users" />
+          <Property Name="Limit" Type="Int32" />
         </EntityType>
         <EntityType Name="AvailableQuality">
           <Key>
@@ -531,9 +533,9 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="TagName" Type="String" MaxLength="20" FixedLength="false" Unicode="true" Nullable="false" />
           <Property Name="DisplayName" Type="String" MaxLength="20" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="AllowedRules" Type="String" MaxLength="150" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="AutoplaylistRules" Relationship="Self.FK_AUTOPLAYLISTRULES_METADATA" FromRole="MetadataFields" ToRole="AutoplaylistRules" />
           <NavigationProperty Name="Metadatas" Relationship="Self.FK_METADATA_FIELD" FromRole="MetadataFields" ToRole="Metadata" />
+          <Property Name="Type" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="Playlist">
           <Key>
@@ -694,7 +696,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_AUTOPLAYLISTS_OWNER">
-          <End Role="Users" Type="Self.User" Multiplicity="1" />
+          <End Role="Users" Type="Self.User" Multiplicity="0..1" />
           <End Role="Autoplaylists" Type="Self.Autoplaylist" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Users">
@@ -962,6 +964,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <EntitySetMapping Name="Autoplaylists">
             <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Autoplaylist">
               <MappingFragment StoreEntitySet="Autoplaylists">
+                <ScalarProperty Name="Limit" ColumnName="Limit" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Owner" ColumnName="Owner" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
@@ -990,10 +993,10 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <EntitySetMapping Name="MetadataFields">
             <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.MetadataField">
               <MappingFragment StoreEntitySet="MetadataFields">
+                <ScalarProperty Name="Type" ColumnName="Type" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="TagName" ColumnName="TagName" />
                 <ScalarProperty Name="DisplayName" ColumnName="DisplayName" />
-                <ScalarProperty Name="AllowedRules" ColumnName="AllowedRules" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

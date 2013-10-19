@@ -3,23 +3,28 @@ Post-Deployment Script
 */
 
 -- Add some supported metadata fields to the database
-INSERT INTO MetadataFields (TagName, DisplayName) 
+INSERT INTO MetadataFields ([TagName], [DisplayName], [Type]) 
 VALUES 
-	('Title', 'Title'), 
-	('Performer', 'Artist'), 
-	('AlbumArtist', 'Album Artist'),
-	('Composer', 'Composer'),
-	('Album', 'Album'),
-	('Genre', 'Genre'),
-	('Year', 'Year'),
-	('Track', 'Track Number'),
-	('TrackCount', 'Track Count'),
-	('Disc', 'Disc Number'),
-	('Lyrics', 'Lyrics'),
-	('BeatsPerMinute', 'BPM'),
-	('Conductor', 'Conductor'),
-	('Copyright', 'Copyright'),
-	('DiscCount', 'Disc Count');
+	('Title', 'Title', 'string'), 
+	('Performer', 'Artist', 'string'), 
+	('AlbumArtist', 'Album Artist', 'string'),
+	('Composer', 'Composer', 'string'),
+	('Album', 'Album', 'string'),
+	('Genre', 'Genre', 'string'),
+	('Year', 'Year', 'numeric'),
+	('Track', 'Track Number', 'numeric'),
+	('TrackCount', 'Track Count', 'numeric'),
+	('Disc', 'Disc Number', 'numeric'),
+	('Lyrics', 'Lyrics', 'string'),
+	('BeatsPerMinute', 'BPM', 'numeric'),
+	('Conductor', 'Conductor', 'string'),
+	('Copyright', 'Copyright', 'string'),
+	('Comment', 'Comment', 'string'),
+	('DiscCount', 'Disc Count', 'numeric'),
+	('DateAdded', 'Date Added', 'date'),
+	('PlayCount', 'Play Count', 'numeric'),
+	('LastPlayed', 'Last Played', 'date'),
+	('Duration', 'Duration', 'numeric');
 
 -- Add some supported audio qualities for transcoding
 INSERT INTO Qualities (Name, Codec, Bitrate, Extension, Directory, Mimetype) 
