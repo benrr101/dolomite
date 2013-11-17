@@ -16,3 +16,9 @@ Thumbs.db
 # NuGet things
 packages/*
 !packages/repositories.config
+
+#VS Backup things
+Upgrade*.htm*
+Upgrade*.xml
+Backup
+_Upgradereport*
