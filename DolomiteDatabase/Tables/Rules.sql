@@ -1,5 +1,7 @@
 ﻿CREATE TABLE [dbo].[Rules]
 (
 	[Id]	INT NOT NULL PRIMARY KEY IDENTITY(1,1), 
-    [Name]	NVARCHAR(10) NOT NULL
+    [Name]	NVARCHAR(30) NOT NULL, 
+    [DisplayName] NVARCHAR(30) NOT NULL, 
+    [Type] NVARCHAR(20) NOT NULL
 )

@@ -20,6 +20,35 @@ namespace DolomiteModel
 
         #endregion
 
+        #region Properties
+
+        /// <summary>
+        /// A cache of the allowed rules organized by their datatype.
+        /// </summary>
+        private Dictionary<string, EntityFramework.Rule[]> _allowedMetadataRules; 
+        private Dictionary<string, EntityFramework.Rule[]> AllowedMetadataRules
+        {
+            get
+            {
+                // Peform the cache lookup if necessary
+                if (_allowedMetadataRules == null)
+                {
+                    using (var context = new DbEntities())
+                    {
+                        _allowedMetadataRules = (from r in context.Rules
+                            group r by r.Type
+                            into types
+                            select new {types.Key, Value = types}).ToDictionary((t=> t.Key), (t => t.Value.ToArray()));
+                    }
+                }
+
+                // Returned the cached version
+                return _allowedMetadataRules;
+            }
+        }
+
+        #endregion
+
         #region Singleton Instance Code
 
         private static PlaylistDbManager _instance;
@@ -42,7 +71,50 @@ namespace DolomiteModel
         #region Public Methods
 
         #region Creation Methods
-        
+
+        /// <summary>
+        /// Creates a new auto playlist
+        /// </summary>
+        /// <param name="name">The name to give to the playlist</param>
+        /// <param name="limit">The optional limit of tracks to satisfy the playlist</param>
+        /// <returns>The new guid id for the playlist</returns>
+        public Guid CreateAutoPlaylist(string name, int? limit = null)
+        {
+            using (var context = new DbEntities())
+            {
+                // Generate a new playlist guid
+                Guid guid = Guid.NewGuid();
+
+                // Create the playlist and add to db
+                Autoplaylist playlist = new Autoplaylist
+                {
+                    Id = guid,
+                    Limit = limit,
+                    Name = name
+                };
+                context.Autoplaylists.Add(playlist);
+
+                try
+                {
+                    context.SaveChanges();
+                }
+                catch (DbUpdateException ex)
+                {
+                    // Check for duplicate entry error
+                    SqlException sex = ex.InnerException.InnerException as SqlException;
+                    if (sex != null && sex.Number == 2601)
+                    {
+                        throw new DuplicateNameException(name);
+                    }
+                    
+                    // Default to rethrowing
+                    throw;
+                }
+
+                return guid;
+            }
+        }
+
         /// <summary>
         /// Creates a new standard playlist
         /// </summary>
@@ -83,33 +155,6 @@ namespace DolomiteModel
             }
         }
 
-        /// <summary>
-        /// Creates a new auto playlist
-        /// </summary>
-        /// <param name="name">The name to give to the playlist</param>
-        /// <param name="limit">The optional limit of tracks to satisfy the playlist</param>
-        /// <returns>The new guid id for the playlist</returns>
-        public Guid CreateAutoPlaylist(string name, int? limit = null)
-        {
-            using (var context = new DbEntities())
-            {
-                // Generate a new playlist guid
-                Guid guid = Guid.NewGuid();
-
-                // Create the playlist and add to db
-                Autoplaylist playlist = new Autoplaylist
-                {
-                    Id = guid,
-                    // TODO: Add limit
-                    Name = name
-                };
-                context.Autoplaylists.Add(playlist);
-                context.SaveChanges();
-
-                return guid;
-            }
-        }
-
         #endregion
 
         #region Retrieval Methods
@@ -142,7 +187,58 @@ namespace DolomiteModel
 
                 return playlists;
             }
-        } 
+        }
+
+        /// <summary>
+        /// Attempts to find a playlist with the given id. It checks for a standard
+        /// playlist first, then an autoplaylist.
+        /// </summary>
+        /// <remarks>
+        /// This is more/less safe since we should never have a collision of guids
+        /// </remarks>
+        /// <exception cref="ObjectNotFoundException">
+        /// Thrown if the guid does not match a standard or auto playlist
+        /// </exception>
+        /// <param name="guid">The guid of the playlist to find</param>
+        /// <returns>A public-ready playlist object.</returns>
+        public Pub.Playlist GetPlaylist(Guid guid)
+        {
+            using (var context = new DbEntities())
+            {
+                // Try to retrieve the playlist as a standard playlist
+                Playlist playlist = context.Playlists.FirstOrDefault(p => p.Id == guid);
+                if (playlist != null)
+                {
+                    Pub.Playlist pubPlaylist = new Pub.Playlist
+                    {
+                        Id = playlist.Id,
+                        Name = playlist.Name,
+                        PlaylistType = StandardPlaylist,
+                        Tracks = playlist.PlaylistTracks.Select(spt => spt.Track).ToList()
+                    };
+                    return pubPlaylist;
+                }
+
+                // Try to retrieve the playlist as an auto playlist
+                Autoplaylist autoPlaylist = context.Autoplaylists.FirstOrDefault(ap => ap.Id == guid);
+                if (autoPlaylist != null)
+                {
+                    Pub.AutoPlaylist pubAutoPlaylist = new Pub.AutoPlaylist
+                    {
+                        Id = autoPlaylist.Id,
+                        Limit = autoPlaylist.Limit,
+                        Name = autoPlaylist.Name,
+                        PlaylistType = AutoPlaylist,
+                        Rules = autoPlaylist.AutoplaylistRules.Select(spt => new Pub.AutoPlaylistRule()).ToList(),  //TODO: Generate real objects
+                        Tracks = {Guid.Empty}   // TODO: Write the fetcher for autoplaylists
+                    };
+                    return pubAutoPlaylist;
+                }
+
+                // The playlist does not exist.
+                throw new ObjectNotFoundException(String.Format("A playlist with id {0} could not be found", guid));
+            }
+        }
 
         #endregion
 
@@ -187,6 +283,47 @@ namespace DolomiteModel
             }
         }
 
+        /// <summary>
+        /// Adds the given rule to the autoplaylist specified.
+        /// </summary>
+        /// <exception cref="InvalidExpressionException">Thrown when the rule is invalid</exception>
+        /// <exception cref="ObjectNotFoundException">Thrown if the guid does not represent an autoplaylist</exception>
+        /// <param name="playlistGuid">The guid of the autoplaylist to add the rule to</param>
+        /// <param name="rule">The rule to add to the autoplaylist</param>
+        public void AddRuleToAutoplaylist(Guid playlistGuid, Pub.AutoPlaylistRule rule)
+        {
+            // Make sure the rule is valid
+            if (!IsValidRule(rule))
+            {
+                string message = String.Format("The rule {0} {1} {2} is invalid.", rule.Field, rule.Comparison, rule.Value);
+                throw new InvalidExpressionException(message);
+            }
+
+            using (var context = new DbEntities())
+            {
+                // Add the rule to the playlist
+                Autoplaylist playlist = context.Autoplaylists.FirstOrDefault(p => p.Id == playlistGuid);
+                if (playlist == null)
+                {
+                    string message =
+                        String.Format("Autoplaylist with guid {0} does not exist or is not an auto playlist.",
+                            playlistGuid);
+                    throw new ObjectNotFoundException(message);
+                }
+
+                AutoplaylistRule newRule = new AutoplaylistRule
+                {
+                    Autoplaylist = playlistGuid,
+                    MetadataField = context.MetadataFields.First(m => m.TagName == rule.Field).Id,
+                    Rule = context.Rules.First(r => r.Name == rule.Comparison).Id,
+                    Value = rule.Value
+                };
+
+                playlist.AutoplaylistRules.Add(newRule);
+                context.SaveChanges();
+            }
+        }
+
         #endregion
 
         #region Deletion Methods
@@ -218,6 +355,28 @@ namespace DolomiteModel
                     context.Playlists.Remove(playlist);
 
                 context.SaveChanges();
+            } 
+        }
+
+        #endregion
+
+        #region Other Stuff
+
+        /// <summary>
+        /// Determines if the rule is valid by comparing it to the list of valid
+        /// comparison for the data type.
+        /// </summary>
+        /// <param name="rule">The public autoplaylist that was deserialized from the request</param>
+        /// <returns>True if the rule is valid. False otherwise.</returns>
+        private bool IsValidRule(Pub.AutoPlaylistRule rule)
+        {
+            using (var context = new DbEntities())
+            {
+                // Try to fetch the field that the rule uses
+                MetadataField field = context.MetadataFields.FirstOrDefault(f => f.DisplayName == rule.Field);
+                return field != null &&
+                       AllowedMetadataRules[field.Type].Any(
+                           t => t.Name.Equals(rule.Comparison, StringComparison.OrdinalIgnoreCase));
             } 
         }
 

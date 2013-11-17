@@ -63,7 +63,7 @@ namespace DolomiteWcfService
                 {
                     foreach (AutoPlaylistRule rule in playlist.Rules)
                     {
-                        // TODO: Add to the playlist
+                        PlaylistDbManager.AddRuleToAutoplaylist(id, rule);
                     }
                 }
 
@@ -97,11 +97,7 @@ namespace DolomiteWcfService
                 {
                     foreach (Guid trackId in playlist.Tracks)
                     {
-                        // Check to see if the track exists
-                        TrackDbManager.GetTrackByGuid(trackId);
-
-                        // Add the track to the playlist
-                        PlaylistDbManager.AddTrackToPlaylist(id, trackId);
+                        AddTrackToPlaylist(id, trackId);
                     }
                 }
 
@@ -129,11 +125,49 @@ namespace DolomiteWcfService
             return PlaylistDbManager.GetAllPlaylists();
         }
 
+        /// <summary>
+        /// Retrieves the requested playlist from the database
+        /// </summary>
+        /// <param name="playlistGuid">GUID of the playlist to look up</param>
+        /// <returns>A public representation of the playlist</returns>
+        public Playlist GetPlaylist(Guid playlistGuid)
+        {
+            // Simple, pass it off to the db manager
+            return PlaylistDbManager.GetPlaylist(playlistGuid);
+        }
+
         #endregion
 
         #region Update Methods
 
+        /// <summary>
+        /// Adds the specified rule to the auto playlist with the given guid
+        /// </summary>
+        /// <param name="playlistGuid">Guid of the auto playlist to add the rule to</param>
+        /// <param name="rule">The rule to add the playlist</param>
+        public void AddRuleToAutoPlaylist(Guid playlistGuid, AutoPlaylistRule rule)
+        {
+            // Check to see if the playlist exists
+            PlaylistDbManager.GetPlaylist(playlistGuid);
 
+            // Add the rule to the playlist
+            PlaylistDbManager.AddRuleToAutoplaylist(playlistGuid, rule);
+        }
+
+        /// <summary>
+        /// Adds the given track to the given playlist
+        /// </summary>
+        /// <param name="playlistGuid">The guid of the playlist</param>
+        /// <param name="trackGuid">The guid of the track</param>
+        public void AddTrackToPlaylist(Guid playlistGuid, Guid trackGuid)
+        {
+            // Check to see if the track and playlist exists
+            TrackDbManager.GetTrackByGuid(trackGuid);
+            PlaylistDbManager.GetPlaylist(playlistGuid);
+
+            // Add the track to the playlist
+            PlaylistDbManager.AddTrackToPlaylist(playlistGuid, trackGuid);
+        }
 
         #endregion
 

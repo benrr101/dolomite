@@ -12,10 +12,10 @@ namespace DolomiteModel.PublicRepresentations
         public string Field { get; set; }
 
         /// <summary>
-        /// The type of the rule &gt; &lt;, etc are acceptable
+        /// The comparison to make against the rule
         /// </summary>
         [DataMember]
-        public string RuleType { get; set; }
+        public string Comparison { get; set; }
 
         /// <summary>
         /// The object of the rule
