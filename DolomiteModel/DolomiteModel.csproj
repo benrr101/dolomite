@@ -64,6 +64,7 @@
     <Compile Include="EntityFramework\AvailableQuality.cs">
       <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
+    <Compile Include="EntityFramework\ConversionUtilities.cs" />
     <Compile Include="EntityFramework\DbEntities.Context.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -115,6 +116,7 @@
     <Compile Include="PublicRepresentations\Quality.cs" />
     <Compile Include="PublicRepresentations\Track.cs" />
     <Compile Include="TrackDbManager.cs" />
+    <Compile Include="TrackRuleProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <EntityDeploy Include="EntityFramework\DbEntities.edmx">

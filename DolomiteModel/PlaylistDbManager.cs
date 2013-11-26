@@ -232,7 +232,7 @@ namespace DolomiteModel
                         Name = autoPlaylist.Name,
                         PlaylistType = AutoPlaylist,
                         Rules = autoPlaylist.AutoplaylistRules.Select(spt => new Pub.AutoPlaylistRule()).ToList(),  //TODO: Generate real objects
-                        Tracks = GetAutoplaylistTracks(autoPlaylist, context)
+                        Tracks = TrackRuleProvider.GetAutoplaylistTracks(context, autoPlaylist)
                     };
                     return pubAutoPlaylist;
                 }
@@ -388,96 +388,7 @@ namespace DolomiteModel
 
         #region Private Methods
 
-        private List<Guid> GetAutoplaylistTracks(Autoplaylist playlist, DbEntities entities)
-        {
-            // Iterate over the rules in the list
-            List<IEnumerable<Guid>> trackProviders = new List<IEnumerable<Guid>>();
-            foreach (AutoplaylistRule rule in playlist.AutoplaylistRules)
-            {
-                // Build a query for the rule
-                switch (rule.MetadataField1.Type)
-                {
-                    case "string":
-                        trackProviders.Add(GetStringTrackProvider(rule, entities));
-                        break;
-                    case "numeric":
-                        break;
-                    case "date":
-                        break;
-                    default:
-                        var message = String.Format("Metadata type '{0}' for field {1} is not supported. " +
-                                                    "You may need to confirm that the metadatafields table " +
-                                                    "is properly initialized.", rule.Rule1.Type,
-                                                    rule.MetadataField1.DisplayName);
-                        throw new InvalidDataException(message);
-                }
-            }
-
-            // Concatenate together 
-            return ConcatenateProviders(trackProviders).ToList();
-        }
-
-        private IEnumerable<Guid> GetStringTrackProvider(AutoplaylistRule rule, DbEntities entities)
-        {
-            // Sanity check
-            if (rule.Rule1.Type != "string")
-            {
-                var message = String.Format("String track provider cannot be used process rule with datetype {0}",
-                    rule.Rule1.Type);
-                throw new InvalidDataException(message);
-            }
-
-            // Basis of the query requires the fields to match
-            IQueryable<Metadata> query = entities.Metadatas.Where(m => m.Field == rule.MetadataField);
-
-            // Build the query
-            switch (rule.Rule1.Name)
-            {
-                case "contains":
-                    query = query.Where(m => m.Value.IndexOf(rule.Value, StringComparison.CurrentCultureIgnoreCase) >= 0);
-                    break;
-
-                case "notcontains":
-                    query = query.Where(m => m.Value.IndexOf(rule.Value, StringComparison.CurrentCultureIgnoreCase) < 0);
-                    break;
-
-                case "sequals":
-                    query = query.Where(m => m.Value.Equals(rule.Value, StringComparison.CurrentCultureIgnoreCase));
-                    break;
-
-                case "snotequal":
-                    query = query.Where(m => !m.Value.Equals(rule.Value, StringComparison.CurrentCultureIgnoreCase));
-                    break;
-
-                case "startswith":
-                    query = query.Where(m => m.Value.StartsWith(rule.Value, StringComparison.CurrentCultureIgnoreCase));
-                    break;
-
-                case "endswith":
-                    query = query.Where(m => m.Value.EndsWith(rule.Value, StringComparison.CurrentCultureIgnoreCase));
-                    break;
-            }
-
-            return query.Select(m => m.Track);
-
-        }
-
-        private IEnumerable<Guid> ConcatenateProviders(List<IEnumerable<Guid>> providers)
-        {
-            var iterator = providers.GetEnumerator();
-            if (!iterator.MoveNext() || iterator.Current == null)
-            {
-                return null;
-            }
-
-            IEnumerable<Guid> concatenatedProviders = iterator.Current;
-            while (iterator.MoveNext() && iterator.Current != null)
-            {
-                concatenatedProviders = concatenatedProviders.Intersect(iterator.Current);
-            }
-
-            return concatenatedProviders;
-        } 
+        
 
         #endregion
 

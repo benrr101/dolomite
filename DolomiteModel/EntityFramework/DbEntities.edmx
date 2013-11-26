@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
   <!-- EF Runtime content -->
   <edmx:Runtime>
@@ -455,6 +455,18 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
       <Schema Namespace="DolomiteModel.EntityFramework" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <Function Name="ConvertToInt32" ReturnType="Edm.Int32">
+          <Parameter Name="myStr" Type="Edm.String" />
+          <DefiningExpression>
+            CAST(myStr AS Edm.Int32)
+          </DefiningExpression>
+        </Function>
+        <Function Name="ConvertToDecimal" ReturnType="Edm.Decimal">
+          <Parameter Name="myStr" Type="Edm.String" />
+          <DefiningExpression>
+            CAST(myStr AS Edm.Decimal(12, 2))
+          </DefiningExpression>
+        </Function>
         <EntityType Name="Album">
           <Key>
             <PropertyRef Name="Id" />
