@@ -104,6 +104,7 @@
     <Build Include="Tables\Art.sql" />
     <Build Include="Foreign Keys\FK_TRACKS_ART.sql" />
     <Build Include="StoredProcedures\IncrementPlaylistTrackOrder.sql" />
+    <Build Include="Foreign Keys\FK_AUTOPLAYLISTS_SORTFIELD.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Script.PostDeployment1.sql" />

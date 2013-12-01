@@ -24,8 +24,11 @@ namespace DolomiteModel.EntityFramework
         public string Name { get; set; }
         public Nullable<int> Limit { get; set; }
         public bool MatchAll { get; set; }
+        public Nullable<bool> SortDesc { get; set; }
+        public Nullable<int> SortField { get; set; }
     
         public virtual ICollection<AutoplaylistRule> AutoplaylistRules { get; set; }
         public virtual User User { get; set; }
+        public virtual MetadataField SortFieldMetadataField { get; set; }
     }
 }

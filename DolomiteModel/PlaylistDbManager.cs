@@ -226,22 +226,39 @@ namespace DolomiteModel
                 Autoplaylist autoPlaylist = context.Autoplaylists.FirstOrDefault(ap => ap.Id == guid);
                 if (autoPlaylist != null)
                 {
+                    // Optionally build the limiter
+                    Pub.AutoPlaylistLimiter limiter = null;
+                    if (autoPlaylist.Limit.HasValue)
+                    {
+                        limiter = new Pub.AutoPlaylistLimiter
+                        {
+                            Limit = autoPlaylist.Limit.Value,
+                            SortDescending = autoPlaylist.SortDesc,
+                            SortField =
+                                autoPlaylist.SortField.HasValue ? autoPlaylist.SortFieldMetadataField.TagName : null
+                        };
+                    }
+
+                    // Build the list of rules
+                    List<Pub.AutoPlaylistRule> rules =
+                        autoPlaylist.AutoplaylistRules.Select(
+                            r =>
+                                new Pub.AutoPlaylistRule
+                                {
+                                    Comparison = r.Rule1.Name,
+                                    Field = r.MetadataField1.TagName,
+                                    Value = r.Value
+                                }).ToList();
+
+                    // Put it all together
                     Pub.AutoPlaylist pubAutoPlaylist = new Pub.AutoPlaylist
                     {
                         Id = autoPlaylist.Id,
-                        Limit = autoPlaylist.Limit,
+                        Limit = limiter,
                         MatchAll = autoPlaylist.MatchAll,
                         Name = autoPlaylist.Name,
                         PlaylistType = AutoPlaylist,
-                        Rules =
-                            autoPlaylist.AutoplaylistRules.Select(
-                                r =>
-                                    new Pub.AutoPlaylistRule
-                                    {
-                                        Comparison = r.Rule1.Name,
-                                        Field = r.MetadataField1.TagName,
-                                        Value = r.Value
-                                    }).ToList(),
+                        Rules = rules,
                         Tracks = TrackRuleProvider.GetAutoplaylistTracks(context, autoPlaylist)
                     };
                     return pubAutoPlaylist;

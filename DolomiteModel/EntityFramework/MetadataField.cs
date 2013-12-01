@@ -18,6 +18,7 @@ namespace DolomiteModel.EntityFramework
         {
             this.AutoplaylistRules = new HashSet<AutoplaylistRule>();
             this.Metadatas = new HashSet<Metadata>();
+            this.Autoplaylists = new HashSet<Autoplaylist>();
         }
     
         public int Id { get; set; }
@@ -27,5 +28,6 @@ namespace DolomiteModel.EntityFramework
     
         public virtual ICollection<AutoplaylistRule> AutoplaylistRules { get; set; }
         public virtual ICollection<Metadata> Metadatas { get; set; }
+        public virtual ICollection<Autoplaylist> Autoplaylists { get; set; }
     }
 }

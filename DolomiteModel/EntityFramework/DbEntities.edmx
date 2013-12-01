@@ -48,6 +48,8 @@
           <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
           <Property Name="Limit" Type="int" />
           <Property Name="MatchAll" Type="bit" Nullable="false" />
+          <Property Name="SortDesc" Type="bit" />
+          <Property Name="SortField" Type="int" />
         </EntityType>
         <EntityType Name="AvailableQualities">
           <Key>
@@ -217,6 +219,18 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
             </Principal>
             <Dependent Role="Autoplaylists">
               <PropertyRef Name="Owner" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_AUTOPLAYLISTS_SORTFIELD">
+          <End Role="MetadataFields" Type="Self.MetadataFields" Multiplicity="0..1" />
+          <End Role="Autoplaylists" Type="Self.Autoplaylists" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MetadataFields">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Autoplaylists">
+              <PropertyRef Name="SortField" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -411,6 +425,10 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             <End Role="Users" EntitySet="Users" />
             <End Role="Autoplaylists" EntitySet="Autoplaylists" />
           </AssociationSet>
+          <AssociationSet Name="FK_AUTOPLAYLISTS_SORTFIELD" Association="Self.FK_AUTOPLAYLISTS_SORTFIELD">
+            <End Role="MetadataFields" EntitySet="MetadataFields" />
+            <End Role="Autoplaylists" EntitySet="Autoplaylists" />
+          </AssociationSet>
           <AssociationSet Name="FK_AVAILABLEQUALITIES_QUALITY" Association="Self.FK_AVAILABLEQUALITIES_QUALITY">
             <End Role="Qualities" EntitySet="Qualities" />
             <End Role="AvailableQualities" EntitySet="AvailableQualities" />
@@ -520,6 +538,9 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <NavigationProperty Name="User" Relationship="Self.FK_AUTOPLAYLISTS_OWNER" FromRole="Autoplaylists" ToRole="Users" />
           <Property Name="Limit" Type="Int32" />
           <Property Name="MatchAll" Type="Boolean" Nullable="false" />
+          <Property Name="SortDesc" Type="Boolean" />
+          <Property Name="SortField" Type="Int32" Nullable="true" />
+          <NavigationProperty Name="SortFieldMetadataField" Relationship="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTS_SORTFIELD" FromRole="Autoplaylist" ToRole="MetadataField" />
         </EntityType>
         <EntityType Name="AvailableQuality">
           <Key>
@@ -552,6 +573,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <NavigationProperty Name="AutoplaylistRules" Relationship="Self.FK_AUTOPLAYLISTRULES_METADATA" FromRole="MetadataFields" ToRole="AutoplaylistRules" />
           <NavigationProperty Name="Metadatas" Relationship="Self.FK_METADATA_FIELD" FromRole="MetadataFields" ToRole="Metadata" />
           <Property Name="Type" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Autoplaylists" Relationship="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTS_SORTFIELD" FromRole="MetadataField" ToRole="Autoplaylist" />
         </EntityType>
         <EntityType Name="Playlist">
           <Key>
@@ -934,7 +956,23 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             <Parameter Name="playlist" Mode="In" Type="Guid" />
             <Parameter Name="position" Mode="In" Type="Int32" />
           </FunctionImport>
+          <AssociationSet Name="FK_AUTOPLAYLISTS_SORTFIELD" Association="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTS_SORTFIELD">
+            <End Role="MetadataField" EntitySet="MetadataFields" />
+            <End Role="Autoplaylist" EntitySet="Autoplaylists" />
+          </AssociationSet>
         </EntityContainer>
+        <Association Name="FK_AUTOPLAYLISTS_SORTFIELD">
+          <End Type="DolomiteModel.EntityFramework.MetadataField" Role="MetadataField" Multiplicity="0..1" />
+          <End Type="DolomiteModel.EntityFramework.Autoplaylist" Role="Autoplaylist" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MetadataField">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Autoplaylist">
+              <PropertyRef Name="SortField" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -982,6 +1020,8 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <EntitySetMapping Name="Autoplaylists">
             <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Autoplaylist">
               <MappingFragment StoreEntitySet="Autoplaylists">
+                <ScalarProperty Name="SortField" ColumnName="SortField" />
+                <ScalarProperty Name="SortDesc" ColumnName="SortDesc" />
                 <ScalarProperty Name="MatchAll" ColumnName="MatchAll" />
                 <ScalarProperty Name="Limit" ColumnName="Limit" />
                 <ScalarProperty Name="Id" ColumnName="Id" />

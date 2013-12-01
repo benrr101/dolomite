@@ -7,10 +7,11 @@ namespace DolomiteModel.PublicRepresentations
     public class AutoPlaylist : Playlist
     {
         /// <summary>
-        /// Limit the playlist to a certain number of tracks. Can be null.
+        /// Parameters for limiting and sorting the playlist. May be omitted if no
+        /// limitations are to be placed on the number of tracks in the playlist.
         /// </summary>
         [DataMember]
-        public int? Limit { get; set; }
+        public AutoPlaylistLimiter Limit { get; set; }
 
         /// <summary>
         /// Whether or not to matching tracks must match all rules. True 

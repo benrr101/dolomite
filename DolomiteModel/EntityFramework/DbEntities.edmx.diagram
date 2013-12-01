@@ -5,21 +5,21 @@
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
       <Diagram DiagramId="fec77083ff0642cbb5fd35b18ef3d13f" Name="Diagram1">
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Album" Width="1.5" PointX="5.75" PointY="18" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Art" Width="1.5" PointX="5.75" PointY="11.875" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Artist" Width="1.5" PointX="3.5" PointY="18.25" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.AutoplaylistRule" Width="1.5" PointX="5.25" PointY="4.375" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Autoplaylist" Width="1.5" PointX="3" PointY="4.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.AvailableQuality" Width="1.5" PointX="10.25" PointY="7.375" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Metadata" Width="1.5" PointX="10.25" PointY="4.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Album" Width="1.5" PointX="11.25" PointY="10" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Art" Width="1.5" PointX="9" PointY="10" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Artist" Width="1.5" PointX="11.25" PointY="12.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.AutoplaylistRule" Width="1.5" PointX="3" PointY="4.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Autoplaylist" Width="1.5" PointX="0.875" PointY="2.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.AvailableQuality" Width="1.5" PointX="11" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Metadata" Width="1.5" PointX="5.125" PointY="1.5" IsExpanded="true" />
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.MetadataField" Width="1.5" PointX="3" PointY="1.5" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Playlist" Width="1.5" PointX="3" PointY="7.5" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.PlaylistTrack" Width="1.5" PointX="5.25" PointY="8.375" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Quality" Width="1.5" PointX="8" PointY="2.125" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Rule" Width="1.5" PointX="3" PointY="10.375" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Track" Width="1.5" PointX="8" PointY="6.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Playlist" Width="1.5" PointX="4.75" PointY="7.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.PlaylistTrack" Width="1.5" PointX="7" PointY="7.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Quality" Width="1.5" PointX="12.875" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Rule" Width="1.5" PointX="5.125" PointY="4.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Track" Width="1.5" PointX="9" PointY="4.75" IsExpanded="true" />
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.User" Width="1.5" PointX="0.75" PointY="7.25" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Device" Width="1.5" PointX="3" PointY="15.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Device" Width="1.5" PointX="0.75" PointY="10" IsExpanded="true" />
         <AssociationConnector Association="DolomiteModel.EntityFramework.Album1" ManuallyRouted="false" />
         <AssociationConnector Association="DolomiteModel.EntityFramework.FK_ALBUMS_ARTIST" ManuallyRouted="false" />
         <AssociationConnector Association="DolomiteModel.EntityFramework.FK_TRACKS_ART" ManuallyRouted="false" />
@@ -36,6 +36,7 @@
         <AssociationConnector Association="DolomiteModel.EntityFramework.FK_PLAYLISTTRACKS_TRACKS" ManuallyRouted="false" />
         <AssociationConnector Association="DolomiteModel.EntityFramework.FK_TRACKS_OWNER" ManuallyRouted="false" />
         <AssociationConnector Association="DolomiteModel.EntityFramework.FK_DEVICES_OWNER" ManuallyRouted="false" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTS_SORTFIELD" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>
