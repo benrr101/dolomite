@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using DolomiteModel.EntityFramework;
 using Pub = DolomiteModel.PublicRepresentations;
 
@@ -76,9 +77,10 @@ namespace DolomiteModel
         /// Creates a new auto playlist
         /// </summary>
         /// <param name="name">The name to give to the playlist</param>
+        /// <param name="matchAll">Whether or not tracks must match all rules of the playlist</param>
         /// <param name="limit">The optional limit of tracks to satisfy the playlist</param>
         /// <returns>The new guid id for the playlist</returns>
-        public Guid CreateAutoPlaylist(string name, int? limit = null)
+        public Guid CreateAutoPlaylist(string name, bool matchAll, int? limit = null)
         {
             using (var context = new DbEntities())
             {
@@ -90,6 +92,7 @@ namespace DolomiteModel
                 {
                     Id = guid,
                     Limit = limit,
+                    MatchAll = matchAll,
                     Name = name
                 };
                 context.Autoplaylists.Add(playlist);
@@ -227,9 +230,18 @@ namespace DolomiteModel
                     {
                         Id = autoPlaylist.Id,
                         Limit = autoPlaylist.Limit,
+                        MatchAll = autoPlaylist.MatchAll,
                         Name = autoPlaylist.Name,
                         PlaylistType = AutoPlaylist,
-                        Rules = autoPlaylist.AutoplaylistRules.Select(spt => new Pub.AutoPlaylistRule()).ToList(),  //TODO: Generate real objects
+                        Rules =
+                            autoPlaylist.AutoplaylistRules.Select(
+                                r =>
+                                    new Pub.AutoPlaylistRule
+                                    {
+                                        Comparison = r.Rule1.Name,
+                                        Field = r.MetadataField1.TagName,
+                                        Value = r.Value
+                                    }).ToList(),
                         Tracks = TrackRuleProvider.GetAutoplaylistTracks(context, autoPlaylist)
                     };
                     return pubAutoPlaylist;

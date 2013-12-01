@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
   <!-- EF Runtime content -->
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-    <Schema Namespace="DolomiteModel.EntityFramework.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2008" Alias="Self" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+    <Schema Namespace="DolomiteModel.EntityFramework.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2008" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="Albums">
           <Key>
             <PropertyRef Name="Id" />
@@ -47,6 +47,7 @@
           <Property Name="Owner" Type="int" />
           <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
           <Property Name="Limit" Type="int" />
+          <Property Name="MatchAll" Type="bit" Nullable="false" />
         </EntityType>
         <EntityType Name="AvailableQualities">
           <Key>
@@ -74,7 +75,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="Track" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Field" Type="int" Nullable="false" />
-          <Property Name="Value" Type="text" Nullable="false" />
+          <Property Name="Value" Type="nvarchar(max)" Nullable="false" />
         </EntityType>
         <EntityType Name="MetadataFields">
           <Key>
@@ -365,21 +366,21 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Parameter Name="hash" Type="text" Mode="In" />
         </Function>
         <EntityContainer Name="DolomiteModelEntityFrameworkStoreContainer">
-          <EntitySet Name="Albums" EntityType="Self.Albums" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
-          <EntitySet Name="Art" EntityType="Self.Art" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
-          <EntitySet Name="Artists" EntityType="Self.Artists" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
-          <EntitySet Name="AutoplaylistRules" EntityType="Self.AutoplaylistRules" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
-          <EntitySet Name="Autoplaylists" EntityType="Self.Autoplaylists" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
-          <EntitySet Name="AvailableQualities" EntityType="Self.AvailableQualities" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
-          <EntitySet Name="Metadata" EntityType="Self.Metadata" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
-          <EntitySet Name="MetadataFields" EntityType="Self.MetadataFields" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
-          <EntitySet Name="Playlists" EntityType="Self.Playlists" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
-          <EntitySet Name="PlaylistTracks" EntityType="Self.PlaylistTracks" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
-          <EntitySet Name="Qualities" EntityType="Self.Qualities" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
-          <EntitySet Name="Rules" EntityType="Self.Rules" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
-          <EntitySet Name="Tracks" EntityType="Self.Tracks" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
-          <EntitySet Name="Users" EntityType="Self.Users" Schema="dbo" p3:Type="Tables" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" />
-          <EntitySet Name="Devices" EntityType="Self.Devices" p3:Type="Tables" p3:Schema="dbo" xmlns:p3="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator">
+          <EntitySet Name="Albums" EntityType="Self.Albums" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Art" EntityType="Self.Art" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Artists" EntityType="Self.Artists" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="AutoplaylistRules" EntityType="Self.AutoplaylistRules" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Autoplaylists" EntityType="Self.Autoplaylists" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="AvailableQualities" EntityType="Self.AvailableQualities" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Metadata" EntityType="Self.Metadata" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="MetadataFields" EntityType="Self.MetadataFields" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Playlists" EntityType="Self.Playlists" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="PlaylistTracks" EntityType="Self.PlaylistTracks" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Qualities" EntityType="Self.Qualities" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Rules" EntityType="Self.Rules" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Tracks" EntityType="Self.Tracks" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Users" EntityType="Self.Users" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Devices" EntityType="Self.Devices" store:Type="Tables" store:Schema="dbo">
             <DefiningQuery>SELECT 
 [Devices].[Key] AS [Key], 
 [Devices].[Owner] AS [Owner], 
@@ -518,6 +519,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <NavigationProperty Name="AutoplaylistRules" Relationship="Self.FK_AUTOPLAYLISTRULES_PLAYLIST" FromRole="Autoplaylists" ToRole="AutoplaylistRules" />
           <NavigationProperty Name="User" Relationship="Self.FK_AUTOPLAYLISTS_OWNER" FromRole="Autoplaylists" ToRole="Users" />
           <Property Name="Limit" Type="Int32" />
+          <Property Name="MatchAll" Type="Boolean" Nullable="false" />
         </EntityType>
         <EntityType Name="AvailableQuality">
           <Key>
@@ -536,7 +538,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="Track" Type="Guid" Nullable="false" />
           <Property Name="Field" Type="Int32" Nullable="false" />
-          <Property Name="Value" Type="String" MaxLength="Max" FixedLength="false" Unicode="false" Nullable="false" />
+          <Property Name="Value" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
           <NavigationProperty Name="MetadataField" Relationship="Self.FK_METADATA_FIELD" FromRole="Metadata" ToRole="MetadataFields" />
           <NavigationProperty Name="Track1" Relationship="Self.FK_METADATA_TRACK" FromRole="Metadata" ToRole="Tracks" />
         </EntityType>
@@ -980,6 +982,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <EntitySetMapping Name="Autoplaylists">
             <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Autoplaylist">
               <MappingFragment StoreEntitySet="Autoplaylists">
+                <ScalarProperty Name="MatchAll" ColumnName="MatchAll" />
                 <ScalarProperty Name="Limit" ColumnName="Limit" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Owner" ColumnName="Owner" />

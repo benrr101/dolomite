@@ -56,7 +56,7 @@ namespace DolomiteWcfService
             Guid id = Guid.Empty;
             try
             {
-                id = PlaylistDbManager.CreateAutoPlaylist(playlist.Name);
+                id = PlaylistDbManager.CreateAutoPlaylist(playlist.Name, playlist.MatchAll);
 
                 // Did they send rules to add to the playlist?
                 if (playlist.Rules != null && playlist.Rules.Any())

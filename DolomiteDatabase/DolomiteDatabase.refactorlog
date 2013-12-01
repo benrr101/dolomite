@@ -7,4 +7,11 @@
     <Property Name="ParentElementType" Value="SqlTable" />
     <Property Name="NewName" Value="HasBeenOnboarded" />
   </Operation>
+  <Operation Name="Rename Refactor" Key="c6ac052b-2aab-44d5-a991-94e41764a4b7" ChangeDateTime="12/01/2013 22:15:46">
+    <Property Name="ElementName" Value="[dbo].[Autoplaylists].[AllMatch]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[Autoplaylists]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="MatchAll" />
+  </Operation>
 </Operations>

@@ -44,7 +44,7 @@ namespace DolomiteModel
             }
 
             // Concatenate together 
-            return ConcatenateProviders(trackProviders).ToList();
+            return ConcatenateProviders(trackProviders, playlist.MatchAll).ToList();
         }
 
         /// <summary>
@@ -227,8 +227,9 @@ namespace DolomiteModel
         /// this is performed using intersects. 
         /// </summary>
         /// <param name="providers">The list of queries that generate matching tracks</param>
+        /// <param name="matchAll">Whether to intersect the matches or union them</param>
         /// <returns>An enumerable list of unique guids of matching tracks</returns>
-        private static IEnumerable<Guid> ConcatenateProviders(List<IEnumerable<Guid>> providers)
+        private static IEnumerable<Guid> ConcatenateProviders(List<IEnumerable<Guid>> providers, bool matchAll)
         {
             var iterator = providers.GetEnumerator();
             if (!iterator.MoveNext() || iterator.Current == null)
@@ -239,7 +240,10 @@ namespace DolomiteModel
             IEnumerable<Guid> concatenatedProviders = iterator.Current;
             while (iterator.MoveNext() && iterator.Current != null)
             {
-                concatenatedProviders = concatenatedProviders.Intersect(iterator.Current);
+                concatenatedProviders = matchAll
+                    ? concatenatedProviders.Intersect(iterator.Current)
+                    : concatenatedProviders.Union(iterator.Current);
+
             }
 
             return concatenatedProviders;
