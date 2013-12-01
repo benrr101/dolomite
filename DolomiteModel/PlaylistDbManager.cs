@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
-using System.IO;
 using System.Linq;
 using DolomiteModel.EntityFramework;
 using Pub = DolomiteModel.PublicRepresentations;
@@ -362,7 +360,9 @@ namespace DolomiteModel
 
         #endregion
 
-        #region Other Stuff
+        #endregion
+
+        #region Private Methods
 
         /// <summary>
         /// Determines if the rule is valid by comparing it to the list of valid
@@ -375,20 +375,12 @@ namespace DolomiteModel
             using (var context = new DbEntities())
             {
                 // Try to fetch the field that the rule uses
-                MetadataField field = context.MetadataFields.FirstOrDefault(f => f.DisplayName == rule.Field);
+                MetadataField field = context.MetadataFields.FirstOrDefault(f => f.TagName == rule.Field);
                 return field != null &&
                        AllowedMetadataRules[field.Type].Any(
                            t => t.Name.Equals(rule.Comparison, StringComparison.OrdinalIgnoreCase));
-            } 
+            }
         }
-
-        #endregion
-
-        #endregion
-
-        #region Private Methods
-
-        
 
         #endregion
 
