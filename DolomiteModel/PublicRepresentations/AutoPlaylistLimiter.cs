@@ -12,7 +12,7 @@ namespace DolomiteModel.PublicRepresentations
         public int Limit { get; set; }
 
         /// <summary>
-        /// Whether to sort the list descending. May be omitted for random ordering
+        /// Whether to sort the list descending. Not used when randomly ordering.
         /// </summary>
         [DataMember]
         public bool? SortDescending { get; set; }

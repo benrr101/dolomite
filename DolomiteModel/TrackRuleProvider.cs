@@ -43,8 +43,15 @@ namespace DolomiteModel
                 }
             }
 
-            // Concatenate together 
-            return ConcatenateProviders(trackProviders, playlist.MatchAll).ToList();
+            // Concatenate together
+            // If null, return all the tracks.
+            var tracksProvider = ConcatenateProviders(trackProviders, playlist.MatchAll);
+            IEnumerable<Guid> tracks = tracksProvider ?? entities.Tracks.Select(t => t.Id);
+
+            // If the playlist is limited, then sort
+            return playlist.Limit.HasValue
+                ? ApplyLimiter(entities, tracks, playlist.Limit.Value, playlist.SortDesc, playlist.SortFieldMetadataField).ToList()
+                : tracks.ToList();
         }
 
         /// <summary>
@@ -247,7 +254,72 @@ namespace DolomiteModel
             }
 
             return concatenatedProviders;
-        } 
+        }
 
+        /// <summary>
+        /// Applies the rules of a limiter for a auto playlist. Will randomize
+        /// the playlist if the sort field is null. Will execute a LINQ query to
+        /// determine the sorting of the tracks based on the metadata field
+        /// specified. If there are any tracks that don't have the metadata field,
+        /// they are placed at the back of the playlist. In any case, the maximum
+        /// number of tracks in the playlist will be eqal to the limit.
+        /// </summary>
+        /// <remarks>
+        /// The case of left-behind tracks is somewhat faulty and non-ideal.
+        /// </remarks>
+        /// <param name="entities">An instance of the database</param>
+        /// <param name="providers">The linq query that provide the tracks</param>
+        /// <param name="limit">The number of tracks to limit toe</param>
+        /// <param name="sortDesc">
+        /// Whether or not to sort the playlist in descending order. Should be
+        /// null if sorting randomly. Must not be null if sorting by a field.
+        /// </param>
+        /// <param name="sortField">
+        /// The metadata field to sort by. If null, the playlist will be 
+        /// randomly sorted.
+        /// </param>
+        /// <returns>A LINQ query of sorted track guids.</returns>
+        private static IEnumerable<Guid> ApplyLimiter(DbEntities entities, IEnumerable<Guid> providers,
+            int limit, bool? sortDesc, MetadataField sortField)
+        {
+            // Should it be randomized?
+            if (sortField == null)
+            {
+                // Randomize the list and return it
+                // Source of randomizing model: http://stackoverflow.com/a/3169165
+                return providers.OrderBy(q => Guid.NewGuid()).Take(limit);
+            }
+
+            if (!sortDesc.HasValue)
+            {
+                throw new Exception(); //TODO: Decide on a better exception type to throw
+            }
+
+            // Do not randomize it. Sort it based on the selected field
+            var sorted = entities.Metadatas.Where(
+                md => providers.Contains(md.Track) && md.MetadataField.Id == sortField.Id);
+            
+            // If we're doing this in desc, then sort descendingly
+            sorted = sortDesc.Value ? sorted.OrderByDescending(md => md.Value) : sorted.OrderBy(md => md.Value);
+            
+            // Apply the limit and select just the guid
+            var sortedGuids = sorted.Take(limit).Select(md => md.Track);
+
+            
+
+
+            // Do we have tracks that don't have the sorting metadata
+            var leftBehind = providers.Except(sortedGuids);
+            if (sortedGuids.Count() < limit && leftBehind.Any())
+            {
+                // Add the left over elements until we reach the limit
+                //TODO: Replace this with a foreach with a kick-out condition whence the limit has been reached.
+                var sortedList = sortedGuids.ToList();
+                sortedList.AddRange(leftBehind);
+                return sortedList.Take(limit);
+            }
+
+            return sortedGuids;
+        } 
     }
 }
