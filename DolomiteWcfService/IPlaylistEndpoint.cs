@@ -12,8 +12,12 @@ namespace DolomiteWcfService
         #region Create Methods
 
         [OperationContract]
-        [WebInvoke(Method = "POST", UriTemplate = "/")]
-        Message CreatePlaylist(Stream body);
+        [WebInvoke(Method = "POST", UriTemplate = "/auto/")]
+        Message CreateAutoPlaylist(Stream body);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "/static/")]
+        Message CreateStaticPlaylist(Stream body);
 
         #endregion
 
@@ -25,28 +29,44 @@ namespace DolomiteWcfService
 
 
         [OperationContract]
-        [WebInvoke(Method = "GET", UriTemplate = "/{guid}")]
-        Message GetPlaylist(string guid);
+        [WebInvoke(Method = "GET", UriTemplate = "/auto/{guid}")]
+        Message GetAutoPlaylist(string guid);
+
+        [OperationContract]
+        [WebInvoke(Method = "GET", UriTemplate = "/static/{guid}")]
+        Message GetStaticPlaylist(string guid);
 
         #endregion
 
         #region Update Methods
 
         [OperationContract]
-        [WebInvoke(Method = "POST", UriTemplate = "/{guid}/")]
-        Message AddToPlaylist(Stream body, string guid);
+        [WebInvoke(Method = "POST", UriTemplate = "/auto/{guid}")]
+        Message AddRuleToAutoPlaylist(Stream body, string guid);
+
+        [OperationContract]
+        [WebInvoke(Method = "POST", UriTemplate = "/static/{guid}")]
+        Message AddTrackToStaticPlaylist(Stream body, string guid);
 
         #endregion
 
         #region Delete Methods
 
         [OperationContract]
-        [WebInvoke(Method = "DELETE", UriTemplate = "/{guid}/{id}")]
-        Message DeleteFromPlaylist(string guid, string id);
+        [WebInvoke(Method = "DELETE", UriTemplate = "/auto/{guid}/{id}")]
+        Message DeleteRuleFromAutoPlaylist(string guid, string id);
 
         [OperationContract]
-        [WebInvoke(Method = "DELETE", UriTemplate = "/{guid}/")]
-        Message DeletePlaylist(string guid);
+        [WebInvoke(Method = "DELETE", UriTemplate = "/static/{guid}/{id}")]
+        Message DeleteTrackFromStaticPlaylist(string guid, string id);
+
+        [OperationContract]
+        [WebInvoke(Method = "DELETE", UriTemplate = "/auto/{guid}")]
+        Message DeleteAutoPlaylist(string guid);
+
+        [OperationContract]
+        [WebInvoke(Method = "DELETE", UriTemplate = "/static/{guid}")]
+        Message DeleteStaticPlaylist(string guid);
 
         #endregion
 

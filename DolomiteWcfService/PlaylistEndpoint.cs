@@ -26,13 +26,12 @@ namespace DolomiteWcfService
         }
 
         /// <summary>
-        /// Handles requests to create a new playlist. Since the best way to
-        /// differentiate between auto playlists and standard ones is in the method,
-        /// we do that here, instead of with a uri scheme.
+        /// Handles requests to create a new auto playlist. Deserializes an auto
+        /// playlist object and feeds it to the playlist manager.
         /// </summary>
-        /// <param name="body">The body of the request</param>
+        /// <param name="body">The body of the request. Should be an autoplaylist object</param>
         /// <returns>A message of success or failure</returns>
-        public Message CreatePlaylist(Stream body)
+        public Message CreateAutoPlaylist(Stream body)
         {
             try
             {
@@ -41,21 +40,7 @@ namespace DolomiteWcfService
                 Playlist playlist = JsonConvert.DeserializeObject<Playlist>(bodyStr);
 
                 // Determine what type of processing to do
-                Guid id;
-                if (playlist.PlaylistType.Equals("standard", StringComparison.OrdinalIgnoreCase))
-                {
-                    id = PlaylistManager.CreateStandardPlaylist(playlist);
-                }
-                else if (playlist.PlaylistType.Equals("auto", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Try to parse it as an auto playlist
-                    AutoPlaylist autoPlaylist = JsonConvert.DeserializeObject<AutoPlaylist>(bodyStr);
-                    id = PlaylistManager.CreateAutoPlaylist(autoPlaylist);
-                }
-                else
-                {
-                    throw new ArgumentOutOfRangeException();
-                }
+                Guid id = PlaylistManager.CreateStandardPlaylist(playlist);
 
                 string responseJson = JsonConvert.SerializeObject(new PlaylistCreationSuccessResponse(id));
                 return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
@@ -65,16 +50,7 @@ namespace DolomiteWcfService
                 // The guid was probably incorrect
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
                 string responseJson =
-                    JsonConvert.SerializeObject(new ErrorResponse("The supplied playlist object is invalid."));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                // The type of the playlist was invalid
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
-                string message =
-                    String.Format("The supplied playlist type '{0}' is not valid. Valid types are 'standard' and 'auto'");
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                    JsonConvert.SerializeObject(new ErrorResponse("The supplied auto playlist object is invalid."));
                 return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
             }
             catch (DuplicateNameException ex)
@@ -83,7 +59,7 @@ namespace DolomiteWcfService
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.Conflict;
                 string message =
                     String.Format(
-                        "A playlist with the name '{0}' already exists. Please choose a different name, or delete the existing playlist.",
+                        "An auto playlist with the name '{0}' already exists. Please choose a different name, or delete the existing playlist.",
                         ex.Message);
                 string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
                 return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
@@ -93,7 +69,61 @@ namespace DolomiteWcfService
                 // The rule is invalid
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
                 string responseJson =
-                    JsonConvert.SerializeObject(new ErrorResponse("Could not add playlist: " + iee.Message));
+                    JsonConvert.SerializeObject(new ErrorResponse("Could not add auto playlist: " + iee.Message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (Exception)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
+                string message = String.Format("An internal server error occurred");
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+        }
+
+        /// <summary>
+        /// Handles requests to create a new static playlist. Deserializes a static
+        /// playlist object and feeds it to the playlist manager.
+        /// </summary>
+        /// <param name="body">The body of the request. Should be a static playlist object</param>
+        /// <returns>A message of success or failure</returns>
+        public Message CreateStaticPlaylist(Stream body)
+        {
+            try
+            {
+                // Process the object we're send
+                string bodyStr = Encoding.Default.GetString(ToByteArray(body));
+                AutoPlaylist autoPlaylist = JsonConvert.DeserializeObject<AutoPlaylist>(bodyStr);
+                Guid id = PlaylistManager.CreateAutoPlaylist(autoPlaylist);
+
+                string responseJson = JsonConvert.SerializeObject(new PlaylistCreationSuccessResponse(id));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (JsonSerializationException)
+            {
+                // The guid was probably incorrect
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                string responseJson =
+                    JsonConvert.SerializeObject(new ErrorResponse("The supplied static playlist object is invalid."));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (DuplicateNameException ex)
+            {
+                // The name is a duplicate
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.Conflict;
+                string message =
+                    String.Format(
+                        "A static playlist with the name '{0}' already exists. Please choose a different name, or delete the existing playlist.",
+                        ex.Message);
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (InvalidExpressionException iee)
+            {
+                // The rule is invalid
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                string responseJson =
+                    JsonConvert.SerializeObject(new ErrorResponse("Could not add static playlist: " + iee.Message));
                 return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
             }
             catch (Exception)
@@ -118,12 +148,11 @@ namespace DolomiteWcfService
         }
 
         /// <summary>
-        /// Attempts to retrieve a specific playlist from the database. This
-        /// makes no differentiation about standard or auto playlists.
+        /// Attempts to retrieve a specific auto playlist from the database.
         /// </summary>
-        /// <param name="guid">The guid of the playlist to lookup</param>
+        /// <param name="guid">The guid of the auto playlist to lookup</param>
         /// <returns>A json serialized version of the playlist</returns>
-        public Message GetPlaylist(string guid)
+        public Message GetAutoPlaylist(string guid)
         {
             try
             {
@@ -144,7 +173,7 @@ namespace DolomiteWcfService
             catch (ObjectNotFoundException)
             {
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
-                string message = String.Format("The playlist with the specified GUID '{0}' does not exist", guid);
+                string message = String.Format("The auto playlist with the specified GUID '{0}' does not exist", guid);
                 string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
                 return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
             }
@@ -158,54 +187,78 @@ namespace DolomiteWcfService
         }
 
         /// <summary>
-        /// Attempts to add either a rule to an autoplaylist or a track to a
-        /// static playlist. Determination of the payload is done by attempting
-        /// deserialize the payload into a rule. Failing that, parsing to a
-        /// guid is attempted. Failing both, the request fails.
+        /// Attempts to retrieve a specific static playlist from the database. This
+        /// makes no differentiation about standard or auto playlists.
+        /// </summary>
+        /// <param name="guid">The guid of the static playlist to lookup</param>
+        /// <returns>A json serialized version of the playlist</returns>
+        public Message GetStaticPlaylist(string guid)
+        {
+            try
+            {
+                // Parse the guid into a Guid and attempt to delete
+                Playlist playlist = PlaylistManager.GetPlaylist(Guid.Parse(guid));
+                string responseJson = JsonConvert.SerializeObject(playlist);
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.OK;
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (FormatException)
+            {
+                // The guid was probably incorrect
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", guid);
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (ObjectNotFoundException)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
+                string message = String.Format("The static playlist with the specified GUID '{0}' does not exist", guid);
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (Exception)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
+                string message = String.Format("An internal server error occurred");
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+        }
+
+        /// <summary>
+        /// Attempts to add a rule to an autoplaylist. The rule object is the
+        /// body of the request.
         /// </summary>
         /// <param name="body">
-        /// The payload of the request. Can either be a AutoPlaylistRule object
-        /// of a GUID of a track.
+        /// The payload of the request. Must be a AutoPlaylistRule object.
         /// </param>
         /// <param name="guid">The guid for the playlist to add the rule to</param>
         /// <returns>Message of success or failure.</returns>
-        public Message AddToPlaylist(Stream body, string guid)
+        public Message AddRuleToAutoPlaylist(Stream body, string guid)
         {
             try
             {
                 // Process the guid into a playlist guid
                 Guid playlistId = Guid.Parse(guid);
 
-                // Process the object we're send
+                // Process the object we're send, attempt to deserialize it as a rule
                 string bodyStr = Encoding.Default.GetString(ToByteArray(body));
-                try
-                {
-                    // Attempt to deserialize it to a rule
-                    AutoPlaylistRule rule = JsonConvert.DeserializeObject<AutoPlaylistRule>(bodyStr);
-
-                    // Success! Now, add the rule to the playlist
-                    PlaylistManager.AddRuleToAutoPlaylist(playlistId, rule);
-                }
-                catch (FormatException)
-                {
-                    // It wasn't a rule it was a guid
-                    Guid trackGuid = Guid.Parse(bodyStr);
-
-                    // Success! Now, add the track to the playlist
-                    PlaylistManager.AddTrackToPlaylist(playlistId, trackGuid);
-                }
+                AutoPlaylistRule rule = JsonConvert.DeserializeObject<AutoPlaylistRule>(bodyStr);
+                // Success! Now, add the rule to the playlist
+                PlaylistManager.AddRuleToAutoPlaylist(playlistId, rule);
 
                 // Send a happy return message
                 string responseJson = JsonConvert.SerializeObject(new WebResponse(WebResponse.StatusValue.Success));
                 return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
             }
-            catch (JsonSerializationException)
+            catch (FormatException)
             {
-                // The payload was not a guid nor a rule
+                // The payload was not a rule
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
                 string responseJson =
                     JsonConvert.SerializeObject(
-                        new ErrorResponse("The body of the request was not a valid AutoPlaylistRule nor a track Guid"));
+                        new ErrorResponse("The body of the request was not a valid AutoPlaylistRule"));
                 return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
             }
             catch (ObjectNotFoundException e)
@@ -232,17 +285,81 @@ namespace DolomiteWcfService
             }
         }
 
-        public Message DeleteFromPlaylist(string guid, string id)
+        /// <summary>
+        /// Attempts to add a track to a playlist. The track's GUID is the
+        /// body of the request.
+        /// </summary>
+        /// <param name="body">
+        /// The payload of the request. Must be a GUID
+        /// </param>
+        /// <param name="guid">The guid for the playlist to add the rule to</param>
+        /// <returns>Message of success or failure.</returns>
+        public Message AddTrackToStaticPlaylist(Stream body, string guid)
+        {
+            try
+            {
+                // Read the body of the request and convert it to the guid of the track to add
+                //TODO: Add support for batch adding tracks
+                string bodyStr = Encoding.Default.GetString(ToByteArray(body));
+                Guid trackGuid = Guid.Parse(bodyStr);
+
+                // Success! Now, add the track to the playlist
+                Guid playlistId = Guid.Parse(guid);
+                PlaylistManager.AddTrackToPlaylist(playlistId, trackGuid);
+                
+                // Send a happy return message
+                string responseJson = JsonConvert.SerializeObject(new WebResponse(WebResponse.StatusValue.Success));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (FormatException)
+            {
+                // The payload was not a rule
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                string responseJson =
+                    JsonConvert.SerializeObject(
+                        new ErrorResponse("The body of the request was not a valid track guid"));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (ObjectNotFoundException e)
+            {
+                // The type of the playlist was invalid
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
+                string message = e.Message;
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (InvalidExpressionException iee)
+            {
+                // The rule passed in was likely invalid
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(iee.Message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (Exception)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
+                string message = String.Format("An internal server error occurred");
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+        }
+
+        public Message DeleteRuleFromAutoPlaylist(string guid, string id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Message DeleteTrackFromStaticPlaylist(string guid, string id)
         {
             throw new NotImplementedException();
         }
 
         /// <summary>
-        /// 
+        /// Attempts to delete an autoplaylist with the given guid
         /// </summary>
-        /// <param name="guid"></param>
-        /// <returns></returns>
-        public Message DeletePlaylist(string guid)
+        /// <param name="guid">Guid of the autoplaylist to delete</param>
+        /// <returns>Success or error message.</returns>
+        public Message DeleteAutoPlaylist(string guid)
         {
             try
             {
@@ -262,7 +379,45 @@ namespace DolomiteWcfService
             catch (FileNotFoundException)
             {
                 WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
-                string message = String.Format("The playlist with the specified GUID '{0}' does not exist", guid);
+                string message = String.Format("The autoplaylist with the specified GUID '{0}' does not exist", guid);
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (Exception)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
+                string message = String.Format("An internal server error occurred");
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+        }
+
+        /// <summary>
+        /// Attempts to delete a static playlist with the given guid
+        /// </summary>
+        /// <param name="guid">Guid of the static playlist to delete</param>
+        /// <returns>Success or error message</returns>
+        public Message DeleteStaticPlaylist(string guid)
+        {
+            try
+            {
+                // Parse the guid into a Guid and attempt to delete
+                PlaylistManager.DeletePlaylist(Guid.Parse(guid));
+                string responseJson = JsonConvert.SerializeObject(new WebResponse(WebResponse.StatusValue.Success));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (FormatException)
+            {
+                // The guid was probably incorrect
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", guid);
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (FileNotFoundException)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
+                string message = String.Format("The static playlist with the specified GUID '{0}' does not exist", guid);
                 string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
                 return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
             }
