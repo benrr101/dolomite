@@ -20,7 +20,9 @@ namespace DolomiteWcfService
         /// </summary>
         private WebServiceHost _tracksHost;
 
-        private WebServiceHost _playlistHost;
+        private WebServiceHost _autoPlaylistHost;
+
+        private WebServiceHost _staticPlaylistHost;
 
         #endregion
 
@@ -68,8 +70,12 @@ namespace DolomiteWcfService
                 _tracksHost = new WebServiceHost(typeof (TracksEndpoint), baseAddress);
                 _tracksHost.AddServiceEndpoint(typeof (ITracksEndpoint), webBinding, "/tracks/");
 
-                _playlistHost = new WebServiceHost(typeof(PlaylistEndpoint), baseAddress);
-                _playlistHost.AddServiceEndpoint(typeof (IPlaylistEndpoint), webBinding, "/playlists/");
+                _autoPlaylistHost = new WebServiceHost(typeof(AutoPlaylistEndpoint), baseAddress);
+                _autoPlaylistHost.AddServiceEndpoint(typeof (IAutoPlaylistEndpoint), webBinding, "/playlists/auto/");
+
+                _staticPlaylistHost = new WebServiceHost(typeof (StaticPlaylistEndpoint), baseAddress);
+                _staticPlaylistHost.AddServiceEndpoint(typeof (IStaticPlaylistEndpoint), webBinding,
+                    "/playlists/static/");
 
                 // Enable the http metadata output
                 ServiceMetadataBehavior smb = new ServiceMetadataBehavior
@@ -80,8 +86,11 @@ namespace DolomiteWcfService
                 _tracksHost.Description.Behaviors.Add(smb);
                 _tracksHost.Open();
 
-                _playlistHost.Description.Behaviors.Add(smb);
-                _playlistHost.Open();
+                _autoPlaylistHost.Description.Behaviors.Add(smb);
+                _autoPlaylistHost.Open();
+
+                _staticPlaylistHost.Description.Behaviors.Add(smb);
+                _staticPlaylistHost.Open();
 
                 Trace.TraceInformation("Started Dolomite WCF Endpoint on {0}", baseAddress.AbsoluteUri);
             }

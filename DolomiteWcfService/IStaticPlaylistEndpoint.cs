@@ -6,13 +6,13 @@ using System.ServiceModel.Web;
 namespace DolomiteWcfService
 {
     [ServiceContract]
-    interface IAutoPlaylistEndpoint
+    interface IStaticPlaylistEndpoint
     {
         #region Create Methods
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "/")]
-        Message CreateAutoPlaylist(Stream body);
+        Message CreateStaticPlaylist(Stream body);
 
         #endregion
 
@@ -20,11 +20,11 @@ namespace DolomiteWcfService
 
         [OperationContract]
         [WebInvoke(Method = "GET", UriTemplate = "/")]
-        Message GetAllAutoPlaylists();
+        Message GetAllStaticPlaylists();
 
         [OperationContract]
         [WebInvoke(Method = "GET", UriTemplate = "/{guid}")]
-        Message GetAutoPlaylist(string guid);
+        Message GetStaticPlaylist(string guid);
 
         #endregion
 
@@ -32,7 +32,7 @@ namespace DolomiteWcfService
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "/{guid}")]
-        Message AddRuleToAutoPlaylist(Stream body, string guid);
+        Message AddTrackToStaticPlaylist(Stream body, string guid);
 
         #endregion
 
@@ -40,11 +40,11 @@ namespace DolomiteWcfService
 
         [OperationContract]
         [WebInvoke(Method = "DELETE", UriTemplate = "/{guid}/{id}")]
-        Message DeleteRuleFromAutoPlaylist(string guid, string id);
+        Message DeleteTrackFromStaticPlaylist(string guid, string id);
 
         [OperationContract]
         [WebInvoke(Method = "DELETE", UriTemplate = "/{guid}")]
-        Message DeleteAutoPlaylist(string guid);
+        Message DeleteStaticPlaylist(string guid);
 
         #endregion
 

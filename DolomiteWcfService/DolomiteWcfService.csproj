@@ -72,11 +72,12 @@
     <Compile Include="AzureStorageManager.cs" />
     <Compile Include="Exceptions\DuplicateTrackException.cs" />
     <Compile Include="IPlaylistEndpoint.cs" />
+    <Compile Include="IStaticPlaylistEndpoint.cs" />
     <Compile Include="ITracksEndpoint.cs" />
     <Compile Include="LocalStorageManager.cs" />
     <Compile Include="MimetypeDetector.cs" />
     <Compile Include="MultipartParser.cs" />
-    <Compile Include="PlaylistEndpoint.cs" />
+    <Compile Include="AutoPlaylistEndpoint.cs" />
     <Compile Include="PlaylistManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DolomiteWorkerRole.cs" />
@@ -86,6 +87,7 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="Responses.cs" />
+    <Compile Include="StaticPlaylistEndpoint.cs" />
     <Compile Include="Threads\TrackOnboarding.cs" />
     <Compile Include="TrackManager.cs" />
     <Compile Include="TracksEndpoint.cs" />
