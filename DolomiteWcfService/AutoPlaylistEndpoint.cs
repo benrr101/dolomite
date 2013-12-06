@@ -4,7 +4,6 @@ using System.Data;
 using System.IO;
 using System.Net;
 using System.ServiceModel.Channels;
-using System.ServiceModel.Web;
 using System.Text;
 using DolomiteModel.PublicRepresentations;
 using Newtonsoft.Json;
@@ -36,48 +35,38 @@ namespace DolomiteWcfService
             try
             {
                 // Process the object we're send
-                string bodyStr = Encoding.Default.GetString(ToByteArray(body));
+                string bodyStr = Encoding.Default.GetString(body.ToByteArray());
                 Playlist playlist = JsonConvert.DeserializeObject<Playlist>(bodyStr);
 
                 // Determine what type of processing to do
                 Guid id = PlaylistManager.CreateStandardPlaylist(playlist);
 
-                string responseJson = JsonConvert.SerializeObject(new PlaylistCreationSuccessResponse(id));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new PlaylistCreationSuccessResponse(id), HttpStatusCode.Created);
             }
             catch (JsonSerializationException)
             {
                 // The guid was probably incorrect
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
-                string responseJson =
-                    JsonConvert.SerializeObject(new ErrorResponse("The supplied auto playlist object is invalid."));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                object payload = new ErrorResponse("The supplied autoplaylist object is invalid.");
+                return WebUtilities.GenerateResponse(payload, HttpStatusCode.BadRequest);
             }
             catch (DuplicateNameException ex)
             {
                 // The name is a duplicate
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.Conflict;
-                string message =
-                    String.Format(
-                        "An auto playlist with the name '{0}' already exists. Please choose a different name, or delete the existing playlist.",
-                        ex.Message);
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                string message = String.Format("An autoplaylist with the name '{0}' already exists. " +
+                                               "Please choose a different name, or delete the existing playlist.",
+                                               ex.Message);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Conflict);
             }
             catch (InvalidExpressionException iee)
             {
                 // The rule is invalid
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
-                string responseJson =
-                    JsonConvert.SerializeObject(new ErrorResponse("Could not add auto playlist: " + iee.Message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                object payload = new ErrorResponse("Could not add static playlist: " + iee.Message);
+                return WebUtilities.GenerateResponse(payload, HttpStatusCode.BadRequest);
             }
             catch (Exception)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
-                string message = String.Format("An internal server error occurred");
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
             }
         }
 
@@ -89,8 +78,7 @@ namespace DolomiteWcfService
         public Message GetAllAutoPlaylists()
         {
             List<Playlist> playlists = PlaylistManager.GetAllPlaylists();
-            string playlistsJson = JsonConvert.SerializeObject(playlists);
-            return WebOperationContext.Current.CreateTextResponse(playlistsJson, "application/json", Encoding.UTF8);
+            return WebUtilities.GenerateResponse(playlists, HttpStatusCode.OK);
         }
 
         /// <summary>
@@ -104,31 +92,23 @@ namespace DolomiteWcfService
             {
                 // Parse the guid into a Guid and attempt to delete
                 Playlist playlist = PlaylistManager.GetPlaylist(Guid.Parse(guid));
-                string responseJson = JsonConvert.SerializeObject(playlist);
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.OK;
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(playlist, HttpStatusCode.OK);
             }
             catch (FormatException)
             {
                 // The guid was probably incorrect
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
                 string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", guid);
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.BadRequest);
             }
             catch (ObjectNotFoundException)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
-                string message = String.Format("The auto playlist with the specified GUID '{0}' does not exist", guid);
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                string message = String.Format("The autoplaylist with the specified GUID '{0}' does not exist", guid);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.NotFound);
             }
             catch (Exception)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
-                string message = String.Format("An internal server error occurred");
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
             }
         }
 
@@ -149,45 +129,34 @@ namespace DolomiteWcfService
                 Guid playlistId = Guid.Parse(guid);
 
                 // Process the object we're send, attempt to deserialize it as a rule
-                string bodyStr = Encoding.Default.GetString(ToByteArray(body));
+                string bodyStr = Encoding.Default.GetString(body.ToByteArray());
                 AutoPlaylistRule rule = JsonConvert.DeserializeObject<AutoPlaylistRule>(bodyStr);
                 // Success! Now, add the rule to the playlist
                 PlaylistManager.AddRuleToAutoPlaylist(playlistId, rule);
 
                 // Send a happy return message
-                string responseJson = JsonConvert.SerializeObject(new WebResponse(WebResponse.StatusValue.Success));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException)
             {
                 // The payload was not a rule
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
-                string responseJson =
-                    JsonConvert.SerializeObject(
-                        new ErrorResponse("The body of the request was not a valid AutoPlaylistRule"));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                const string message = "The body of the request was not a valid AutoPlaylistRule object";
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.BadRequest);
             }
             catch (ObjectNotFoundException e)
             {
                 // The type of the playlist was invalid
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
-                string message = e.Message;
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(e.Message), HttpStatusCode.NotFound);
             }
             catch (InvalidExpressionException iee)
             {
                 // The rule passed in was likely invalid
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(iee.Message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(iee.Message), HttpStatusCode.BadRequest);
             }
             catch (Exception)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
-                string message = String.Format("An internal server error occurred");
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
             }
         }
 
@@ -207,50 +176,24 @@ namespace DolomiteWcfService
             {
                 // Parse the guid into a Guid and attempt to delete
                 PlaylistManager.DeletePlaylist(Guid.Parse(guid));
-                string responseJson = JsonConvert.SerializeObject(new WebResponse(WebResponse.StatusValue.Success));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException)
             {
                 // The guid was probably incorrect
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
                 string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", guid);
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.BadRequest);
             }
             catch (FileNotFoundException)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
                 string message = String.Format("The autoplaylist with the specified GUID '{0}' does not exist", guid);
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.NotFound);
             }
             catch (Exception)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
-                string message = String.Format("An internal server error occurred");
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
             }
         }
-
-        #region Helper Methods
-
-        private byte[] ToByteArray(Stream stream)
-        {
-            byte[] buffer = new byte[32768];
-            using (MemoryStream ms = new MemoryStream())
-            {
-                while (true)
-                {
-                    int read = stream.Read(buffer, 0, buffer.Length);
-                    if (read <= 0)
-                        return ms.ToArray();
-                    ms.Write(buffer, 0, read);
-                }
-            }
-        }
-
-        #endregion
     }
 }
