@@ -5,6 +5,9 @@ namespace DolomiteModel.PublicRepresentations
     [DataContract]
     public class AutoPlaylistRule
     {
+        [DataMember]
+        public int? Id { get; set; }
+
         /// <summary>
         /// The metadata field the rule is based on
         /// </summary>

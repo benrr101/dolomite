@@ -157,9 +157,79 @@ namespace DolomiteWcfService
             }
         }
 
+        /// <summary>
+        /// Attempts to add either a rule to an autoplaylist or a track to a
+        /// static playlist. Determination of the payload is done by attempting
+        /// deserialize the payload into a rule. Failing that, parsing to a
+        /// guid is attempted. Failing both, the request fails.
+        /// </summary>
+        /// <param name="body">
+        /// The payload of the request. Can either be a AutoPlaylistRule object
+        /// of a GUID of a track.
+        /// </param>
+        /// <param name="guid">The guid for the playlist to add the rule to</param>
+        /// <returns>Message of success or failure.</returns>
         public Message AddToPlaylist(Stream body, string guid)
         {
-            throw new NotImplementedException();
+            try
+            {
+                // Process the guid into a playlist guid
+                Guid playlistId = Guid.Parse(guid);
+
+                // Process the object we're send
+                string bodyStr = Encoding.Default.GetString(ToByteArray(body));
+                try
+                {
+                    // Attempt to deserialize it to a rule
+                    AutoPlaylistRule rule = JsonConvert.DeserializeObject<AutoPlaylistRule>(bodyStr);
+
+                    // Success! Now, add the rule to the playlist
+                    PlaylistManager.AddRuleToAutoPlaylist(playlistId, rule);
+                }
+                catch (FormatException)
+                {
+                    // It wasn't a rule it was a guid
+                    Guid trackGuid = Guid.Parse(bodyStr);
+
+                    // Success! Now, add the track to the playlist
+                    PlaylistManager.AddTrackToPlaylist(playlistId, trackGuid);
+                }
+
+                // Send a happy return message
+                string responseJson = JsonConvert.SerializeObject(new WebResponse(WebResponse.StatusValue.Success));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (JsonSerializationException)
+            {
+                // The payload was not a guid nor a rule
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                string responseJson =
+                    JsonConvert.SerializeObject(
+                        new ErrorResponse("The body of the request was not a valid AutoPlaylistRule nor a track Guid"));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (ObjectNotFoundException e)
+            {
+                // The type of the playlist was invalid
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
+                string message = e.Message;
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (InvalidExpressionException iee)
+            {
+                // The rule passed in was likely invalid
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(iee.Message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
+            catch (Exception)
+            {
+                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
+                string message = String.Format("An internal server error occurred");
+                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
+                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+            }
         }
 
         public Message DeleteFromPlaylist(string guid, string id)
