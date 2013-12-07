@@ -11,15 +11,6 @@ namespace DolomiteModel
 {
     public class PlaylistDbManager
     {
-
-        #region Constants
-
-        private const string AutoPlaylist = "auto";
-
-        private const string StandardPlaylist = "standard";
-
-        #endregion
-
         #region Properties
 
         /// <summary>
@@ -235,6 +226,7 @@ namespace DolomiteModel
                     autoPlaylist.AutoplaylistRules.Select(
                         r => new Pub.AutoPlaylistRule
                              {
+                                 Id = r.Id,
                                  Comparison = r.Rule1.Name,
                                  Field = r.MetadataField1.TagName,
                                  Value = r.Value
