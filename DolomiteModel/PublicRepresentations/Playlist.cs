@@ -20,12 +20,6 @@ namespace DolomiteModel.PublicRepresentations
         public string Name { get; set; }
 
         /// <summary>
-        /// The type of the playlist. Should only ever be "Normal" or "Auto"
-        /// </summary>
-        [DataMember]
-        public string PlaylistType { get; set; }
-
-        /// <summary>
         /// List of tracks the playlist contains
         /// </summary>
         [DataMember]

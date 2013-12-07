@@ -116,24 +116,43 @@ namespace DolomiteWcfService
         #region Retrieve Methods
 
         /// <summary>
-        /// Retrieves a list of all playlists from the database
+        /// Retrieves a list of all auto playlists from the database
         /// </summary>
-        /// <returns>List of all playlists</returns>
-        public List<Playlist> GetAllPlaylists()
+        /// <returns>List of all auto playlists</returns>
+        public List<Playlist> GetAllAutoPlaylists()
         {
-            // Simple, pass it off to the db wrangler
-            return PlaylistDbManager.GetAllPlaylists();
+            return PlaylistDbManager.GetAllAutoPlaylists();
         }
 
         /// <summary>
-        /// Retrieves the requested playlist from the database
+        /// Retrieves a list of all static playlists from the database
+        /// </summary>
+        /// <returns>List of all static playlists</returns>
+        public List<Playlist> GetAllStaticPlaylists()
+        {
+            // Simple, pass it off to the db wrangler
+            return PlaylistDbManager.GetAllStaticPlaylists();
+        }
+
+        /// <summary>
+        /// Retrieves the requested auto playlist from the database
         /// </summary>
         /// <param name="playlistGuid">GUID of the playlist to look up</param>
-        /// <returns>A public representation of the playlist</returns>
-        public Playlist GetPlaylist(Guid playlistGuid)
+        /// <returns>A public representation of the autoplaylist</returns>
+        public AutoPlaylist GetAutoPlaylist(Guid playlistGuid)
         {
             // Simple, pass it off to the db manager
-            return PlaylistDbManager.GetPlaylist(playlistGuid);
+            return PlaylistDbManager.GetAutoPlaylist(playlistGuid);
+        }
+
+        /// <summary>
+        /// Get a static playlist by it's guid
+        /// </summary>
+        /// <param name="playlistGuid">Guid of the playlist to lookup</param>
+        /// <returns>A public-ready static playlist object</returns>
+        public Playlist GetStaticPlaylist(Guid playlistGuid)
+        {
+            return PlaylistDbManager.GetStaticPlaylist(playlistGuid);
         }
 
         #endregion
@@ -147,9 +166,6 @@ namespace DolomiteWcfService
         /// <param name="rule">The rule to add the playlist</param>
         public void AddRuleToAutoPlaylist(Guid playlistGuid, AutoPlaylistRule rule)
         {
-            // Check to see if the playlist exists
-            PlaylistDbManager.GetPlaylist(playlistGuid);
-
             // Add the rule to the playlist
             PlaylistDbManager.AddRuleToAutoplaylist(playlistGuid, rule);
         }
@@ -163,7 +179,7 @@ namespace DolomiteWcfService
         {
             // Check to see if the track and playlist exists
             TrackDbManager.GetTrackByGuid(trackGuid);
-            PlaylistDbManager.GetPlaylist(playlistGuid);
+            PlaylistDbManager.GetStaticPlaylist(playlistGuid);
 
             // Add the track to the playlist
             PlaylistDbManager.AddTrackToPlaylist(playlistGuid, trackGuid);

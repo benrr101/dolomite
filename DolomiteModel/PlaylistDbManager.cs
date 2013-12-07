@@ -4,7 +4,6 @@ using System.Data;
 using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
 using DolomiteModel.EntityFramework;
 using Pub = DolomiteModel.PublicRepresentations;
 
@@ -163,32 +162,38 @@ namespace DolomiteModel
         #region Retrieval Methods
 
         /// <summary>
-        /// Creates a list of all the playlists in the database.
+        /// Creates a list of all the auto playlists in the database. Does not
+        /// store the rules for the playlists.
         /// </summary>
-        /// <returns>The list of playlists (auto and standard) without tracks or rules</returns>
-        public List<Pub.Playlist> GetAllPlaylists()
+        /// <returns>A public-ready list of auto playlists w/o rules</returns>
+        public List<Pub.Playlist> GetAllAutoPlaylists()
         {
             using (var context = new DbEntities())
             {
-                // Select all the regular playlists 
-                List<Pub.Playlist> playlists = (from p in context.Playlists
+                return (from p in context.Autoplaylists
+                    select new Pub.Playlist
+                    {
+                        Id = p.Id,
+                        Name = p.Name
+                    }).ToList();
+            }
+        }
+
+        /// <summary>
+        /// Creates a list of all the static playlists in the database. Does 
+        /// not return the tracks of the playlist
+        /// </summary>
+        /// <returns>The list of static playlists without tracks</returns>
+        public List<Pub.Playlist> GetAllStaticPlaylists()
+        {
+            using (var context = new DbEntities())
+            {
+                return (from p in context.Playlists
                     select new Pub.Playlist
                     {
                         Id = p.Id,
                         Name = p.Name,
-                        PlaylistType = StandardPlaylist
                     }).ToList();
-
-                // Select all the auto playlists
-                playlists.AddRange(from ap in context.Autoplaylists
-                    select new Pub.Playlist
-                    {
-                        Id = ap.Id,
-                        Name = ap.Name,
-                        PlaylistType = AutoPlaylist
-                    });
-
-                return playlists;
             }
         }
 
@@ -196,76 +201,81 @@ namespace DolomiteModel
         /// Attempts to find a playlist with the given id. It checks for a standard
         /// playlist first, then an autoplaylist.
         /// </summary>
-        /// <remarks>
-        /// This is more/less safe since we should never have a collision of guids
-        /// </remarks>
         /// <exception cref="ObjectNotFoundException">
-        /// Thrown if the guid does not match a standard or auto playlist
+        /// Thrown if a auto playlist with the given guid could not be found
         /// </exception>
         /// <param name="guid">The guid of the playlist to find</param>
-        /// <returns>A public-ready playlist object.</returns>
-        public Pub.Playlist GetPlaylist(Guid guid)
+        /// <returns>A public-ready auto playlist object.</returns>
+        public Pub.AutoPlaylist GetAutoPlaylist(Guid guid)
+        {
+            using (var context = new DbEntities())
+            {
+                // Try to retrieve the playlist as an auto playlist
+                Autoplaylist autoPlaylist = context.Autoplaylists.FirstOrDefault(ap => ap.Id == guid);
+                if (autoPlaylist == null)
+                    throw new ObjectNotFoundException(String.Format("A playlist with id {0} could not be found", guid));
+                
+                // Optionally build the limiter
+                Pub.AutoPlaylistLimiter limiter = null;
+                if (autoPlaylist.Limit.HasValue)
+                {
+                    limiter = new Pub.AutoPlaylistLimiter
+                    {
+                        Limit = autoPlaylist.Limit.Value,
+                        SortDescending = autoPlaylist.SortDesc,
+                        SortField =
+                            autoPlaylist.SortField.HasValue ? autoPlaylist.SortFieldMetadataField.TagName : null
+                    };
+                }
+
+                // Build the list of rules
+                List<Pub.AutoPlaylistRule> rules =
+                    autoPlaylist.AutoplaylistRules.Select(
+                        r => new Pub.AutoPlaylistRule
+                             {
+                                 Comparison = r.Rule1.Name,
+                                 Field = r.MetadataField1.TagName,
+                                 Value = r.Value
+                             }).ToList();
+
+                // Put it all together
+                Pub.AutoPlaylist pubAutoPlaylist = new Pub.AutoPlaylist
+                {
+                    Id = autoPlaylist.Id,
+                    Limit = limiter,
+                    MatchAll = autoPlaylist.MatchAll,
+                    Name = autoPlaylist.Name,
+                    Rules = rules,
+                    Tracks = TrackRuleProvider.GetAutoplaylistTracks(context, autoPlaylist)
+                };
+                return pubAutoPlaylist;
+            }
+        }
+
+        /// <summary>
+        /// Attempts to find a static playlist with the given id.
+        /// <exception cref="ObjectNotFoundException">
+        /// Thrown if a static playlist with the given guid could not be found
+        /// </exception>
+        /// </summary>
+        /// <param name="playlistGuid">The guid of the playlist to find</param>
+        /// <returns>A public-ready static playlist object</returns>
+        public Pub.Playlist GetStaticPlaylist(Guid playlistGuid)
         {
             using (var context = new DbEntities())
             {
                 // Try to retrieve the playlist as a standard playlist
-                Playlist playlist = context.Playlists.FirstOrDefault(p => p.Id == guid);
-                if (playlist != null)
+                Playlist playlist = context.Playlists.FirstOrDefault(p => p.Id == playlistGuid);
+                if (playlist == null)
+                    throw new ObjectNotFoundException(String.Format("A playlist with id {0} could not be found", playlistGuid));
+
+                Pub.Playlist pubPlaylist = new Pub.Playlist
                 {
-                    Pub.Playlist pubPlaylist = new Pub.Playlist
-                    {
-                        Id = playlist.Id,
-                        Name = playlist.Name,
-                        PlaylistType = StandardPlaylist,
-                        Tracks = playlist.PlaylistTracks.Select(spt => spt.Track).ToList()
-                    };
-                    return pubPlaylist;
-                }
-
-                // Try to retrieve the playlist as an auto playlist
-                Autoplaylist autoPlaylist = context.Autoplaylists.FirstOrDefault(ap => ap.Id == guid);
-                if (autoPlaylist != null)
-                {
-                    // Optionally build the limiter
-                    Pub.AutoPlaylistLimiter limiter = null;
-                    if (autoPlaylist.Limit.HasValue)
-                    {
-                        limiter = new Pub.AutoPlaylistLimiter
-                        {
-                            Limit = autoPlaylist.Limit.Value,
-                            SortDescending = autoPlaylist.SortDesc,
-                            SortField =
-                                autoPlaylist.SortField.HasValue ? autoPlaylist.SortFieldMetadataField.TagName : null
-                        };
-                    }
-
-                    // Build the list of rules
-                    List<Pub.AutoPlaylistRule> rules =
-                        autoPlaylist.AutoplaylistRules.Select(
-                            r =>
-                                new Pub.AutoPlaylistRule
-                                {
-                                    Comparison = r.Rule1.Name,
-                                    Field = r.MetadataField1.TagName,
-                                    Value = r.Value
-                                }).ToList();
-
-                    // Put it all together
-                    Pub.AutoPlaylist pubAutoPlaylist = new Pub.AutoPlaylist
-                    {
-                        Id = autoPlaylist.Id,
-                        Limit = limiter,
-                        MatchAll = autoPlaylist.MatchAll,
-                        Name = autoPlaylist.Name,
-                        PlaylistType = AutoPlaylist,
-                        Rules = rules,
-                        Tracks = TrackRuleProvider.GetAutoplaylistTracks(context, autoPlaylist)
-                    };
-                    return pubAutoPlaylist;
-                }
-
-                // The playlist does not exist.
-                throw new ObjectNotFoundException(String.Format("A playlist with id {0} could not be found", guid));
+                    Id = playlist.Id,
+                    Name = playlist.Name,
+                    Tracks = playlist.PlaylistTracks.Select(spt => spt.Track).ToList()
+                };
+                return pubPlaylist;
             }
         }
 

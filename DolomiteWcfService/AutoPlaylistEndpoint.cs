@@ -77,7 +77,7 @@ namespace DolomiteWcfService
         /// <returns>A json seriailized version of the list of playlists</returns>
         public Message GetAllAutoPlaylists()
         {
-            List<Playlist> playlists = PlaylistManager.GetAllPlaylists();
+            List<Playlist> playlists = PlaylistManager.GetAllAutoPlaylists();
             return WebUtilities.GenerateResponse(playlists, HttpStatusCode.OK);
         }
 
@@ -91,7 +91,7 @@ namespace DolomiteWcfService
             try
             {
                 // Parse the guid into a Guid and attempt to delete
-                Playlist playlist = PlaylistManager.GetPlaylist(Guid.Parse(guid));
+                Playlist playlist = PlaylistManager.GetAutoPlaylist(Guid.Parse(guid));
                 return WebUtilities.GenerateResponse(playlist, HttpStatusCode.OK);
             }
             catch (FormatException)
