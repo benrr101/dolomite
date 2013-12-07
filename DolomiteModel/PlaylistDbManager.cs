@@ -174,7 +174,8 @@ namespace DolomiteModel
                     select new Pub.Playlist
                     {
                         Id = p.Id,
-                        Name = p.Name
+                        Name = p.Name,
+                        Type = Pub.Playlist.PlaylistType.Auto
                     }).ToList();
             }
         }
@@ -193,6 +194,7 @@ namespace DolomiteModel
                     {
                         Id = p.Id,
                         Name = p.Name,
+                        Type = Pub.Playlist.PlaylistType.Static
                     }).ToList();
             }
         }
@@ -246,7 +248,8 @@ namespace DolomiteModel
                     MatchAll = autoPlaylist.MatchAll,
                     Name = autoPlaylist.Name,
                     Rules = rules,
-                    Tracks = TrackRuleProvider.GetAutoplaylistTracks(context, autoPlaylist)
+                    Tracks = TrackRuleProvider.GetAutoplaylistTracks(context, autoPlaylist),
+                    Type = Pub.Playlist.PlaylistType.Auto
                 };
                 return pubAutoPlaylist;
             }
@@ -273,7 +276,8 @@ namespace DolomiteModel
                 {
                     Id = playlist.Id,
                     Name = playlist.Name,
-                    Tracks = playlist.PlaylistTracks.Select(spt => spt.Track).ToList()
+                    Tracks = playlist.PlaylistTracks.Select(spt => spt.Track).ToList(),
+                    Type = Pub.Playlist.PlaylistType.Static
                 };
                 return pubPlaylist;
             }

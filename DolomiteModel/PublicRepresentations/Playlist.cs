@@ -7,11 +7,31 @@ namespace DolomiteModel.PublicRepresentations
     [DataContract]
     public class Playlist
     {
+        public enum PlaylistType
+        {
+            Auto,
+            Static
+        }
+
         /// <summary>
         /// Id of the playlist
         /// </summary>
         [DataMember]
         public Guid Id { get; set; }
+
+        /// <summary>
+        /// Href to the playlist
+        /// </summary>
+        [DataMember]
+        public string Href {
+            get
+            {
+                string href = "/playlists/";
+                href += Type == PlaylistType.Auto ? "auto/" : "static/";
+                href += Id.ToString();
+                return href;
+            }
+        }
 
         /// <summary>
         /// The name of the playlist
@@ -25,5 +45,9 @@ namespace DolomiteModel.PublicRepresentations
         [DataMember]
         public List<Guid> Tracks { get; set; }
 
+        /// <summary>
+        /// The type of the playlist
+        /// </summary>
+        public PlaylistType Type { get; set; }
     }
 }
