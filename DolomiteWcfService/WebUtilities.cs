@@ -15,6 +15,30 @@ namespace DolomiteWcfService
         /// </summary>
         public const string InternalServerMessage = "An internal server error occurred";
 
+        public static string GetContentType()
+        {
+            // Make sure there is a current operation context to use
+            if (WebOperationContext.Current == null)
+            {
+                throw new CommunicationException(
+                    "The current web operation context is null. Are you sure you're running this as a web service?");
+            }
+
+            return WebOperationContext.Current.IncomingRequest.ContentType;
+        }
+
+        public static long GetContentLength()
+        {
+            // Make sure there is a current operation context to use
+            if (WebOperationContext.Current == null)
+            {
+                throw new CommunicationException(
+                    "The current web operation context is null. Are you sure you're running this as a web service?");
+            }
+
+            return WebOperationContext.Current.IncomingRequest.ContentLength;
+        }
+
         /// <summary>
         /// Generates a Message object suitable for returning after a request to the server.
         /// A JSON serialization of the response object is performed. The status code
@@ -41,6 +65,42 @@ namespace DolomiteWcfService
             // Set the status code and let the response fly
             WebOperationContext.Current.OutgoingResponse.StatusCode = statusCode;
             return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+        }
+
+        public static void SetStatusCode(HttpStatusCode code)
+        {
+            // Make sure there is a current operation context to use
+            if (WebOperationContext.Current == null)
+            {
+                throw new CommunicationException(
+                    "The current web operation context is null. Are you sure you're running this as a web service?");
+            }
+
+            WebOperationContext.Current.OutgoingResponse.StatusCode = code;
+        }
+
+        public static void SetHeader(string headerName, string content)
+        {
+            // Make sure there is a current operation context to use
+            if (WebOperationContext.Current == null)
+            {
+                throw new CommunicationException(
+                    "The current web operation context is null. Are you sure you're running this as a web service?");
+            }
+
+            WebOperationContext.Current.OutgoingResponse.Headers.Add(headerName, content);
+        }
+
+        public static void SetHeader(HttpResponseHeader header, string value)
+        {
+            // Make sure there is a current operation context to use
+            if (WebOperationContext.Current == null)
+            {
+                throw new CommunicationException(
+                    "The current web operation context is null. Are you sure you're running this as a web service?");
+            }
+
+            WebOperationContext.Current.OutgoingResponse.Headers.Add(header, value);
         }
 
         /// <summary>

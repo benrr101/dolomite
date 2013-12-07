@@ -4,7 +4,6 @@ using System.Data;
 using System.IO;
 using System.Net;
 using System.ServiceModel.Channels;
-using System.ServiceModel.Web;
 using System.Text;
 using DolomiteModel.PublicRepresentations;
 using Newtonsoft.Json;
@@ -48,7 +47,7 @@ namespace DolomiteWcfService
             try
             {
                 MemoryStream memoryStream;
-                if (WebOperationContext.Current.IncomingRequest.ContentType.StartsWith("multipart/form-data"))
+                if (WebUtilities.GetContentType().StartsWith("multipart/form-data"))
                 {
                     // We need to process out other form data for the stuff we want
                     MultipartParser parser = new MultipartParser(file);
@@ -59,40 +58,32 @@ namespace DolomiteWcfService
                     else
                     {
                         // Failure of one kind or another
-                        WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
-                        ErrorResponse fResponse = new ErrorResponse("Failed to process request.");
-                        string fResponseJson = JsonConvert.SerializeObject(fResponse);
-                        return WebOperationContext.Current.CreateTextResponse(fResponseJson, "application/json", Encoding.UTF8);
+                        return WebUtilities.GenerateResponse(new ErrorResponse("Failed to process request."),
+                            HttpStatusCode.BadRequest);
                     }
                 }
                 else
                 {
                     // There's no need to process out anything else. The body is the file.
-                    memoryStream = new MemoryStream(ToByteArray(file));
+                    memoryStream = new MemoryStream(file.ToByteArray());
                 }
 
                 // Upload the track
                 Guid guid;
                 string hash;
                 TrackManager.UploadTrack(memoryStream, out guid, out hash);
-                WebResponse response = new UploadSuccessResponse(guid, hash);
-                string responseJson = JsonConvert.SerializeObject(response);
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new UploadSuccessResponse(guid, hash), HttpStatusCode.Created);
             }
             catch (DuplicateNameException)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.Conflict;
                 ErrorResponse eResponse = new ErrorResponse("The request could not be completed. A track with the same hash already exists." +
                                                             " Duplicate tracks are not permitted");
-                string eResponseJson = JsonConvert.SerializeObject(eResponse);
-                return WebOperationContext.Current.CreateTextResponse(eResponseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(eResponse, HttpStatusCode.Conflict);
             }
             catch (Exception)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
-                ErrorResponse eResponse = new ErrorResponse("An internal server error occurred");
-                string eResponseJson = JsonConvert.SerializeObject(eResponse);
-                return WebOperationContext.Current.CreateTextResponse(eResponseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
             }
         }
 
@@ -120,8 +111,9 @@ namespace DolomiteWcfService
                     
                     // Set the headers
                     string contentDisp = String.Format("attachment; filename=\"{0}\";", guid);
-                    WebOperationContext.Current.OutgoingResponse.Headers.Add("Content-Disposition", contentDisp);
-                    WebOperationContext.Current.OutgoingResponse.ContentType = artMime;
+                    WebUtilities.SetStatusCode(HttpStatusCode.OK);
+                    WebUtilities.SetHeader("Content-Disposition", contentDisp);
+                    WebUtilities.SetHeader(HttpResponseHeader.ContentType, artMime);
 
                     return artStream;
                 }
@@ -133,30 +125,29 @@ namespace DolomiteWcfService
                 // Set special headers that tell the client to download the file
                 // and what filename to give it
                 string disposition = String.Format("attachment; filename=\"{0}.{1}\";", guid, qualityObj.Extension);
-                WebOperationContext.Current.OutgoingResponse.Headers.Add("Content-Disposition", disposition);
-                WebOperationContext.Current.OutgoingResponse.ContentType = qualityObj.Mimetype;
+                WebUtilities.SetStatusCode(HttpStatusCode.OK);
+                WebUtilities.SetHeader("Content-Disposition", disposition);
+                WebUtilities.SetHeader(HttpResponseHeader.ContentType, qualityObj.Mimetype);
                 return qualityObj.FileStream;
             }
             catch (FormatException)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
-                return null;
+                WebUtilities.SetStatusCode(HttpStatusCode.BadRequest);
             }
             catch (UnsupportedFormatException)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
-                return null;
+                WebUtilities.SetStatusCode(HttpStatusCode.NotFound);
             }
             catch (ObjectNotFoundException)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
-                return null;
+                WebUtilities.SetStatusCode(HttpStatusCode.NotFound);
             }
             catch (Exception)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
-                return null;
+                WebUtilities.SetStatusCode(HttpStatusCode.InternalServerError);
             }
+
+            return null;
         }
 
         /// <summary>
@@ -168,8 +159,7 @@ namespace DolomiteWcfService
         {
             // Retrieve the track without the stream
             List<Track> tracks = TrackManager.FetchAllTracks();
-            string trackJson = JsonConvert.SerializeObject(tracks);
-            return WebOperationContext.Current.CreateTextResponse(trackJson, "application/json", Encoding.UTF8);
+            return WebUtilities.GenerateResponse(tracks, HttpStatusCode.OK);
         }
 
         /// <summary>
@@ -184,30 +174,23 @@ namespace DolomiteWcfService
             {
                 // Retrieve the track without the stream
                 Track track = TrackManager.GetTrack(Guid.Parse(guid));
-                string trackJson = JsonConvert.SerializeObject(track);
-                return WebOperationContext.Current.CreateTextResponse(trackJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(track, HttpStatusCode.OK);
             }
             catch (FormatException)
             {
                 // The guid was probably incorrect
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
                 string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", guid);
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.BadRequest);
             }
             catch (ObjectNotFoundException)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
                 string message = String.Format("The track with the specified GUID '{0}' does not exist", guid);
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.NotFound);
             }
             catch (Exception)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
-                string message = String.Format("An internal server error occurred");
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
             }
         }
 
@@ -226,7 +209,7 @@ namespace DolomiteWcfService
             try
             {
                 MemoryStream memoryStream;
-                if(WebOperationContext.Current.IncomingRequest.ContentType.StartsWith("multipart/form-data"))
+                if(WebUtilities.GetContentType().StartsWith("multipart/form-data"))
                 {
                     // Attempt to replace the track with the new file
                     MultipartParser parser = new MultipartParser(file);
@@ -238,48 +221,37 @@ namespace DolomiteWcfService
                     else
                     {
                         // Failure of one kind or another
-                        WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
-                        ErrorResponse fResponse = new ErrorResponse("Failed to process request.");
-                        string fResponseJson = JsonConvert.SerializeObject(fResponse);
-                        return WebOperationContext.Current.CreateTextResponse(fResponseJson, "application/json",
-                            Encoding.UTF8);
+                        return WebUtilities.GenerateResponse(new ErrorResponse("Failed to process request."),
+                            HttpStatusCode.BadRequest);
                     }
                 } 
                 else
                 {
                     // There's no need to process out anything else. The body is the file.
-                    memoryStream = new MemoryStream(ToByteArray(file));
+                    memoryStream = new MemoryStream(file.ToByteArray());
                 }
                 
                 // Replace the file
                 string hash;
                 Guid guid = Guid.Parse(trackGuid);
                 TrackManager.ReplaceTrack(memoryStream, guid, out hash);
-                WebResponse response = new UploadSuccessResponse(guid, hash);
-                string responseJson = JsonConvert.SerializeObject(response);
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new UploadSuccessResponse(guid, hash), HttpStatusCode.OK);
             }
             catch (FormatException)
             {
                 // The guid was probably incorrect
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
                 string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", trackGuid);
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.BadRequest);
             }
             catch (ObjectNotFoundException)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
                 string message = String.Format("The track with the specified GUID '{0}' does not exist", trackGuid);
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.NotFound);
             }
             catch (Exception)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
-                string message = String.Format("An internal server error occurred");
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
             }
         }
 
@@ -295,45 +267,36 @@ namespace DolomiteWcfService
             {
                 // Translate the body and guid
                 Guid trackGuid = Guid.Parse(guid);
-                string bodyStr = Encoding.Default.GetString(ToByteArray(body));
+                string bodyStr = Encoding.Default.GetString(body.ToByteArray());
                 var metadata = JsonConvert.DeserializeObject<Dictionary<string, string>>(bodyStr);
 
                 // Pass it along to the track manager
                 TrackManager.ReplaceMetadata(trackGuid, metadata);
 
                 // Sucess
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.OK;
-                string responseJson = JsonConvert.SerializeObject(new WebResponse(WebResponse.StatusValue.Success));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException)
             {
                 // The guid was probably incorrect
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
                 string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", guid);
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.BadRequest);
             }
             catch (JsonReaderException)
             {
                 // The json was formatted poorly
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse("The JSON is invalid."));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse("The JSON is invalid."),
+                    HttpStatusCode.BadRequest);
             }
             catch (ObjectNotFoundException)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
                 string message = String.Format("The track with the specified GUID '{0}' does not exist", guid);
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.NotFound);
             }
             catch (Exception)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
-                string message = String.Format("An internal server error occurred");
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
             }
         }
 
@@ -350,45 +313,36 @@ namespace DolomiteWcfService
             {
                 // Translate the body and guid
                 Guid trackGuid = Guid.Parse(guid);
-                string bodyStr = Encoding.Default.GetString(ToByteArray(body));
+                string bodyStr = Encoding.Default.GetString(body.ToByteArray());
                 var metadata = JsonConvert.DeserializeObject<Dictionary<string, string>>(bodyStr);
 
                 // Pass it along to the track manager
                 TrackManager.ReplaceMetadata(trackGuid, metadata, true);
 
                 // Sucess
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.OK;
-                string responseJson = JsonConvert.SerializeObject(new WebResponse(WebResponse.StatusValue.Success));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException)
             {
                 // The guid was probably incorrect
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
                 string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", guid);
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.BadRequest);
             }
             catch (JsonReaderException)
             {
                 // The json was formatted poorly
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse("The JSON is invalid."));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse("The JSON is invalid."),
+                    HttpStatusCode.BadRequest);
             }
             catch (ObjectNotFoundException)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
                 string message = String.Format("The track with the specified GUID '{0}' does not exist", guid);
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.NotFound);
             }
             catch (Exception)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
-                string message = String.Format("An internal server error occurred");
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
             }
         }
 
@@ -406,13 +360,13 @@ namespace DolomiteWcfService
                 Guid trackGuid = Guid.Parse(guid);
 
                 MemoryStream memoryStream;
-                if (WebOperationContext.Current.IncomingRequest.ContentLength == 0)
+                if (WebUtilities.GetContentLength() == 0)
                 {
                     memoryStream = new MemoryStream();
                 }
                 else
                 {
-                    if (WebOperationContext.Current.IncomingRequest.ContentType.StartsWith("multipart/form-data"))
+                    if (WebUtilities.GetContentType().StartsWith("multipart/form-data"))
                     {
                         // Attempt to replace the track with the new file
                         MultipartParser parser = new MultipartParser(body);
@@ -424,17 +378,14 @@ namespace DolomiteWcfService
                         else
                         {
                             // Failure of one kind or another
-                            WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
-                            ErrorResponse fResponse = new ErrorResponse("Failed to process request.");
-                            string fResponseJson = JsonConvert.SerializeObject(fResponse);
-                            return WebOperationContext.Current.CreateTextResponse(fResponseJson, "application/json",
-                                Encoding.UTF8);
+                            return WebUtilities.GenerateResponse(new ErrorResponse("Failed to process request."),
+                                HttpStatusCode.BadRequest);
                         }
                     }
                     else
                     {
                         // There's no need to process out anything else. The body is the file.
-                        memoryStream = new MemoryStream(ToByteArray(body));
+                        memoryStream = new MemoryStream(body.ToByteArray());
                     }
                 }
 
@@ -442,31 +393,23 @@ namespace DolomiteWcfService
                 TrackManager.ReplaceTrackArt(trackGuid, memoryStream);
 
                 // Sucess
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.OK;
-                string responseJson = JsonConvert.SerializeObject(new WebResponse(WebResponse.StatusValue.Success));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException)
             {
                 // The guid was probably incorrect
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
                 string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", guid);
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.BadRequest);
             }
             catch (ObjectNotFoundException)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
                 string message = String.Format("The track with the specified GUID '{0}' does not exist", guid);
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.NotFound);
             }
             catch (Exception)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.InternalServerError;
-                string message = String.Format("An internal server error occurred");
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
             }
         }
 
@@ -485,43 +428,21 @@ namespace DolomiteWcfService
             {
                 // Parse the guid into a Guid and attempt to delete
                 TrackManager.DeleteTrack(Guid.Parse(guid));
-                string responseJson = JsonConvert.SerializeObject(new WebResponse(WebResponse.StatusValue.Success));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException)
             {
                 // The guid was probably incorrect
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.BadRequest;
                 string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", guid);
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.BadRequest);
             }
             catch (FileNotFoundException)
             {
-                WebOperationContext.Current.OutgoingResponse.StatusCode = HttpStatusCode.NotFound;
                 string message = String.Format("The track with the specified GUID '{0}' does not exist", guid);
-                string responseJson = JsonConvert.SerializeObject(new ErrorResponse(message));
-                return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.NotFound);
             }
         }
 
-        #endregion
-
-        #region Helper Methods
-        private byte[] ToByteArray(Stream stream)
-        {
-            byte[] buffer = new byte[32768];
-            using (MemoryStream ms = new MemoryStream())
-            {
-                while (true)
-                {
-                    int read = stream.Read(buffer, 0, buffer.Length);
-                    if (read <= 0)
-                        return ms.ToArray();
-                    ms.Write(buffer, 0, read);
-                }
-            }
-        }
         #endregion
 
         #endregion
