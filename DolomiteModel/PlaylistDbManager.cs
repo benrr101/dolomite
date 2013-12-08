@@ -359,6 +359,30 @@ namespace DolomiteModel
             }
         }
 
+        /// <summary>
+        /// Attempts to delete a rule from an autoplaylist. Despite the rule id
+        /// being unique across all playlists, we make sure the playlist matches
+        /// to help with avoiding cross-playlist deletions.
+        /// </summary>
+        /// <param name="playlistGuid">The guid of the autoplaylist</param>
+        /// <param name="ruleId">The id of the rule to delete</param>
+        public void DeleteRuleFromAutoplaylist(Guid playlistGuid, int ruleId)
+        {
+            using (var context = new DbEntities())
+            {
+                // Find the rule in the playlist
+                var rule = context.AutoplaylistRules.FirstOrDefault(
+                    r => r.Autoplaylist == playlistGuid && r.Id == ruleId);
+
+                if(rule == null)
+                    throw new ObjectNotFoundException("Failed to find a playlist with the given id " +
+                                                      "or a rule with given id");
+
+                context.AutoplaylistRules.Remove(rule);
+                context.SaveChanges();
+            }
+        }
+
         #endregion
 
         #region Deletion Methods

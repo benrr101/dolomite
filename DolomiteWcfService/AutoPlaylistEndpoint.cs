@@ -160,9 +160,46 @@ namespace DolomiteWcfService
             }
         }
 
+        /// <summary>
+        /// Attempts to delete a rule with the given id from the given playlist
+        /// </summary>
+        /// <param name="guid">GUID of the playlist to remove the rule from</param>
+        /// <param name="id">The id of the rule to remove</param>
+        /// <returns>A success or failure message</returns>
         public Message DeleteRuleFromAutoPlaylist(string guid, string id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                // Parse the guid and id into sensible types
+                Guid playlistGuid;
+                if (!Guid.TryParse(guid, out playlistGuid))
+                {
+                    string message = String.Format("The autoplaylist GUID provided {0} was invalid.", guid);
+                    return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.BadRequest);
+                }
+
+                int ruleId;
+                if (!Int32.TryParse(id, out ruleId))
+                {
+                    string message = String.Format("The autoplaylist rule id {0} is not a valid integer.", id);
+                    return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.BadRequest);
+                }
+
+                // Send the request to the db manager
+                PlaylistManager.DeleteRuleFromAutoPlaylist(playlistGuid, ruleId);
+                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
+            }
+            catch (ObjectNotFoundException)
+            {
+                string message = String.Format("The autoplaylist with the specified GUID '{0}' does not exist " +
+                                               "or a rule with id {1} does not exist.", guid, id);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.NotFound);
+            }
+            catch (Exception)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
+            }
         }
 
         /// <summary>

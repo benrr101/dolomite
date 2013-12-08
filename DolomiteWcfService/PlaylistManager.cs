@@ -185,6 +185,17 @@ namespace DolomiteWcfService
             PlaylistDbManager.AddTrackToPlaylist(playlistGuid, trackGuid);
         }
 
+        /// <summary>
+        /// Deletes a rule from a given autoplaylist
+        /// </summary>
+        /// <param name="playlistGuid">GUID of the playlist to delete the rule from</param>
+        /// <param name="ruleId">Id of the rule to delete</param>
+        public void DeleteRuleFromAutoPlaylist(Guid playlistGuid, int ruleId)
+        {
+            // Pass the call to the database
+            PlaylistDbManager.DeleteRuleFromAutoplaylist(playlistGuid, ruleId);
+        }
+
         #endregion
 
         #region Delete Methods
