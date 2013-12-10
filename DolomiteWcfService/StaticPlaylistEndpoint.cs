@@ -128,10 +128,19 @@ namespace DolomiteWcfService
                 //TODO: Add support for batch adding tracks
                 string bodyStr = Encoding.Default.GetString(body.ToByteArray());
                 Guid trackGuid = Guid.Parse(bodyStr);
-
-                // Success! Now, add the track to the playlist
                 Guid playlistId = Guid.Parse(guid);
-                PlaylistManager.AddTrackToPlaylist(playlistId, trackGuid);
+
+                // See if a position was passed in as part of the request
+                int position;
+                if (WebUtilities.GetQueryParameters()["position"] != null &&
+                    Int32.TryParse(WebUtilities.GetQueryParameters()["position"], out position))
+                {
+                    PlaylistManager.AddTrackToPlaylist(playlistId, trackGuid, position);
+                }
+                else
+                {
+                    PlaylistManager.AddTrackToPlaylist(playlistId, trackGuid);
+                }
 
                 // Send a happy return message
                 return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);

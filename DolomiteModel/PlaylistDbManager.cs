@@ -268,7 +268,7 @@ namespace DolomiteModel
                 {
                     Id = playlist.Id,
                     Name = playlist.Name,
-                    Tracks = playlist.PlaylistTracks.Select(spt => spt.Track).ToList(),
+                    Tracks = playlist.PlaylistTracks.OrderBy(spt => spt.Order).Select(spt => spt.Track).ToList(),
                     Type = Pub.Playlist.PlaylistType.Static
                 };
                 return pubPlaylist;

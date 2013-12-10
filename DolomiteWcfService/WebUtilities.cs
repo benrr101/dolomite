@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Specialized;
+using System.IO;
 using System.Net;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
@@ -37,6 +38,18 @@ namespace DolomiteWcfService
             }
 
             return WebOperationContext.Current.IncomingRequest.ContentLength;
+        }
+
+        public static NameValueCollection GetQueryParameters()
+        {
+            // Make sure there is a current operation context to use
+            if (WebOperationContext.Current == null)
+            {
+                throw new CommunicationException(
+                    "The current web operation context is null. Are you sure you're running this as a web service?");
+            }
+
+            return WebOperationContext.Current.IncomingRequest.UriTemplateMatch.QueryParameters;
         }
 
         /// <summary>

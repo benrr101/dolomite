@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using DolomiteModel;
 using DolomiteModel.PublicRepresentations;
 
@@ -172,18 +171,19 @@ namespace DolomiteWcfService
         }
 
         /// <summary>
-        /// Adds the given track to the given playlist
+        /// Adds the given track to the given playlist.
         /// </summary>
         /// <param name="playlistGuid">The guid of the playlist</param>
         /// <param name="trackGuid">The guid of the track</param>
-        public void AddTrackToPlaylist(Guid playlistGuid, Guid trackGuid)
+        /// <param name="position">The position to insert the track in the playlist</param>
+        public void AddTrackToPlaylist(Guid playlistGuid, Guid trackGuid, int? position = null)
         {
             // Check to see if the track and playlist exists
             TrackDbManager.GetTrackByGuid(trackGuid);
             PlaylistDbManager.GetStaticPlaylist(playlistGuid);
 
             // Add the track to the playlist
-            PlaylistDbManager.AddTrackToPlaylist(playlistGuid, trackGuid);
+            PlaylistDbManager.AddTrackToPlaylist(playlistGuid, trackGuid, position);
         }
 
         /// <summary>
