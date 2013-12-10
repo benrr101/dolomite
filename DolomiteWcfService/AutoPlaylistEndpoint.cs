@@ -39,7 +39,7 @@ namespace DolomiteWcfService
                 Playlist playlist = JsonConvert.DeserializeObject<Playlist>(bodyStr);
 
                 // Determine what type of processing to do
-                Guid id = PlaylistManager.CreateStandardPlaylist(playlist);
+                Guid id = PlaylistManager.CreateStaticPlaylist(playlist);
 
                 return WebUtilities.GenerateResponse(new PlaylistCreationSuccessResponse(id), HttpStatusCode.Created);
             }
@@ -212,7 +212,7 @@ namespace DolomiteWcfService
             try
             {
                 // Parse the guid into a Guid and attempt to delete
-                PlaylistManager.DeletePlaylist(Guid.Parse(guid));
+                PlaylistManager.DeleteAutoPlaylist(Guid.Parse(guid));
                 return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException)

@@ -364,6 +364,10 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Function Name="DecrementPlaylistTrackOrder" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="playlist" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="position" Type="int" Mode="In" />
+        </Function>
         <Function Name="GetAndLockTopOnboardingItem" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
         <Function Name="IncrementPlaylistTrackOrder" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="playlist" Type="uniqueidentifier" Mode="In" />
@@ -960,6 +964,10 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             <End Role="MetadataField" EntitySet="MetadataFields" />
             <End Role="Autoplaylist" EntitySet="Autoplaylists" />
           </AssociationSet>
+          <FunctionImport Name="DecrementPlaylistTrackOrder">
+            <Parameter Name="playlist" Mode="In" Type="Guid" />
+            <Parameter Name="position" Mode="In" Type="Int32" />
+          </FunctionImport>
         </EntityContainer>
         <Association Name="FK_AUTOPLAYLISTS_SORTFIELD">
           <End Type="DolomiteModel.EntityFramework.MetadataField" Role="MetadataField" Multiplicity="0..1" />
@@ -1141,6 +1149,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <FunctionImportMapping FunctionImportName="ResetOnboardingStatus" FunctionName="DolomiteModel.EntityFramework.Store.ResetOnboardingStatus" />
           <FunctionImportMapping FunctionImportName="SetTrackHash" FunctionName="DolomiteModel.EntityFramework.Store.SetTrackHash" />
           <FunctionImportMapping FunctionImportName="IncrementPlaylistTrackOrder" FunctionName="DolomiteModel.EntityFramework.Store.IncrementPlaylistTrackOrder" />
+          <FunctionImportMapping FunctionImportName="DecrementPlaylistTrackOrder" FunctionName="DolomiteModel.EntityFramework.Store.DecrementPlaylistTrackOrder" />
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using DolomiteModel;
 using DolomiteModel.PublicRepresentations;
 
@@ -72,7 +73,7 @@ namespace DolomiteWcfService
             catch (Exception)
             {
                 // Delete the playlist
-                PlaylistDbManager.DeletePlaylist(id);
+                PlaylistDbManager.DeleteAutoPlaylist(id);
                 throw;
             }
         }
@@ -84,7 +85,7 @@ namespace DolomiteWcfService
         /// </summary>
         /// <param name="playlist">The playlist object parsed from the request</param>
         /// <returns>The guid of the newly created playlist</returns>
-        public Guid CreateStandardPlaylist(Playlist playlist)
+        public Guid CreateStaticPlaylist(Playlist playlist)
         {
             Guid id = Guid.Empty;
             try
@@ -106,7 +107,7 @@ namespace DolomiteWcfService
             catch (Exception)
             {
                 // Delete the playlist
-                PlaylistDbManager.DeletePlaylist(id);
+                PlaylistDbManager.DeleteStaticPlaylist(id);
                 throw;
             }
         }
@@ -196,6 +197,16 @@ namespace DolomiteWcfService
             PlaylistDbManager.DeleteRuleFromAutoplaylist(playlistGuid, ruleId);
         }
 
+        /// <summary>
+        /// Sends the call to the database to delete the track from the playlist
+        /// </summary>
+        /// <param name="playlistGuid">The guid of the playlist to remove the track from</param>
+        /// <param name="trackId">The guid of the track to remove</param>
+        public void DeleteTrackFromStaticPlaylist(Guid playlistGuid, Guid trackId)
+        {
+            PlaylistDbManager.DeleteTrackFromPlaylist(playlistGuid, trackId);
+        }
+
         #endregion
 
         #region Delete Methods
@@ -204,10 +215,20 @@ namespace DolomiteWcfService
         /// Sends the deletion request to the database
         /// </summary>
         /// <param name="guid">The guid of the playlist to delete</param>
-        public void DeletePlaylist(Guid guid)
+        public void DeleteAutoPlaylist(Guid guid)
         {
             // Send the call to the database
-            PlaylistDbManager.DeletePlaylist(guid);
+            PlaylistDbManager.DeleteAutoPlaylist(guid);
+        }
+
+        /// <summary>
+        /// Sends the deletion request to the database
+        /// </summary>
+        /// <param name="guid">The guid of the playlist to delete</param>
+        public void DeleteStaticPlaylist(Guid guid)
+        {
+            // Send the call to the database
+            PlaylistDbManager.DeleteStaticPlaylist(guid);
         }
 
         #endregion

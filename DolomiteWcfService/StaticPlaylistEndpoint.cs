@@ -37,11 +37,11 @@ namespace DolomiteWcfService
                 // Process the object we're send
                 string bodyStr = Encoding.Default.GetString(body.ToByteArray());
                 AutoPlaylist autoPlaylist = JsonConvert.DeserializeObject<AutoPlaylist>(bodyStr);
-                Guid id = PlaylistManager.CreateAutoPlaylist(autoPlaylist);
+                Guid id = PlaylistManager.CreateStaticPlaylist(autoPlaylist);
 
                 return WebUtilities.GenerateResponse(new PlaylistCreationSuccessResponse(id), HttpStatusCode.Created);
             }
-            catch (JsonSerializationException)
+            catch (JsonReaderException)
             {
                 // The guid was probably incorrect
                 object payload = new ErrorResponse("The supplied static playlist object is invalid.");
@@ -159,9 +159,42 @@ namespace DolomiteWcfService
             }
         }
 
-        public Message DeleteTrackFromStaticPlaylist(string guid, string id)
+        /// <summary>
+        /// Deletes the given track from the given playlist. We also shuffle the
+        /// track orders to make sure everything comes up Millhouse.
+        /// </summary>
+        /// <param name="playlist">The guid of the playlist to delete the track from</param>
+        /// <param name="track">The track to delete from the playlist</param>
+        /// <returns>A success or error message</returns>
+        public Message DeleteTrackFromStaticPlaylist(string playlist, string track)
         {
-            throw new NotImplementedException();
+            try
+            {
+                // Parse the guids
+                Guid playlistGuid, trackGuid;
+                if (!Guid.TryParse(playlist, out playlistGuid))
+                    throw new FormatException(String.Format("The playlist GUID supplied '{0}' is an invalid GUID.", playlistGuid));
+                if (!Guid.TryParse(track, out trackGuid))
+                    throw new FormatException(String.Format("The track GUID supplied '{0}' is an invalid GUID.", playlistGuid));
+
+                // Attempt to delete
+                PlaylistManager.DeleteTrackFromStaticPlaylist(playlistGuid, trackGuid);
+                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
+            }
+            catch (FormatException fe)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse(fe.Message), HttpStatusCode.BadRequest);
+            }
+            catch (ObjectNotFoundException)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse("Failed to find track in playlist." +
+                                                                       " Playlist may not exist."), HttpStatusCode.NotFound);
+            }
+            catch (Exception)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
+            }
         }
 
         /// <summary>
@@ -174,7 +207,7 @@ namespace DolomiteWcfService
             try
             {
                 // Parse the guid into a Guid and attempt to delete
-                PlaylistManager.DeletePlaylist(Guid.Parse(guid));
+                PlaylistManager.DeleteStaticPlaylist(Guid.Parse(guid));
                 return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException)

@@ -383,20 +383,42 @@ namespace DolomiteModel
             }
         }
 
+        /// <summary>
+        /// Deletes a track from a static playlist. Also decrements the order 
+        /// of the tracks in the playist to keep the indices correct.
+        /// </summary>
+        /// <param name="playlistGuid">GUID of the playlist to remove the track from</param>
+        /// <param name="trackId">GUID of the track to remove from the playlist</param>
+        public void DeleteTrackFromPlaylist(Guid playlistGuid, Guid trackId)
+        {
+            using (var context = new DbEntities())
+            {
+                // Find the playlist<->track object
+                var playlistTrack =
+                    context.PlaylistTracks.FirstOrDefault(t => t.Playlist == playlistGuid && t.Track == trackId);
+                if (playlistTrack == null)
+                    throw new ObjectNotFoundException("Failed to find track in playlist.");
+
+                // Temp store the order for future processes
+                var order = playlistTrack.Order;
+
+                // Delete the track from the playlist
+                context.PlaylistTracks.Remove(playlistTrack);
+                context.SaveChanges();
+
+                context.DecrementPlaylistTrackOrder(playlistGuid, order);
+            }
+        }
+
         #endregion
 
         #region Deletion Methods
 
         /// <summary>
-        /// Tries to delete the playlist from the database. It doesn't matter
-        /// what type of playlist it is. Non-existing playlist errors are swallowed.
+        /// Tries to delete the playlist from the database.
         /// </summary>
-        /// <remarks>
-        /// Since GUIDs are supposed to be unique, we don't have to worry about
-        /// accidentally deleting the wrong playlist.
-        /// </remarks>
-        /// <param name="playlistGuid">GUID of the playlist to delete</param>
-        public void DeletePlaylist(Guid playlistGuid)
+        /// <param name="playlistGuid">GUID of the autoplaylist to delete</param>
+        public void DeleteAutoPlaylist(Guid playlistGuid)
         {
             if (playlistGuid == Guid.Empty)
                 return;
@@ -405,16 +427,33 @@ namespace DolomiteModel
             {
                 // Try to delete the playlist from the autoplaylists
                 Autoplaylist autoplaylist = context.Autoplaylists.FirstOrDefault(ap => ap.Id == playlistGuid);
-                if (autoplaylist != null)
-                    context.Autoplaylists.Remove(autoplaylist);
+                if (autoplaylist == null)
+                    throw new ObjectNotFoundException("Autoplaylist with the given GUID not found.");
 
-                // Try to delete the playlist from the playlists
-                Playlist playlist = context.Playlists.FirstOrDefault(p => p.Id == playlistGuid);
-                if (playlist != null)
-                    context.Playlists.Remove(playlist);
-
+                context.Autoplaylists.Remove(autoplaylist);
                 context.SaveChanges();
             } 
+        }
+
+        /// <summary>
+        /// Tries to delete a static playlist from the database.
+        /// </summary>
+        /// <param name="playlistGuid">GUID of static playlist to delete</param>
+        public void DeleteStaticPlaylist(Guid playlistGuid)
+        {
+            if (playlistGuid == Guid.Empty)
+                return;
+
+            using (var context = new DbEntities())
+            {
+                // Try to delete the static playlist from the playlists
+                Playlist playlist = context.Playlists.FirstOrDefault(p => p.Id == playlistGuid);
+                if (playlist == null)
+                    throw new ObjectNotFoundException("Static playlist with the given GUID not found.");
+                    
+                context.Playlists.Remove(playlist);
+                context.SaveChanges();
+            }
         }
 
         #endregion
