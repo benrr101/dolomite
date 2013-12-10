@@ -115,7 +115,7 @@ namespace DolomiteWcfService
             stream.Position = 0;
 
             // Calculate the hash and save it
-            RIPEMD160 hashCalculator = RIPEMD160Managed.Create();
+            RIPEMD160 hashCalculator = RIPEMD160.Create();
             byte[] hashBytes = hashCalculator.ComputeHash(stream);
             string hashString = BitConverter.ToString(hashBytes);
             hashString = hashString.Replace("-", String.Empty);
