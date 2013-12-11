@@ -7,6 +7,7 @@
       <Setting name="StorageConnectionString" value="UseDevelopmentStorage=true" />
     </ConfigurationSettings>
     <Certificates>
+      <Certificate name="LocalSSLCert" thumbprint="9688A35DE15C0C15AA604C5C119F78A191749247" thumbprintAlgorithm="sha1" />
     </Certificates>
   </Role>
 </ServiceConfiguration>

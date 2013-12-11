@@ -59,10 +59,11 @@ namespace DolomiteWcfService
             // Grab the base address from the role manager
             IPEndPoint endpoint = RoleEnvironment.CurrentRoleInstance.InstanceEndpoints["DolomiteRest"].IPEndpoint;
             WebHttpBinding webBinding = new WebHttpBinding
-                {
-                    MaxReceivedMessageSize = 200*1024*2024 // 200Mb
-                };
-            Uri baseAddress = new Uri(String.Format("http://{0}:{1}", endpoint.Address, endpoint.Port));
+            {
+                MaxReceivedMessageSize = 200 * 1024 * 2024, // 200Mb
+                Security = {Mode = WebHttpSecurityMode.Transport, Transport = new HttpTransportSecurity()} 
+            };
+            Uri baseAddress = new Uri(String.Format("https://{0}:{1}", endpoint.Address, endpoint.Port));
 
             // Spin up a service end point
             try

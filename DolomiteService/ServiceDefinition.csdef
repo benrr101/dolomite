@@ -5,9 +5,10 @@
       <Import moduleName="Diagnostics" />
     </Imports>
     <Endpoints>
-      <InputEndpoint name="DolomiteRest" protocol="http" port="8080" localPort="8080" />
+      <InputEndpoint name="DolomiteRest" protocol="https" port="8080" localPort="8080" certificate="LocalSSLCert" />
     </Endpoints>
     <Certificates>
+      <Certificate name="LocalSSLCert" storeLocation="LocalMachine" storeName="My" />
     </Certificates>
     <ConfigurationSettings>
       <Setting name="StorageConnectionString" />
