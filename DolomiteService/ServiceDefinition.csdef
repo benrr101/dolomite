@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ServiceDefinition name="DolomiteService" xmlns="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition" schemaVersion="2013-03.2.0">
-  <WorkerRole name="DolomiteWcfService" vmsize="Small">
+  <WorkerRole name="DolomiteWcfService" vmsize="ExtraSmall">
     <Imports>
       <Import moduleName="Diagnostics" />
     </Imports>
     <Endpoints>
-      <InputEndpoint name="DolomiteRest" protocol="tcp" port="80" localPort="8080" />
+      <InputEndpoint name="DolomiteRest" protocol="http" port="8080" localPort="8080" />
     </Endpoints>
     <Certificates>
     </Certificates>
