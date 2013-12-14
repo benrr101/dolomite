@@ -74,6 +74,7 @@
     <Compile Include="IPlaylistEndpoint.cs" />
     <Compile Include="IStaticPlaylistEndpoint.cs" />
     <Compile Include="ITracksEndpoint.cs" />
+    <Compile Include="IUserEndpoint.cs" />
     <Compile Include="LocalStorageManager.cs" />
     <Compile Include="MimetypeDetector.cs" />
     <Compile Include="MultipartParser.cs" />
@@ -92,6 +93,7 @@
     <Compile Include="TrackManager.cs" />
     <Compile Include="TracksEndpoint.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="UserEndpoint.cs" />
     <Compile Include="WebUtilities.cs" />
   </ItemGroup>
   <ItemGroup>
