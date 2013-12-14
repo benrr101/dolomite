@@ -143,12 +143,23 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Property Name="Locked" Type="bit" Nullable="false" />
           <Property Name="TrackInTempStorage" Type="bit" Nullable="false" />
         </EntityType>
+        <EntityType Name="UserKeys">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Email" Type="nvarchar" MaxLength="255" />
+          <Property Name="Claimed" Type="bit" Nullable="false" />
+        </EntityType>
         <EntityType Name="Users">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="int" Nullable="false" />
           <Property Name="Username" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="PasswordHash" Type="nchar" MaxLength="64" Nullable="false" />
+          <Property Name="PasswordReset" Type="bit" Nullable="false" />
+          <Property Name="Email" Type="nvarchar" MaxLength="255" Nullable="false" />
         </EntityType>
         <Association Name="Album">
           <End Role="Albums" Type="Self.Albums" Multiplicity="0..1" />
@@ -397,6 +408,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <EntitySet Name="Qualities" EntityType="Self.Qualities" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Rules" EntityType="Self.Rules" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Tracks" EntityType="Self.Tracks" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="UserKeys" EntityType="Self.UserKeys" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Users" EntityType="Self.Users" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Devices" EntityType="Self.Devices" store:Type="Tables" store:Schema="dbo">
             <DefiningQuery>SELECT 
@@ -656,6 +668,9 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <NavigationProperty Name="Playlists" Relationship="Self.FK_PLAYLISTS_OWNER" FromRole="Users" ToRole="Playlists" />
           <NavigationProperty Name="Tracks" Relationship="Self.FK_TRACKS_OWNER" FromRole="Users" ToRole="Tracks" />
           <NavigationProperty Name="Devices" Relationship="Self.FK_DEVICES_OWNER" FromRole="Users" ToRole="Devices" />
+          <Property Name="PasswordHash" Type="String" Nullable="false" MaxLength="64" FixedLength="true" Unicode="true" />
+          <Property Name="PasswordReset" Type="Boolean" Nullable="false" />
+          <Property Name="Email" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="Device">
           <Key>
@@ -968,6 +983,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             <Parameter Name="playlist" Mode="In" Type="Guid" />
             <Parameter Name="position" Mode="In" Type="Int32" />
           </FunctionImport>
+          <EntitySet Name="UserKeys" EntityType="DolomiteModel.EntityFramework.UserKey" />
         </EntityContainer>
         <Association Name="FK_AUTOPLAYLISTS_SORTFIELD">
           <End Type="DolomiteModel.EntityFramework.MetadataField" Role="MetadataField" Multiplicity="0..1" />
@@ -981,6 +997,14 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <EntityType Name="UserKey">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Guid" Nullable="false" />
+          <Property Name="Email" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="Claimed" Type="Boolean" Nullable="false" />
+        </EntityType>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -1130,6 +1154,9 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <EntitySetMapping Name="Users">
             <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.User">
               <MappingFragment StoreEntitySet="Users">
+                <ScalarProperty Name="Email" ColumnName="Email" />
+                <ScalarProperty Name="PasswordReset" ColumnName="PasswordReset" />
+                <ScalarProperty Name="PasswordHash" ColumnName="PasswordHash" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Username" ColumnName="Username" />
               </MappingFragment>
@@ -1150,6 +1177,15 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <FunctionImportMapping FunctionImportName="SetTrackHash" FunctionName="DolomiteModel.EntityFramework.Store.SetTrackHash" />
           <FunctionImportMapping FunctionImportName="IncrementPlaylistTrackOrder" FunctionName="DolomiteModel.EntityFramework.Store.IncrementPlaylistTrackOrder" />
           <FunctionImportMapping FunctionImportName="DecrementPlaylistTrackOrder" FunctionName="DolomiteModel.EntityFramework.Store.DecrementPlaylistTrackOrder" />
+          <EntitySetMapping Name="UserKeys">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.UserKey">
+              <MappingFragment StoreEntitySet="UserKeys">
+                <ScalarProperty Name="Claimed" ColumnName="Claimed" />
+                <ScalarProperty Name="Email" ColumnName="Email" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

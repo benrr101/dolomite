@@ -24,6 +24,9 @@ namespace DolomiteModel.EntityFramework
     
         public int Id { get; set; }
         public string Username { get; set; }
+        public string PasswordHash { get; set; }
+        public bool PasswordReset { get; set; }
+        public string Email { get; set; }
     
         public virtual ICollection<Autoplaylist> Autoplaylists { get; set; }
         public virtual ICollection<Playlist> Playlists { get; set; }

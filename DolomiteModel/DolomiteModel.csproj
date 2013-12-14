@@ -107,6 +107,9 @@
     <Compile Include="EntityFramework\User.cs">
       <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
+    <Compile Include="EntityFramework\UserKey.cs">
+      <DependentUpon>DbEntities.tt</DependentUpon>
+    </Compile>
     <Compile Include="PlaylistDbManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublicRepresentations\Art.cs" />
@@ -118,6 +121,7 @@
     <Compile Include="PublicRepresentations\Track.cs" />
     <Compile Include="TrackDbManager.cs" />
     <Compile Include="TrackRuleProvider.cs" />
+    <Compile Include="UserDbManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <EntityDeploy Include="EntityFramework\DbEntities.edmx">

@@ -1,0 +1,3 @@
+﻿ALTER TABLE [dbo].[Users]
+	ADD CONSTRAINT [UNQ_USERS_EMAIL]
+	UNIQUE (Email)

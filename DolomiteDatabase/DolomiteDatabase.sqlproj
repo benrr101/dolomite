@@ -106,6 +106,8 @@
     <Build Include="StoredProcedures\IncrementPlaylistTrackOrder.sql" />
     <Build Include="Foreign Keys\FK_AUTOPLAYLISTS_SORTFIELD.sql" />
     <Build Include="StoredProcedures\DecrementPlaylistTrackOrder.sql" />
+    <Build Include="Tables\UserKeys.sql" />
+    <Build Include="Indexes\UNQ_USERS_EMAIL.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Script.PostDeployment1.sql" />

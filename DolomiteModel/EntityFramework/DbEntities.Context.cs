@@ -43,6 +43,7 @@ namespace DolomiteModel.EntityFramework
         public DbSet<Track> Tracks { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Device> Devices { get; set; }
+        public DbSet<UserKey> UserKeys { get; set; }
     
         public virtual ObjectResult<Nullable<System.Guid>> GetAndLockTopOnboardingItem()
         {
