@@ -5,5 +5,8 @@
     <Setting Name="trackStorageContainer" Type="System.String" Scope="User">
       <Value Profile="(Default)">trackstorage</Value>
     </Setting>
+    <Setting Name="userKeysEnabled" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -94,6 +94,7 @@
     <Compile Include="TracksEndpoint.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="UserEndpoint.cs" />
+    <Compile Include="UserManager.cs" />
     <Compile Include="WebUtilities.cs" />
   </ItemGroup>
   <ItemGroup>

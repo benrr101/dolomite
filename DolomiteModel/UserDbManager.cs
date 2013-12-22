@@ -92,5 +92,24 @@ namespace DolomiteModel
         }
 
         #endregion
+
+        #region Update Methods
+
+        public void ClaimUserKey(Guid key, bool value)
+        {
+            using (var context = new DbEntities())
+            {
+                // Fetch the user key
+                var userKey = context.UserKeys.FirstOrDefault(k => k.Id == key);
+                if (userKey == null)
+                    throw new NullReferenceException("Could not find user key with given guid.");
+
+                // Claim it
+                userKey.Claimed = value;
+                context.SaveChanges();
+            }
+        }
+
+        #endregion
     }
 }
