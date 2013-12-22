@@ -3,7 +3,6 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using DolomiteModel;
-using Crypt = BCrypt.Net;
 
 namespace DolomiteWcfService
 {
@@ -70,7 +69,7 @@ namespace DolomiteWcfService
             SHA256 saltHasher = new SHA256Cng();
             byte[] salt = saltHasher.ComputeHash(Encoding.Default.GetBytes(email));
 
-            string hashedPassword = Crypt.BCrypt.HashPassword(password + salt, Crypt.BCrypt.GenerateSalt());
+            //string hashedPassword = Crypt.BCrypt.HashPassword(password + salt, Crypt.BCrypt.GenerateSalt());
 
             // 2) Check to see if a userkey is required
             if (UserKeysEnabled)
@@ -86,7 +85,7 @@ namespace DolomiteWcfService
                 // 3) Create the user
                 try
                 {
-                    DatabaseManager.CreateUser(username, hashedPassword, email);
+                    DatabaseManager.CreateUser(username, "haha!I'mOnTheInternet!", email);
                 }
                 catch (Exception)
                 {
@@ -98,7 +97,7 @@ namespace DolomiteWcfService
             else
             {
                 // 3) Create the user
-                DatabaseManager.CreateUser(username, hashedPassword, email);
+                DatabaseManager.CreateUser(username, "haha!I'mOnTheInternet!", email);
             }
         }
 
