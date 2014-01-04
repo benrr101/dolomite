@@ -31,6 +31,19 @@ namespace DolomiteModel
 
         #region Creation Methods
 
+        /// <summary>
+        /// Creates a new user in the database using the user's username, email,
+        /// and hashed password. Special error handling is done to detect
+        /// duplicate usernames or emails.
+        /// </summary>
+        /// <exception cref="DuplicateNameException">
+        /// Thrown if the username or the email is a duplicate of another user.
+        /// The message will say which field was duplicate, so it may be used
+        /// as-is when generating user-facing error messages.
+        /// </exception>
+        /// <param name="username">The username selected by the user. Must not be duplicate.</param>
+        /// <param name="passwordHash">The hashed password for the user. Should be unique to all users.</param>
+        /// <param name="email">The user's email. Must not be duplicate.</param>
         public void CreateUser(string username, string passwordHash, string email)
         {
             using (var context = new DbEntities())
@@ -99,7 +112,15 @@ namespace DolomiteModel
 
         #region Update Methods
 
-        public void ClaimUserKey(Guid key, bool value)
+        /// <summary>
+        /// Sets the claim status on the user auth key.
+        /// </summary>
+        /// <exception cref="NullReferenceException">
+        /// Thrown if the user auth key could not be found.
+        /// </exception>
+        /// <param name="key">The key to set the status of</param>
+        /// <param name="value">The value to set the claim status to.</param>
+        public void SetUserKeyClaimStatus(Guid key, bool value)
         {
             using (var context = new DbEntities())
             {

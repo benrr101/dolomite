@@ -26,6 +26,20 @@ namespace DolomiteWcfService
             UserManager = UserManager.Instance;
         }
 
+        /// <summary>
+        /// Operation for creating a new user account. This requires passing in
+        /// a user creation request object. The processing is handed off to the
+        /// user manager which does all the validation and creation work. The
+        /// method is PUT, so the username is extracted from the URI.
+        /// </summary>
+        /// <param name="username">
+        /// Name of the user to create, extracted from the URI
+        /// </param>
+        /// <param name="body">
+        /// The body of the request. Should be a JSON representation of a user
+        /// creation request object.
+        /// </param>
+        /// <returns>Success or failure message</returns>
         public Message CreateUser(string username, Stream body)
         {
             try

@@ -56,12 +56,19 @@ namespace DolomiteWcfService
         #region Creation Methods
 
         /// <summary>
-        /// Does processing on the user information to 
+        /// Does processing on the user information to create a user. This
+        /// includes performing the hashing operations for the username. The
+        /// changing of the status for the user auth key (if required) is also
+        /// performed in this method.
         /// </summary>
-        /// <param name="username"></param>
-        /// <param name="email"></param>
-        /// <param name="password"></param>
-        /// <param name="userKey"></param>
+        /// <param name="username">The username for the user to create</param>
+        /// <param name="email">The email address of the user</param>
+        /// <param name="password">The password for the user</param>
+        /// <param name="userKey">
+        /// The auth key for creating the user. This is only required if the
+        /// UserKeysEnabled flag is set in the application configuration. If not
+        /// required, the parameter can be set to null.
+        /// </param>
         public void CreateUser(string username, string email, string password, Guid? userKey)
         {
             // 1) Hash the users password
@@ -69,8 +76,9 @@ namespace DolomiteWcfService
             RIPEMD160 saltHasher = new RIPEMD160Managed();
             SHA256 passHasher = new SHA256Cng();
             byte[] salt = saltHasher.ComputeHash(Encoding.Default.GetBytes(email));
-
             byte[] hashBytes = passHasher.ComputeHash(Encoding.Default.GetBytes(password + salt));
+
+            // Convrt the password bytes to a string.
             // Why use the bitconverter for this and not the encoding.default.getstring?
             // Because we bitconverter gives us a hex string, instead of unintelligble
             // unicode characters.
@@ -86,7 +94,7 @@ namespace DolomiteWcfService
                 }
 
                 // Wrap the user creation with claim and unclaim keys
-                DatabaseManager.ClaimUserKey(userKey.Value, true);
+                DatabaseManager.SetUserKeyClaimStatus(userKey.Value, true);
                 // 3) Create the user
                 try
                 {
@@ -95,7 +103,7 @@ namespace DolomiteWcfService
                 catch (Exception)
                 {
                     // Unclaim the key
-                    DatabaseManager.ClaimUserKey(userKey.Value, false);
+                    DatabaseManager.SetUserKeyClaimStatus(userKey.Value, false);
                     throw;
                 }
             }
