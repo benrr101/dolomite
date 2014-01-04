@@ -65,16 +65,21 @@ namespace DolomiteWcfService
         public void CreateUser(string username, string email, string password, Guid? userKey)
         {
             // 1) Hash the users password
-            // The algo: use sha256 to hash the user's email, use that as a salt and bcrypt the whole thing
-            SHA256 saltHasher = new SHA256Cng();
+            // The algo: use RIPEMD160 to hash the user's email, use that as a salt and SHA256 the whole thing
+            RIPEMD160 saltHasher = new RIPEMD160Managed();
+            SHA256 passHasher = new SHA256Cng();
             byte[] salt = saltHasher.ComputeHash(Encoding.Default.GetBytes(email));
 
-            //string hashedPassword = Crypt.BCrypt.HashPassword(password + salt, Crypt.BCrypt.GenerateSalt());
+            byte[] hashBytes = passHasher.ComputeHash(Encoding.Default.GetBytes(password + salt));
+            // Why use the bitconverter for this and not the encoding.default.getstring?
+            // Because we bitconverter gives us a hex string, instead of unintelligble
+            // unicode characters.
+            string hashString = BitConverter.ToString(hashBytes).Replace("-",String.Empty);
 
             // 2) Check to see if a userkey is required
             if (UserKeysEnabled)
             {
-                if (!userKey.HasValue || DatabaseManager.ValidateUserKey(userKey.Value, email))
+                if (!userKey.HasValue || !DatabaseManager.ValidateUserKey(userKey.Value, email))
                 {
                     throw new ArgumentNullException("userKey",
                         "You must use a user sign up key that has been provided by the administrator");
@@ -85,7 +90,7 @@ namespace DolomiteWcfService
                 // 3) Create the user
                 try
                 {
-                    DatabaseManager.CreateUser(username, "haha!I'mOnTheInternet!", email);
+                    DatabaseManager.CreateUser(username, hashString, email);
                 }
                 catch (Exception)
                 {
@@ -97,12 +102,10 @@ namespace DolomiteWcfService
             else
             {
                 // 3) Create the user
-                DatabaseManager.CreateUser(username, "haha!I'mOnTheInternet!", email);
+                DatabaseManager.CreateUser(username, hashString, email);
             }
         }
 
         #endregion
-
-        //return StringComparer.Ordinal.Compare(hashed, HashPassword(plaintext, hashed)) == 0;
     }
 }

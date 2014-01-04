@@ -46,10 +46,10 @@
           <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Owner" Type="int" />
           <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
-          <Property Name="Limit" Type="int" />
           <Property Name="MatchAll" Type="bit" Nullable="false" />
-          <Property Name="SortDesc" Type="bit" />
+          <Property Name="Limit" Type="int" />
           <Property Name="SortField" Type="int" />
+          <Property Name="SortDesc" Type="bit" />
         </EntityType>
         <EntityType Name="AvailableQualities">
           <Key>
@@ -155,7 +155,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" Nullable="false" />
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="Username" Type="nvarchar" MaxLength="50" Nullable="false" />
           <Property Name="PasswordHash" Type="nchar" MaxLength="64" Nullable="false" />
           <Property Name="PasswordReset" Type="bit" Nullable="false" />
@@ -662,7 +662,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" />
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="Username" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
           <NavigationProperty Name="Autoplaylists" Relationship="Self.FK_AUTOPLAYLISTS_OWNER" FromRole="Users" ToRole="Autoplaylists" />
           <NavigationProperty Name="Playlists" Relationship="Self.FK_PLAYLISTS_OWNER" FromRole="Users" ToRole="Playlists" />

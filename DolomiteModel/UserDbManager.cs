@@ -53,9 +53,13 @@ namespace DolomiteModel
                 {
                     // Check for duplicate entry error
                     SqlException sex = ex.InnerException.InnerException as SqlException;
-                    if (sex != null && sex.Number == 2601)
+                    if (sex != null && sex.Number == 2627 && sex.Message.Contains("USERNAME"))
                     {
-                        throw new DuplicateNameException(username);
+                        throw new DuplicateNameException("The username provided is already being used. Please choose another one.");
+                    } 
+                    if (sex != null && sex.Number == 2627 && sex.Message.Contains("EMAIL"))
+                    {
+                        throw new DuplicateNameException("The email address provided is already being used. Please use another one.");
                     }
 
                     // Default to rethrowing
