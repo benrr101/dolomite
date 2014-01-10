@@ -141,7 +141,9 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="Token" Type="nchar" MaxLength="60" Nullable="false" />
           <Property Name="User" Type="int" Nullable="false" />
+          <Property Name="InitialIP" Type="nvarchar" MaxLength="15" Nullable="false" />
           <Property Name="ApiKey" Type="int" Nullable="false" />
+          <Property Name="InitializedTime" Type="datetime" Nullable="false" StoreGeneratedPattern="Computed" />
           <Property Name="IdleTimeout" Type="datetime" Nullable="false" />
           <Property Name="AbsoluteTimeout" Type="datetime" Nullable="false" />
         </EntityType>
@@ -1074,6 +1076,8 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <NavigationProperty Name="ApiKey1" Relationship="DolomiteModel.EntityFramework.FK_SESSION_APIKEY" FromRole="Session" ToRole="ApiKey" />
           <Property Name="User" Type="Int32" Nullable="false" />
           <NavigationProperty Name="User1" Relationship="DolomiteModel.EntityFramework.FK_SESSION_USER" FromRole="Session" ToRole="User" />
+          <Property Name="InitialIP" Type="String" Nullable="false" MaxLength="15" FixedLength="false" Unicode="true" />
+          <Property Name="InitializedTime" Type="DateTime" Nullable="false" Precision="3" annotation:StoreGeneratedPattern="Computed" />
         </EntityType>
         <Association Name="FK_SESSION_APIKEY">
           <End Type="DolomiteModel.EntityFramework.ApiKey" Role="ApiKey" Multiplicity="1" />
@@ -1292,6 +1296,8 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <EntitySetMapping Name="Sessions">
             <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Session">
               <MappingFragment StoreEntitySet="Sessions">
+                <ScalarProperty Name="InitializedTime" ColumnName="InitializedTime" />
+                <ScalarProperty Name="InitialIP" ColumnName="InitialIP" />
                 <ScalarProperty Name="User" ColumnName="User" />
                 <ScalarProperty Name="AbsoluteTimeout" ColumnName="AbsoluteTimeout" />
                 <ScalarProperty Name="IdleTimeout" ColumnName="IdleTimeout" />

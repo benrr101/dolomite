@@ -20,6 +20,8 @@ namespace DolomiteModel.EntityFramework
         public System.DateTime IdleTimeout { get; set; }
         public System.DateTime AbsoluteTimeout { get; set; }
         public int User { get; set; }
+        public string InitialIP { get; set; }
+        public System.DateTime InitializedTime { get; set; }
     
         public virtual ApiKey ApiKey1 { get; set; }
         public virtual User User1 { get; set; }
