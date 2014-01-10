@@ -134,6 +134,17 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Property Name="DisplayName" Type="nvarchar" MaxLength="30" Nullable="false" />
           <Property Name="Type" Type="nvarchar" MaxLength="20" Nullable="false" />
         </EntityType>
+        <EntityType Name="Sessions">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Token" Type="nchar" MaxLength="60" Nullable="false" />
+          <Property Name="User" Type="int" Nullable="false" />
+          <Property Name="ApiKey" Type="int" Nullable="false" />
+          <Property Name="IdleTimeout" Type="datetime" Nullable="false" />
+          <Property Name="AbsoluteTimeout" Type="datetime" Nullable="false" />
+        </EntityType>
         <EntityType Name="Tracks">
           <Key>
             <PropertyRef Name="Id" />
@@ -359,6 +370,18 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_SESSION_USER">
+          <End Role="Users" Type="Self.Users" Multiplicity="1" />
+          <End Role="Sessions" Type="Self.Sessions" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Users">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Sessions">
+              <PropertyRef Name="User" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_TRACKS_ART">
           <End Role="Art" Type="Self.Art" Multiplicity="0..1" />
           <End Role="Tracks" Type="Self.Tracks" Multiplicity="*" />
@@ -416,6 +439,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <EntitySet Name="PlaylistTracks" EntityType="Self.PlaylistTracks" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Qualities" EntityType="Self.Qualities" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Rules" EntityType="Self.Rules" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Sessions" EntityType="Self.Sessions" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Tracks" EntityType="Self.Tracks" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="UserKeys" EntityType="Self.UserKeys" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Users" EntityType="Self.Users" Schema="dbo" store:Type="Tables" />
@@ -485,6 +509,10 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <AssociationSet Name="FK_PLAYLISTTRACKS_TRACKS" Association="Self.FK_PLAYLISTTRACKS_TRACKS">
             <End Role="Tracks" EntitySet="Tracks" />
             <End Role="PlaylistTracks" EntitySet="PlaylistTracks" />
+          </AssociationSet>
+          <AssociationSet Name="FK_SESSION_USER" Association="Self.FK_SESSION_USER">
+            <End Role="Users" EntitySet="Users" />
+            <End Role="Sessions" EntitySet="Sessions" />
           </AssociationSet>
           <AssociationSet Name="FK_TRACKS_ART" Association="Self.FK_TRACKS_ART">
             <End Role="Art" EntitySet="Art" />
@@ -680,6 +708,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <Property Name="PasswordHash" Type="String" Nullable="false" MaxLength="60" FixedLength="true" Unicode="true" />
           <Property Name="PasswordReset" Type="Boolean" Nullable="false" />
           <Property Name="Email" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Sessions" Relationship="DolomiteModel.EntityFramework.FK_SESSION_USER" FromRole="User" ToRole="Session" />
         </EntityType>
         <EntityType Name="Device">
           <Key>
@@ -994,6 +1023,15 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           </FunctionImport>
           <EntitySet Name="UserKeys" EntityType="DolomiteModel.EntityFramework.UserKey" />
           <EntitySet Name="ApiKeys" EntityType="DolomiteModel.EntityFramework.ApiKey" />
+          <EntitySet Name="Sessions" EntityType="DolomiteModel.EntityFramework.Session" />
+          <AssociationSet Name="FK_SESSION_APIKEY" Association="DolomiteModel.EntityFramework.FK_SESSION_APIKEY">
+            <End Role="ApiKey" EntitySet="ApiKeys" />
+            <End Role="Session" EntitySet="Sessions" />
+          </AssociationSet>
+          <AssociationSet Name="FK_SESSION_USER" Association="DolomiteModel.EntityFramework.FK_SESSION_USER">
+            <End Role="User" EntitySet="Users" />
+            <End Role="Session" EntitySet="Sessions" />
+          </AssociationSet>
         </EntityContainer>
         <Association Name="FK_AUTOPLAYLISTS_SORTFIELD">
           <End Type="DolomiteModel.EntityFramework.MetadataField" Role="MetadataField" Multiplicity="0..1" />
@@ -1022,7 +1060,45 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="Key" Type="String" Nullable="false" MaxLength="64" FixedLength="true" Unicode="true" />
           <Property Name="FriendlyName" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Sessions" Relationship="DolomiteModel.EntityFramework.FK_SESSION_APIKEY" FromRole="ApiKey" ToRole="Session" />
         </EntityType>
+        <EntityType Name="Session">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Token" Type="String" Nullable="false" MaxLength="60" FixedLength="true" Unicode="true" />
+          <Property Name="ApiKey" Type="Int32" Nullable="false" />
+          <Property Name="IdleTimeout" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AbsoluteTimeout" Type="DateTime" Nullable="false" Precision="3" />
+          <NavigationProperty Name="ApiKey1" Relationship="DolomiteModel.EntityFramework.FK_SESSION_APIKEY" FromRole="Session" ToRole="ApiKey" />
+          <Property Name="User" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="User1" Relationship="DolomiteModel.EntityFramework.FK_SESSION_USER" FromRole="Session" ToRole="User" />
+        </EntityType>
+        <Association Name="FK_SESSION_APIKEY">
+          <End Type="DolomiteModel.EntityFramework.ApiKey" Role="ApiKey" Multiplicity="1" />
+          <End Type="DolomiteModel.EntityFramework.Session" Role="Session" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ApiKey">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Session">
+              <PropertyRef Name="ApiKey" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_SESSION_USER">
+          <End Type="DolomiteModel.EntityFramework.User" Role="User" Multiplicity="1" />
+          <End Type="DolomiteModel.EntityFramework.Session" Role="Session" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Session">
+              <PropertyRef Name="User" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -1209,6 +1285,18 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
               <MappingFragment StoreEntitySet="ApiKeys">
                 <ScalarProperty Name="FriendlyName" ColumnName="FriendlyName" />
                 <ScalarProperty Name="Key" ColumnName="ApiKey" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Sessions">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Session">
+              <MappingFragment StoreEntitySet="Sessions">
+                <ScalarProperty Name="User" ColumnName="User" />
+                <ScalarProperty Name="AbsoluteTimeout" ColumnName="AbsoluteTimeout" />
+                <ScalarProperty Name="IdleTimeout" ColumnName="IdleTimeout" />
+                <ScalarProperty Name="ApiKey" ColumnName="ApiKey" />
+                <ScalarProperty Name="Token" ColumnName="Token" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>
