@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Data;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using DolomiteModel;
+using DolomiteModel.PublicRepresentations;
 
 namespace DolomiteWcfService
 {
@@ -72,17 +74,7 @@ namespace DolomiteWcfService
         public void CreateUser(string username, string email, string password, Guid? userKey)
         {
             // 1) Hash the users password
-            // The algo: use RIPEMD160 to hash the user's email, use that as a salt and SHA256 the whole thing
-            RIPEMD160 saltHasher = new RIPEMD160Managed();
-            SHA256 passHasher = new SHA256Cng();
-            byte[] salt = saltHasher.ComputeHash(Encoding.Default.GetBytes(email));
-            byte[] hashBytes = passHasher.ComputeHash(Encoding.Default.GetBytes(password + salt));
-
-            // Convrt the password bytes to a string.
-            // Why use the bitconverter for this and not the encoding.default.getstring?
-            // Because we bitconverter gives us a hex string, instead of unintelligble
-            // unicode characters.
-            string hashString = BitConverter.ToString(hashBytes).Replace("-",String.Empty);
+            string hashString = CreatePasswordHash(email, password);
 
             // 2) Check to see if a userkey is required
             if (UserKeysEnabled)
@@ -116,6 +108,50 @@ namespace DolomiteWcfService
 
         #endregion
 
-        
+        public string ValidateLogin(string apiKey, string username, string password)
+        {
+            // Validate the apiKey
+            if (!DatabaseManager.ValidateApiKey(apiKey))
+                throw new ApplicationException("Invalid API key.");
+
+            // Validate the login credentials
+            User user = DatabaseManager.GetUser(username);
+            if (user == null)
+                throw new ObjectNotFoundException(String.Format("User with username {0} does not exist", username));
+
+            // Compare the password hashes
+            string hash = CreatePasswordHash(user.Email, password);
+            if (user.PasswordHash.Equals(hash, StringComparison.Ordinal))
+                throw new ObjectNotFoundException(String.Format("User {0} passwords do not match", username));
+
+            // Everything looks good, fire up a session
+
+        }
+
+        #region Private Methods
+
+        /// <summary>
+        /// Creates a password hash, suitable for storing in the database, or
+        /// for validating a login.
+        /// </summary>
+        /// <param name="email">The email of the user, used for the salt.</param>
+        /// <param name="password">The password of the user.</param>
+        /// <returns>A hashed password</returns>
+        private static string CreatePasswordHash(string email, string password)
+        {
+            // The algo: use RIPEMD160 to hash the user's email, use that as a salt and SHA256 the whole thing
+            RIPEMD160 saltHasher = new RIPEMD160Managed();
+            SHA256 passHasher = new SHA256Cng();
+            byte[] salt = saltHasher.ComputeHash(Encoding.Default.GetBytes(email));
+            byte[] hashBytes = passHasher.ComputeHash(Encoding.Default.GetBytes(password + salt));
+
+            // Convrt the password bytes to a string.
+            // Why use the bitconverter for this and not the encoding.default.getstring?
+            // Because we bitconverter gives us a hex string, instead of unintelligble
+            // unicode characters.
+            return BitConverter.ToString(hashBytes).Replace("-", String.Empty);
+        }
+
+        #endregion
     }
 }

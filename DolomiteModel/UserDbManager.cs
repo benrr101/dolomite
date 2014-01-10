@@ -5,6 +5,7 @@ using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
 using System.Linq;
 using DolomiteModel.EntityFramework;
+using Pub = DolomiteModel.PublicRepresentations;
 
 namespace DolomiteModel
 {
@@ -84,6 +85,45 @@ namespace DolomiteModel
         #endregion
 
         #region Retrieval Methods
+
+        /// <summary>
+        /// Retrieves a user from the database, based on the username provided
+        /// </summary>
+        /// <param name="username">The username of the user to retrieve</param>
+        /// <returns>A user object if the user exists, null if the user doesn't exist</returns>
+        public Pub.User GetUser(string username)
+        {
+            using (var context = new DbEntities())
+            {
+                // Find the matching user
+                return (from u in context.Users
+                    where u.Username == username
+                    select new Pub.User
+                    {
+                        Email = u.Email,
+                        PasswordHash = u.PasswordHash,
+                        Username = u.Username
+                    }).FirstOrDefault();
+            }
+        }
+
+        /// <summary>
+        /// Validates an API key. Essentially it just checks to see if an api
+        /// key with the given string exists.
+        /// </summary>
+        /// <param name="key">A 64-character hex API key</param>
+        /// <returns>True if the key exists, false otherwise</returns>
+        public bool ValidateApiKey(string key)
+        {
+            using (var context = new DbEntities())
+            {
+                // Find the matching API key
+                var apiKey = context.ApiKeys.FirstOrDefault(k => k.Key == key);
+
+                // Key must exist
+                return apiKey != null;
+            }
+        }
 
         /// <summary>
         /// Validates a user sign-up key. It checks for a matching key based on
