@@ -14,6 +14,14 @@
           <Property Name="Artist" Type="int" Nullable="false" />
           <Property Name="Art" Type="uniqueidentifier" />
         </EntityType>
+        <EntityType Name="ApiKeys">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="ApiKey" Type="nchar" MaxLength="64" Nullable="false" />
+          <Property Name="FriendlyName" Type="nvarchar" MaxLength="50" Nullable="false" />
+        </EntityType>
         <EntityType Name="Art">
           <Key>
             <PropertyRef Name="Id" />
@@ -46,10 +54,10 @@
           <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Owner" Type="int" />
           <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
-          <Property Name="MatchAll" Type="bit" Nullable="false" />
           <Property Name="Limit" Type="int" />
-          <Property Name="SortField" Type="int" />
+          <Property Name="MatchAll" Type="bit" Nullable="false" />
           <Property Name="SortDesc" Type="bit" />
+          <Property Name="SortField" Type="int" />
         </EntityType>
         <EntityType Name="AvailableQualities">
           <Key>
@@ -155,9 +163,9 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="Username" Type="nvarchar" MaxLength="50" Nullable="false" />
-          <Property Name="PasswordHash" Type="nchar" MaxLength="64" Nullable="false" />
+          <Property Name="PasswordHash" Type="nchar" MaxLength="60" Nullable="false" />
           <Property Name="PasswordReset" Type="bit" Nullable="false" />
           <Property Name="Email" Type="nvarchar" MaxLength="255" Nullable="false" />
         </EntityType>
@@ -396,6 +404,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
         </Function>
         <EntityContainer Name="DolomiteModelEntityFrameworkStoreContainer">
           <EntitySet Name="Albums" EntityType="Self.Albums" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ApiKeys" EntityType="Self.ApiKeys" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Art" EntityType="Self.Art" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Artists" EntityType="Self.Artists" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="AutoplaylistRules" EntityType="Self.AutoplaylistRules" Schema="dbo" store:Type="Tables" />
@@ -668,7 +677,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <NavigationProperty Name="Playlists" Relationship="Self.FK_PLAYLISTS_OWNER" FromRole="Users" ToRole="Playlists" />
           <NavigationProperty Name="Tracks" Relationship="Self.FK_TRACKS_OWNER" FromRole="Users" ToRole="Tracks" />
           <NavigationProperty Name="Devices" Relationship="Self.FK_DEVICES_OWNER" FromRole="Users" ToRole="Devices" />
-          <Property Name="PasswordHash" Type="String" Nullable="false" MaxLength="64" FixedLength="true" Unicode="true" />
+          <Property Name="PasswordHash" Type="String" Nullable="false" MaxLength="60" FixedLength="true" Unicode="true" />
           <Property Name="PasswordReset" Type="Boolean" Nullable="false" />
           <Property Name="Email" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
         </EntityType>
@@ -984,6 +993,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             <Parameter Name="position" Mode="In" Type="Int32" />
           </FunctionImport>
           <EntitySet Name="UserKeys" EntityType="DolomiteModel.EntityFramework.UserKey" />
+          <EntitySet Name="ApiKeys" EntityType="DolomiteModel.EntityFramework.ApiKey" />
         </EntityContainer>
         <Association Name="FK_AUTOPLAYLISTS_SORTFIELD">
           <End Type="DolomiteModel.EntityFramework.MetadataField" Role="MetadataField" Multiplicity="0..1" />
@@ -1004,6 +1014,14 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <Property Name="Id" Type="Guid" Nullable="false" />
           <Property Name="Email" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
           <Property Name="Claimed" Type="Boolean" Nullable="false" />
+        </EntityType>
+        <EntityType Name="ApiKey">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Key" Type="String" Nullable="false" MaxLength="64" FixedLength="true" Unicode="true" />
+          <Property Name="FriendlyName" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
         </EntityType>
       </Schema>
     </edmx:ConceptualModels>
@@ -1182,6 +1200,15 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
               <MappingFragment StoreEntitySet="UserKeys">
                 <ScalarProperty Name="Claimed" ColumnName="Claimed" />
                 <ScalarProperty Name="Email" ColumnName="Email" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ApiKeys">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.ApiKey">
+              <MappingFragment StoreEntitySet="ApiKeys">
+                <ScalarProperty Name="FriendlyName" ColumnName="FriendlyName" />
+                <ScalarProperty Name="Key" ColumnName="ApiKey" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>

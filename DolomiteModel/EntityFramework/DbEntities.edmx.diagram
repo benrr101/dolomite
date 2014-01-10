@@ -38,6 +38,7 @@
         <AssociationConnector Association="DolomiteModel.EntityFramework.FK_DEVICES_OWNER" ManuallyRouted="false" />
         <AssociationConnector Association="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTS_SORTFIELD" />
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.UserKey" Width="1.5" PointX="10.625" PointY="1.375" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.ApiKey" Width="1.5" PointX="12.625" PointY="1.375" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

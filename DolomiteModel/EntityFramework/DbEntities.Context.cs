@@ -44,6 +44,7 @@ namespace DolomiteModel.EntityFramework
         public DbSet<User> Users { get; set; }
         public DbSet<Device> Devices { get; set; }
         public DbSet<UserKey> UserKeys { get; set; }
+        public DbSet<ApiKey> ApiKeys { get; set; }
     
         public virtual ObjectResult<Nullable<System.Guid>> GetAndLockTopOnboardingItem()
         {
