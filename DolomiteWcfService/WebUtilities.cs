@@ -16,6 +16,8 @@ namespace DolomiteWcfService
         /// </summary>
         public const string InternalServerMessage = "An internal server error occurred";
 
+        #region Request Getters
+
         public static string GetContentType()
         {
             // Make sure there is a current operation context to use
@@ -40,6 +42,21 @@ namespace DolomiteWcfService
             return WebOperationContext.Current.IncomingRequest.ContentLength;
         }
 
+        public static string GetRemoteIpAddress()
+        {
+            // The ip address must be fetched from the regular operation context, not the web one
+            MessageProperties properties = OperationContext.Current.IncomingMessageProperties;
+            var endpointProperty = properties[RemoteEndpointMessageProperty.Name] as RemoteEndpointMessageProperty;
+
+            if (endpointProperty == null)
+            {
+                throw new CommunicationException(
+                    "The current endpoint property is null. Are you sure you're running this as a web service?");
+            }
+
+            return endpointProperty.Address;
+        }
+
         public static NameValueCollection GetQueryParameters()
         {
             // Make sure there is a current operation context to use
@@ -51,6 +68,8 @@ namespace DolomiteWcfService
 
             return WebOperationContext.Current.IncomingRequest.UriTemplateMatch.QueryParameters;
         }
+
+        #endregion
 
         /// <summary>
         /// Generates a Message object suitable for returning after a request to the server.

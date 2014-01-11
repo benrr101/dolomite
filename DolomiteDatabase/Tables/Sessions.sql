@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [dbo].[Sessions]
 (
 	[Id]				INT NOT NULL PRIMARY KEY IDENTITY(1,1),
-	[Token]				NCHAR(60) NOT NULL,
+	[Token]				NCHAR(64) NOT NULL,
 	[User]				INT NOT NULL,
 	[InitialIP]			NVARCHAR(15) NOT NULL,
 	[ApiKey]			INT NOT NULL,

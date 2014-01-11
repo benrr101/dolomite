@@ -139,7 +139,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="Token" Type="nchar" MaxLength="60" Nullable="false" />
+          <Property Name="Token" Type="nchar" MaxLength="64" Nullable="false" />
           <Property Name="User" Type="int" Nullable="false" />
           <Property Name="InitialIP" Type="nvarchar" MaxLength="15" Nullable="false" />
           <Property Name="ApiKey" Type="int" Nullable="false" />
@@ -178,7 +178,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           </Key>
           <Property Name="Id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
           <Property Name="Username" Type="nvarchar" MaxLength="50" Nullable="false" />
-          <Property Name="PasswordHash" Type="nchar" MaxLength="60" Nullable="false" />
+          <Property Name="PasswordHash" Type="nchar" MaxLength="64" Nullable="false" />
           <Property Name="PasswordReset" Type="bit" Nullable="false" />
           <Property Name="Email" Type="nvarchar" MaxLength="255" Nullable="false" />
         </EntityType>
@@ -707,7 +707,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <NavigationProperty Name="Playlists" Relationship="Self.FK_PLAYLISTS_OWNER" FromRole="Users" ToRole="Playlists" />
           <NavigationProperty Name="Tracks" Relationship="Self.FK_TRACKS_OWNER" FromRole="Users" ToRole="Tracks" />
           <NavigationProperty Name="Devices" Relationship="Self.FK_DEVICES_OWNER" FromRole="Users" ToRole="Devices" />
-          <Property Name="PasswordHash" Type="String" Nullable="false" MaxLength="60" FixedLength="true" Unicode="true" />
+          <Property Name="PasswordHash" Type="String" Nullable="false" MaxLength="64" FixedLength="true" Unicode="true" />
           <Property Name="PasswordReset" Type="Boolean" Nullable="false" />
           <Property Name="Email" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="Sessions" Relationship="DolomiteModel.EntityFramework.FK_SESSION_USER" FromRole="User" ToRole="Session" />
@@ -1069,7 +1069,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="Token" Type="String" Nullable="false" MaxLength="60" FixedLength="true" Unicode="true" />
+          <Property Name="Token" Type="String" Nullable="false" MaxLength="64" FixedLength="true" Unicode="true" />
           <Property Name="ApiKey" Type="Int32" Nullable="false" />
           <Property Name="IdleTimeout" Type="DateTime" Nullable="false" Precision="3" />
           <Property Name="AbsoluteTimeout" Type="DateTime" Nullable="false" Precision="3" />

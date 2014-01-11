@@ -34,6 +34,18 @@ namespace DolomiteWcfService {
     }
 
     [DataContract]
+    public class LoginSuccessResponse : WebResponse
+    {
+        [DataMember]
+        public string Token { get; set; }
+
+        public LoginSuccessResponse(string token) : base(StatusValue.Success)
+        {
+            Token = token;
+        }
+    }
+
+    [DataContract]
     public class UploadSuccessResponse : WebResponse
     {
         [DataMember]

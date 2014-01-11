@@ -15,11 +15,19 @@ namespace DolomiteWcfService
 
         public const string UserKeysEnabledKey = "userKeysEnabled";
 
+        public const string AbsoluteTimeoutKey = "absoluteTimeout";
+
+        public const string IdleTimeoutKey = "IdleTimeout";
+
         #endregion
 
         #region Properties and Member Variables
 
         private bool UserKeysEnabled { get; set; }
+
+        private TimeSpan AbsoluteTimeoutInterval { get; set; }
+
+        private TimeSpan IdleTimeoutInterval { get; set; }
 
         private UserDbManager DatabaseManager { get; set; }
 
@@ -44,10 +52,20 @@ namespace DolomiteWcfService
         {
             // Check if the user keys checking is enabled in the configuration file
             if (Properties.Settings.Default[UserKeysEnabledKey] as Boolean? == null)
-            {
                 throw new InvalidDataException("Track storage container key not set in settings.");
-            }
+
             UserKeysEnabled = (bool)Properties.Settings.Default[UserKeysEnabledKey];
+
+            // Determine the absolute and idle timeout intervals
+            if (Properties.Settings.Default[IdleTimeoutKey] as TimeSpan? == null)
+                throw new InvalidDataException("Session idle timeout interval not set in settings.");
+
+            IdleTimeoutInterval = (TimeSpan) Properties.Settings.Default[IdleTimeoutKey];
+
+            if (Properties.Settings.Default[AbsoluteTimeoutKey] as TimeSpan? == null)
+                throw new InvalidDataException("Session absolute timeout interval not set in settings.");
+
+            AbsoluteTimeoutInterval = (TimeSpan)Properties.Settings.Default[AbsoluteTimeoutKey];
 
             // Grab an instance of the User database manager
             DatabaseManager = UserDbManager.Instance;
@@ -108,7 +126,16 @@ namespace DolomiteWcfService
 
         #endregion
 
-        public string ValidateLogin(string apiKey, string username, string password)
+        /// <summary>
+        /// Performs all the actions necessary to validate a login attempt.
+        /// Upon successful validation, a new session is created.
+        /// </summary>
+        /// <param name="apiKey">The API key that the request came from</param>
+        /// <param name="ipAddress">The IP address that initialized the request</param>
+        /// <param name="username">The name of the user that is attempting to login</param>
+        /// <param name="password">The password that is being used for the login</param>
+        /// <returns></returns>
+        public string ValidateLogin(string apiKey, string ipAddress, string username, string password)
         {
             // Validate the apiKey
             if (!DatabaseManager.ValidateApiKey(apiKey))
@@ -121,11 +148,19 @@ namespace DolomiteWcfService
 
             // Compare the password hashes
             string hash = CreatePasswordHash(user.Email, password);
-            if (user.PasswordHash.Equals(hash, StringComparison.Ordinal))
+            if (!user.PasswordHash.Equals(hash, StringComparison.Ordinal))
                 throw new ObjectNotFoundException(String.Format("User {0} passwords do not match", username));
 
             // Everything looks good, fire up a session
+            // Determine the timeout times
+            DateTime absTimeout = DateTime.Now + AbsoluteTimeoutInterval;
+            DateTime idleTimeout = DateTime.Now + IdleTimeoutInterval;
 
+            // Create a unique token for the session and create the session
+            string token = CreateSessionToken(username);
+            DatabaseManager.CreateSession(user, apiKey, token, ipAddress, idleTimeout, absTimeout);
+
+            return token;
         }
 
         #region Private Methods
@@ -149,6 +184,21 @@ namespace DolomiteWcfService
             // Why use the bitconverter for this and not the encoding.default.getstring?
             // Because we bitconverter gives us a hex string, instead of unintelligble
             // unicode characters.
+            return BitConverter.ToString(hashBytes).Replace("-", String.Empty);
+        }
+
+        /// <summary>
+        /// Generates a unique session token using a SHA256 hash
+        /// </summary>
+        /// <param name="username">A username to add to the token</param>
+        /// <returns>A simple, 64-character session token</returns>
+        private static string CreateSessionToken(string username)
+        {
+            // The algo: sha256 the username + the current timestamp + a new guid
+            SHA256 hasher = new SHA256Cng();
+            byte[] toHash = Encoding.Default.GetBytes(username + DateTime.Now + Guid.NewGuid());
+            byte[] hashBytes = hasher.ComputeHash(toHash);
+
             return BitConverter.ToString(hashBytes).Replace("-", String.Empty);
         }
 

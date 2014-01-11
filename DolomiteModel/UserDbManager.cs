@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
@@ -31,6 +30,36 @@ namespace DolomiteModel
         #endregion
 
         #region Creation Methods
+
+        /// <summary>
+        /// Attempts to create a new session in the database using all the
+        /// information provided.
+        /// </summary>
+        /// <param name="user">The user to associate the session with. User MUST exist.</param>
+        /// <param name="apiKey">The API key to associate the session with</param>
+        /// <param name="token">The token for identifying the session</param>
+        /// <param name="ipAddress">The IP address that initialized the session</param>
+        /// <param name="idleExpire">The time to timeout the session if no actions are taken</param>
+        /// <param name="absExpire">The time to timeout the session regardless of actions taken</param>
+        public void CreateSession(Pub.User user, string apiKey, string token, string ipAddress, DateTime idleExpire, DateTime absExpire)
+        {
+            using (var context = new DbEntities())
+            {
+                // Create a new Session object
+                Session session = new Session
+                {
+                    AbsoluteTimeout = absExpire,
+                    ApiKey = context.ApiKeys.First(a => a.Key == apiKey).Id,
+                    IdleTimeout = idleExpire,
+                    Token = token,
+                    InitialIP = ipAddress,
+                    User = context.Users.First(u => u.Username == user.Username).Id,
+                };
+
+                context.Sessions.Add(session);
+                context.SaveChanges();
+            }
+        }
 
         /// <summary>
         /// Creates a new user in the database using the user's username, email,

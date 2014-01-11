@@ -12,7 +12,7 @@ namespace DolomiteWcfService
         Message CreateUser(string username, Stream body);
 
         [WebInvoke(Method = "POST", UriTemplate = "/login")]
-        Message Login();
+        Message Login(Stream body);
 
         [WebInvoke(Method = "POST", UriTemplate = "/logout")]
         Message Logout();
