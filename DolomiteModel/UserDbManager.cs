@@ -182,6 +182,46 @@ namespace DolomiteModel
         #region Update Methods
 
         /// <summary>
+        /// Sets the absolute timeout for a given session
+        /// </summary>
+        /// <param name="sessionToken">The token for identifying the session</param>
+        /// <param name="newTimeout">The new time to set the absolute timeout to</param>
+        public void SetSessionAbsoluteTimeout(string sessionToken, DateTime newTimeout)
+        {
+            using (var context = new DbEntities())
+            {
+                // Fetch the session
+                Session session = context.Sessions.FirstOrDefault(s => s.Token == sessionToken);
+                if (session == null)
+                    throw new ObjectNotFoundException(String.Format("Session with token {0} not found.", sessionToken));
+
+                // Update the absolute timeout
+                session.AbsoluteTimeout = newTimeout;
+                context.SaveChanges();
+            }
+        }
+
+        /// <summary>
+        /// Sets the idle timeout for a given session
+        /// </summary>
+        /// <param name="sessionToken">The token for identifying the session</param>
+        /// <param name="newTimeout">The new time to set the idle timeout to</param>
+        public void SetSessionIdleTimeout(string sessionToken, DateTime newTimeout)
+        {
+            using (var context = new DbEntities())
+            {
+                // Fetch the session
+                Session session = context.Sessions.FirstOrDefault(s => s.Token == sessionToken);
+                if (session == null)
+                    throw new ObjectNotFoundException(String.Format("Session with token {0} not found.", sessionToken));
+
+                // Update the absolute timeout
+                session.IdleTimeout = newTimeout;
+                context.SaveChanges();
+            }
+        }
+
+        /// <summary>
         /// Sets the claim status on the user auth key.
         /// </summary>
         /// <exception cref="NullReferenceException">
@@ -205,5 +245,6 @@ namespace DolomiteModel
         }
 
         #endregion
+
     }
 }

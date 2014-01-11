@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.ServiceModel.Channels;
 using System.Text;
+using DolomiteWcfService.Exceptions;
 using DolomiteWcfService.Requests;
 using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
@@ -123,9 +124,38 @@ namespace DolomiteWcfService
             
         }
 
+        /// <summary>
+        /// Attempts to log out the user by invalidating their session. Error
+        /// messages are only given when the session token is missing or an unknown
+        /// error occurred. If the session is already invalid or does not exist,
+        /// then nothing happens.
+        /// </summary>
+        /// <returns>A success or error message</returns>
         public Message Logout()
         {
-            throw new NotImplementedException();
+            try
+            {
+                // Read the session token from the headers
+                string token = WebUtilities.GetDolomiteSessionToken();
+
+                // Invalidate the session
+                UserManager.InvalidateSession(token);
+            }
+            catch (InvalidSessionException)
+            {
+                string message = "The session token was missing or not formatted correctly. Please see the API guide for more info.";
+                WebUtilities.SetHeader(HttpResponseHeader.WwwAuthenticate, "DOLOMITE");
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Unauthorized);
+            }
+            catch(ObjectNotFoundException) {}   // Ignore this one.
+            catch (Exception)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
+            }
+            
+            // Tell the client everything went "ok"
+            return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
         }
     }
 }

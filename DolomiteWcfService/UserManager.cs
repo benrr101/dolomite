@@ -127,6 +127,28 @@ namespace DolomiteWcfService
         #endregion
 
         /// <summary>
+        /// Invalidates a given session by setting the timeouts on the session
+        /// to one hour in the past. If the session doesn't exist, we ignore it
+        /// </summary>
+        /// <param name="sessionToken">The token identifier for the session</param>
+        public void InvalidateSession(string sessionToken)
+        {
+            // Calculate new timeouts. Set them for the past to expire the session.
+            DateTime expiredTimeout = DateTime.Now - TimeSpan.FromHours(1);
+
+            // Invalidate the session in the server, swallow invalid session errors
+            // since we don't want to expose the existence of a session
+            try
+            {
+                DatabaseManager.SetSessionAbsoluteTimeout(sessionToken, expiredTimeout);
+                DatabaseManager.SetSessionIdleTimeout(sessionToken, expiredTimeout);
+            }
+            catch (ObjectNotFoundException)
+            {
+            }
+        }
+
+        /// <summary>
         /// Performs all the actions necessary to validate a login attempt.
         /// Upon successful validation, a new session is created.
         /// </summary>
