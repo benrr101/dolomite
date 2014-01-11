@@ -1,10 +1,13 @@
-﻿using System.Collections.Specialized;
+﻿using System;
+using System.Collections.Specialized;
 using System.IO;
 using System.Net;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Web;
 using System.Text;
+using System.Text.RegularExpressions;
+using DolomiteWcfService.Exceptions;
 using Newtonsoft.Json;
 
 namespace DolomiteWcfService
@@ -17,6 +20,35 @@ namespace DolomiteWcfService
         public const string InternalServerMessage = "An internal server error occurred";
 
         #region Request Getters
+
+        /// <summary>
+        /// Fetches the session token from the headers of the incoming request.
+        /// This uses regular expressions to get the token from the header. It
+        /// also is able to validate the header at the same time!
+        /// </summary>
+        /// <exception cref="InvalidSessionException">Thrown if the authorization header is formatted incorrectly or is missing.</exception>
+        /// <returns>The session token from the authorization header</returns>
+        public static string GetDolomiteSessionToken()
+        {
+            // Make sure there is a current operation context to use
+            if (WebOperationContext.Current == null)
+            {
+                throw new CommunicationException(
+                    "The current web operation context is null. Are you sure you're running this as a web service?");
+            }
+
+            // Fetch the header
+            string authHeader = WebOperationContext.Current.IncomingRequest.Headers[HttpRequestHeader.Authorization];
+            if (String.IsNullOrWhiteSpace(authHeader))
+                throw new InvalidSessionException("The authorization header is missing.");
+
+            // Parse the header to get at the token
+            Regex regex = new Regex("DOLOMITE.*token=\"([0-9a-fA-F]{64})\"", RegexOptions.Compiled);
+            if (!regex.IsMatch(authHeader))
+                throw new InvalidSessionException("Authorization header does not match regular expression for the header");
+
+            return regex.Match(authHeader).Groups[1].Value;
+        }
 
         public static string GetContentType()
         {
