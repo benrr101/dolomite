@@ -87,7 +87,13 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="Responses.cs" />
+    <Compile Include="Responses\LoginSuccessResponse.cs" />
+    <Compile Include="Requests\UserCreationRequest.cs" />
+    <Compile Include="Requests\UserLoginRequest.cs" />
+    <Compile Include="Responses\ErrorResponse.cs" />
+    <Compile Include="Responses\PlaylistCreateSuccessResponse.cs" />
+    <Compile Include="Responses\UploadSuccessResponse.cs" />
+    <Compile Include="Responses\Response.cs" />
     <Compile Include="StaticPlaylistEndpoint.cs" />
     <Compile Include="Threads\TrackOnboarding.cs" />
     <Compile Include="TrackManager.cs" />

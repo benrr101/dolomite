@@ -6,6 +6,7 @@ using System.Net;
 using System.ServiceModel.Channels;
 using System.Text;
 using DolomiteModel.PublicRepresentations;
+using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
 
 namespace DolomiteWcfService
@@ -135,7 +136,7 @@ namespace DolomiteWcfService
                 PlaylistManager.AddRuleToAutoPlaylist(playlistId, rule);
 
                 // Send a happy return message
-                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
+                return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException)
             {
@@ -187,7 +188,7 @@ namespace DolomiteWcfService
 
                 // Send the request to the db manager
                 PlaylistManager.DeleteRuleFromAutoPlaylist(playlistGuid, ruleId);
-                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
+                return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (ObjectNotFoundException)
             {
@@ -213,7 +214,7 @@ namespace DolomiteWcfService
             {
                 // Parse the guid into a Guid and attempt to delete
                 PlaylistManager.DeleteAutoPlaylist(Guid.Parse(guid));
-                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
+                return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException)
             {

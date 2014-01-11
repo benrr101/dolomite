@@ -126,8 +126,6 @@
     <Compile Include="PublicRepresentations\Quality.cs" />
     <Compile Include="PublicRepresentations\Track.cs" />
     <Compile Include="PublicRepresentations\User.cs" />
-    <Compile Include="PublicRepresentations\UserCreationRequest.cs" />
-    <Compile Include="PublicRepresentations\UserLoginRequest.cs" />
     <Compile Include="TrackDbManager.cs" />
     <Compile Include="TrackRuleProvider.cs" />
     <Compile Include="UserDbManager.cs" />

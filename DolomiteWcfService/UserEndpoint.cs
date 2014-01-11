@@ -4,7 +4,8 @@ using System.IO;
 using System.Net;
 using System.ServiceModel.Channels;
 using System.Text;
-using DolomiteModel.PublicRepresentations;
+using DolomiteWcfService.Requests;
+using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
 
 namespace DolomiteWcfService
@@ -50,7 +51,7 @@ namespace DolomiteWcfService
 
                 // Attempt to create a new user
                 UserManager.CreateUser(username, request.Email, request.Password, request.AuthKey);
-                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
+                return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (JsonSerializationException)
             {

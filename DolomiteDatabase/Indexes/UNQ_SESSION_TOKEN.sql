@@ -1,0 +1,3 @@
+﻿ALTER TABLE [dbo].[Sessions]
+	ADD CONSTRAINT [UNQ_SESSION_TOKEN]
+	UNIQUE (Token)

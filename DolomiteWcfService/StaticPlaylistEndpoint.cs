@@ -6,6 +6,7 @@ using System.Net;
 using System.ServiceModel.Channels;
 using System.Text;
 using DolomiteModel.PublicRepresentations;
+using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
 
 namespace DolomiteWcfService
@@ -143,7 +144,7 @@ namespace DolomiteWcfService
                 }
 
                 // Send a happy return message
-                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
+                return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException)
             {
@@ -188,7 +189,7 @@ namespace DolomiteWcfService
 
                 // Attempt to delete
                 PlaylistManager.DeleteTrackFromStaticPlaylist(playlistGuid, trackGuid);
-                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
+                return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException fe)
             {
@@ -217,7 +218,7 @@ namespace DolomiteWcfService
             {
                 // Parse the guid into a Guid and attempt to delete
                 PlaylistManager.DeleteStaticPlaylist(Guid.Parse(guid));
-                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
+                return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException)
             {

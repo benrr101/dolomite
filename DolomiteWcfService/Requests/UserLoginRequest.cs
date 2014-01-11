@@ -1,4 +1,4 @@
-﻿namespace DolomiteModel.PublicRepresentations
+﻿namespace DolomiteWcfService.Requests
 {
     public struct UserLoginRequest
     {

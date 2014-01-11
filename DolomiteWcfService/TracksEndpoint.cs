@@ -6,6 +6,7 @@ using System.Net;
 using System.ServiceModel.Channels;
 using System.Text;
 using DolomiteModel.PublicRepresentations;
+using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
 using AntsCode.Util;
 using TagLib;
@@ -274,7 +275,7 @@ namespace DolomiteWcfService
                 TrackManager.ReplaceMetadata(trackGuid, metadata);
 
                 // Sucess
-                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
+                return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException)
             {
@@ -320,7 +321,7 @@ namespace DolomiteWcfService
                 TrackManager.ReplaceMetadata(trackGuid, metadata, true);
 
                 // Sucess
-                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
+                return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException)
             {
@@ -393,7 +394,7 @@ namespace DolomiteWcfService
                 TrackManager.ReplaceTrackArt(trackGuid, memoryStream);
 
                 // Sucess
-                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
+                return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException)
             {
@@ -428,7 +429,7 @@ namespace DolomiteWcfService
             {
                 // Parse the guid into a Guid and attempt to delete
                 TrackManager.DeleteTrack(Guid.Parse(guid));
-                return WebUtilities.GenerateResponse(new WebResponse(WebResponse.StatusValue.Success), HttpStatusCode.OK);
+                return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException)
             {

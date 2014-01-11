@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DolomiteModel.PublicRepresentations
+namespace DolomiteWcfService.Requests
 {
     public struct UserCreationRequest
     {
