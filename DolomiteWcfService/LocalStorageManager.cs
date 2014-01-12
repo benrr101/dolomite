@@ -53,7 +53,8 @@ namespace DolomiteWcfService
         /// </summary>
         /// <param name="stream">The stream to store</param>
         /// <param name="filename">The name of the file</param>
-        public string StoreStream(Stream stream, string filename)
+        /// <param name="owner">The owner of the file</param>
+        public string StoreStream(Stream stream, string filename, string owner)
         {
             // Copy the stream to the file
             using (var newFile = File.Create(GetPath(filename)))
@@ -62,7 +63,7 @@ namespace DolomiteWcfService
             }
 
             // Calculate the hash of the file
-            return CalculateHash(stream);
+            return CalculateHash(stream, owner);
         }
 
         #endregion
@@ -109,8 +110,9 @@ namespace DolomiteWcfService
         /// Calculates the RIPEMD160 hash of the given stream
         /// </summary>
         /// <param name="stream">The stream to calculate the hash of</param>
+        /// <param name="owner">The owner of the track</param>
         /// <returns>The hash of the file</returns>
-        public string CalculateHash(Stream stream)
+        public string CalculateHash(Stream stream, string owner)
         {
             stream.Position = 0;
 
@@ -123,7 +125,7 @@ namespace DolomiteWcfService
             stream.Position = 0;
 
             // Is the track a duplicate?
-            if (TrackDbManager.Instance.GetTrackByHash(hashString) != null)
+            if (TrackDbManager.Instance.GetTrackByHash(hashString, owner) != null)
             {
                 // The track is a duplicate!
                 throw new DuplicateNameException("Track is a duplicate as determined by hash comparison");

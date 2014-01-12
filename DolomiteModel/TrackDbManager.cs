@@ -324,14 +324,15 @@ namespace DolomiteModel
         /// Fetches a minimalistic track object based on the hash of the track
         /// </summary>
         /// <param name="hash">The hash of the track to find</param>
+        /// <param name="owner">The owner of the track to search for</param>
         /// <returns>A public track object with the id set. Null if a matching track can't be found</returns>
-        public Pub.Track GetTrackByHash(string hash)
+        public Pub.Track GetTrackByHash(string hash, string owner)
         {
             using (var context = new DbEntities())
             {
                 // Search for the track
                 return (from track in context.Tracks
-                    where track.Hash == hash
+                    where track.Hash == hash && track.User.Username == owner
                     select new Pub.Track {Id = track.Id}).FirstOrDefault();
             }
         }

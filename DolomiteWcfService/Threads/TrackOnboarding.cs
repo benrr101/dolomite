@@ -329,7 +329,7 @@ namespace DolomiteWcfService.Threads
             var artFile = new IO.MemoryStream(art.Data.ToArray());
 
             // Calculate the hash of the album art
-            string hash = LocalStorageManager.CalculateHash(artFile);
+            string hash = LocalStorageManager.CalculateHash(artFile, null);
             var artGuid = DatabaseManager.GetArtIdByHash(hash);
             if (artGuid == Guid.Empty)
             {

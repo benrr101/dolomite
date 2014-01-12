@@ -113,6 +113,7 @@
     <Build Include="Indexes\UNQ_SESSION_TOKEN.sql" />
     <Build Include="Foreign Keys\FK_SESSION_APIKEY.sql" />
     <Build Include="Foreign Keys\FK_SESSION_USER.sql" />
+    <Build Include="Indexes\IDX_TRACKS_USER_HASH.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Script.PostDeployment1.sql" />

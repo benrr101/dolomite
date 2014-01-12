@@ -207,7 +207,7 @@ namespace DolomiteModel
                 // 1) exist
                 // 2) either have matching email or no email requirement
                 // 3) not be claimed
-                return userKey != null && (userKey.Email == null || userKey.Email == email) && !userKey.Claimed;
+                return userKey != null && (String.IsNullOrWhiteSpace(userKey.Email) || userKey.Email == email) && !userKey.Claimed;
             }
         }
 

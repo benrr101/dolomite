@@ -174,7 +174,7 @@ namespace DolomiteWcfService
             Track track = DatabaseManager.GetTrackByGuid(guid);
 
             // Step 1: Upload the track to temporary storage
-            hash = LocalStorageManager.StoreStream(stream, guid.ToString());
+            hash = LocalStorageManager.StoreStream(stream, guid.ToString(), null);
 
             // Step 2: Delete existing blobs from azure
             foreach (Track.Quality quality in track.Qualities)
@@ -241,7 +241,7 @@ namespace DolomiteWcfService
                 throw new UnsupportedFormatException("The image format provided was either invalid or not supported.");
 
             // Calculate the hash
-            string hash = LocalStorageManager.CalculateHash(stream);
+            string hash = LocalStorageManager.CalculateHash(stream, null);
             var artGuid = DatabaseManager.GetArtIdByHash(hash);
             if (artGuid == Guid.Empty)
             {
@@ -273,7 +273,7 @@ namespace DolomiteWcfService
         {
             // Step 1: Upload the track to temporary storage in azure
             guid = Guid.NewGuid();
-            hash = LocalStorageManager.StoreStream(stream, guid.ToString());
+            hash = LocalStorageManager.StoreStream(stream, guid.ToString(), owner);
 
             // Step 2: Create the inital record of the track in the database
             DatabaseManager.CreateInitialTrackRecord(owner, guid, hash);
