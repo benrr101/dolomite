@@ -93,6 +93,7 @@ namespace DolomiteModel
         /// <summary>
         /// Create a stubbed out record for the track
         /// </summary>
+        /// <param name="owner">The username for the owner of the track</param>
         /// <param name="guid">The guid of the track</param>
         /// <param name="hash">The hash of the track</param>
         public void CreateInitialTrackRecord(string owner, Guid guid, string hash)

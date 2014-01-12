@@ -78,12 +78,17 @@ namespace DolomiteWcfService
         /// Deletes the track with the given GUID from the database and Azure storage
         /// </summary>
         /// <param name="trackGuid">The GUID of the track to delete.</param>
-        public void DeleteTrack(Guid trackGuid)
+        /// <param name="owner">The owner of the session</param>
+        public void DeleteTrack(Guid trackGuid, string owner)
         {
             // Does the track exist?
             Track track = DatabaseManager.GetTrackByGuid(trackGuid);
             if (track == null)
                 throw new FileNotFoundException(String.Format("Track with guid {0} does not exist.", trackGuid));
+
+            // Make sure the owners match
+            if (track.Owner != owner)
+                throw new UnauthorizedAccessException("The requested track is not owned by the session owner.");
 
             // TODO: Verify that we can't have inconsistent states for the database
 
@@ -233,6 +238,7 @@ namespace DolomiteWcfService
         /// then it can safely be deleted.
         /// </summary>
         /// <param name="guid">The guid of the track to set the art for</param>
+        /// <param name="owner">The owner of the session</param>
         /// <param name="stream">The stream representing the art file</param>
         public void ReplaceTrackArt(Guid guid, string owner, Stream stream)
         {
