@@ -199,7 +199,15 @@ namespace DolomiteWcfService
         public string GetUsernameFromSession(string sessionToken, string apiKey)
         {
             // Ask the database for the session
-            Session session = DatabaseManager.GetSession(sessionToken);
+            Session session;
+            try
+            {
+                session = DatabaseManager.GetSession(sessionToken);
+            }
+            catch (ObjectNotFoundException)
+            {
+                throw new InvalidSessionException("The session does not exist.");
+            }
 
             // Perform validation
             // Are the timeouts in the future?

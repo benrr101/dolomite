@@ -95,7 +95,7 @@ namespace DolomiteModel
         /// </summary>
         /// <param name="guid">The guid of the track</param>
         /// <param name="hash">The hash of the track</param>
-        public void CreateInitialTrackRecord(Guid guid, string hash)
+        public void CreateInitialTrackRecord(string owner, Guid guid, string hash)
         {
             using (var context = new DbEntities())
             {
@@ -106,7 +106,8 @@ namespace DolomiteModel
                     Hash = hash,
                     TrackInTempStorage = true,
                     HasBeenOnboarded = false,
-                    Locked = false
+                    Locked = false,
+                    Owner = context.Users.First(u => u.Username == owner).Id
                 };
                 context.Tracks.Add(track);
                 context.SaveChanges();

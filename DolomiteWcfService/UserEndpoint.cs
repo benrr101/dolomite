@@ -136,7 +136,8 @@ namespace DolomiteWcfService
             try
             {
                 // Read the session token from the headers
-                string token = WebUtilities.GetDolomiteSessionToken();
+                string ignore;
+                string token = WebUtilities.GetDolomiteSessionToken(out ignore);
 
                 // Invalidate the session
                 UserManager.InvalidateSession(token);
@@ -144,7 +145,7 @@ namespace DolomiteWcfService
             catch (InvalidSessionException)
             {
                 string message = "The session token was missing or not formatted correctly. Please see the API guide for more info.";
-                WebUtilities.SetHeader(HttpResponseHeader.WwwAuthenticate, "DOLOMITE");
+                WebUtilities.SetHeader(HttpResponseHeader.WwwAuthenticate, "DOLOMITE href=\"/users/login\"");
                 return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Unauthorized);
             }
             catch(ObjectNotFoundException) {}   // Ignore this one.

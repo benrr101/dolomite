@@ -27,6 +27,8 @@ namespace DolomiteWcfService
 
         private LocalStorageManager LocalStorageManager { get; set; }
 
+        private UserManager UserManager { get; set; }
+
         #endregion
 
         #region Singleton Instance Code
@@ -63,6 +65,9 @@ namespace DolomiteWcfService
 
             // Get an instance of the local storage manager
             LocalStorageManager = LocalStorageManager.Instance;
+
+            // Get an instance of the user manager
+            UserManager = UserManager.Instance;
         }
 
         #endregion
@@ -260,17 +265,18 @@ namespace DolomiteWcfService
         /// detect duplicate tracks based on hash here.
         /// </summary>
         /// <param name="stream">Stream of the uploaded track</param>
+        /// <param name="owner">The username of the owner of the track</param>
         /// <param name="guid">Output variable for the guid of the track</param>
         /// <param name="hash">Output variable for the hash of the track</param>
         /// <returns>The guid for identifying the track</returns>
-        public void UploadTrack(Stream stream, out Guid guid, out string hash)
+        public void UploadTrack(Stream stream, string owner, out Guid guid, out string hash)
         {
             // Step 1: Upload the track to temporary storage in azure
             guid = Guid.NewGuid();
             hash = LocalStorageManager.StoreStream(stream, guid.ToString());
 
             // Step 2: Create the inital record of the track in the database
-            DatabaseManager.CreateInitialTrackRecord(guid, hash);
+            DatabaseManager.CreateInitialTrackRecord(owner, guid, hash);
         }
 
         #endregion

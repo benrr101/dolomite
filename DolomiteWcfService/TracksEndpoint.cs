@@ -6,6 +6,7 @@ using System.Net;
 using System.ServiceModel.Channels;
 using System.Text;
 using DolomiteModel.PublicRepresentations;
+using DolomiteWcfService.Exceptions;
 using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
 using AntsCode.Util;
@@ -19,16 +20,22 @@ namespace DolomiteWcfService
         #region Properties
 
         /// <summary>
-        /// Instance of the Azure Storage Manager
+        /// Instance of the Track Manager
         /// </summary>
         private TrackManager TrackManager { get; set; }
+
+        /// <summary>
+        /// Instance of the User Manager
+        /// </summary>
+        private UserManager UserManager { get; set; }
 
         #endregion
 
         public TracksEndpoint()
         {
-            // Initialize the track manager
+            // Initialize the track and user manager
             TrackManager = TrackManager.Instance;
+            UserManager = UserManager.Instance;
         }
 
         #region ITracksEndpoint Operations
@@ -47,6 +54,12 @@ namespace DolomiteWcfService
         {
             try
             {
+                // Step 0: Make sure the session is valid
+                string api;
+                string token = WebUtilities.GetDolomiteSessionToken(out api);
+                string username = UserManager.GetUsernameFromSession(token, api);
+
+                // Step 1: Read the request body
                 MemoryStream memoryStream;
                 if (WebUtilities.GetContentType().StartsWith("multipart/form-data"))
                 {
@@ -72,8 +85,12 @@ namespace DolomiteWcfService
                 // Upload the track
                 Guid guid;
                 string hash;
-                TrackManager.UploadTrack(memoryStream, out guid, out hash);
+                TrackManager.UploadTrack(memoryStream, username, out guid, out hash);
                 return WebUtilities.GenerateResponse(new UploadSuccessResponse(guid, hash), HttpStatusCode.Created);
+            }
+            catch (InvalidSessionException)
+            {
+                return WebUtilities.GenerateUnauthorizedResponse();
             }
             catch (DuplicateNameException)
             {

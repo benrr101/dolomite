@@ -8,6 +8,7 @@ using System.ServiceModel.Web;
 using System.Text;
 using System.Text.RegularExpressions;
 using DolomiteWcfService.Exceptions;
+using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
 
 namespace DolomiteWcfService
@@ -28,7 +29,7 @@ namespace DolomiteWcfService
         /// </summary>
         /// <exception cref="InvalidSessionException">Thrown if the authorization header is formatted incorrectly or is missing.</exception>
         /// <returns>The session token from the authorization header</returns>
-        public static string GetDolomiteSessionToken()
+        public static string GetDolomiteSessionToken(out string apiKey)
         {
             // Make sure there is a current operation context to use
             if (WebOperationContext.Current == null)
@@ -43,11 +44,14 @@ namespace DolomiteWcfService
                 throw new InvalidSessionException("The authorization header is missing.");
 
             // Parse the header to get at the token
-            Regex regex = new Regex("DOLOMITE.*token=\"([0-9a-fA-F]{64})\"", RegexOptions.Compiled);
+            Regex regex = new Regex(@"DOLOMITE\s*token=""([0-9a-fA-F]{64})""\s*api=""([0-9a-fA-F]{64})""", RegexOptions.Compiled);
             if (!regex.IsMatch(authHeader))
                 throw new InvalidSessionException("Authorization header does not match regular expression for the header");
 
-            return regex.Match(authHeader).Groups[1].Value;
+            var groups = regex.Match(authHeader).Groups;
+
+            apiKey = groups[2].Value;
+            return groups[1].Value;
         }
 
         public static string GetContentType()
@@ -102,6 +106,13 @@ namespace DolomiteWcfService
         }
 
         #endregion
+
+        public static Message GenerateUnauthorizedResponse()
+        {
+            const string message = "Invalid session information provided";
+            SetHeader(HttpResponseHeader.WwwAuthenticate, "DOLOMITE href=\"/users/login\"");
+            return GenerateResponse(new ErrorResponse(message), HttpStatusCode.Unauthorized);
+        }
 
         /// <summary>
         /// Generates a Message object suitable for returning after a request to the server.
