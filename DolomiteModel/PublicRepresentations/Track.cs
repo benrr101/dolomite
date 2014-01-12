@@ -97,6 +97,12 @@ namespace DolomiteModel.PublicRepresentations
         public Dictionary<string, string> Metadata;
 
         /// <summary>
+        /// The username of the owner of the track. This is not a datamember since
+        /// it should not be used by clients.
+        /// </summary>
+        public string Owner { get; set; }
+
+        /// <summary>
         /// List of qualities that are available for the given track.
         /// </summary>
         [DataMember]

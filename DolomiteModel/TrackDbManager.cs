@@ -155,14 +155,14 @@ namespace DolomiteModel
         /// Fetches all tracks in the database. This auto-converts all the fields
         /// </summary>
         /// <returns></returns>
-        public List<Pub.Track> GetAllTracks()
+        public List<Pub.Track> GetAllTracksByOwner(string username)
         {
             using (var context = new DbEntities())
             {
                 // Fetch ORM version of the track from the database
                 // <remarks>Unfortunately, there isn't a better way to do this</remarks>
                 var ormTracks = (from track in context.Tracks
-                                 where track.HasBeenOnboarded
+                                 where track.HasBeenOnboarded && track.User.Username == username
                                  select track).ToList();
 
                 // Parse them into the model version of the track
@@ -315,6 +315,7 @@ namespace DolomiteModel
                     ArtId = track.Art,
                     Id = trackId,
                     Metadata = metadata.ToDictionary(o => o.Name, o => o.Value),
+                    Owner = track.User.Username,
                     Qualities = qualities
                 };
             }

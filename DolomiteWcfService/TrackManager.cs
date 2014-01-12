@@ -102,11 +102,18 @@ namespace DolomiteWcfService
         /// Retreives the info about the track
         /// </summary>
         /// <param name="trackGuid">The guid of the track to retreive</param>
+        /// <param name="owner">The owner of the track</param>
         /// <returns>Object representation of the track</returns>
-        public Track GetTrack(Guid trackGuid)
+        public Track GetTrack(Guid trackGuid, string owner)
         {
             // Retrieve the track from the database
-            return DatabaseManager.GetTrackByGuid(trackGuid);
+            Track track = DatabaseManager.GetTrackByGuid(trackGuid);
+
+            // Make sure the user owns it
+            if (owner != track.Owner)
+                throw new UnauthorizedAccessException("The requested track is not owned by the session owner.");
+
+            return track;
         }
 
         /// <summary>
@@ -149,10 +156,10 @@ namespace DolomiteWcfService
         /// Retrieve an index of all the tracks in the database
         /// </summary>
         /// <returns>List of track objects in the database</returns>
-        public List<Track> FetchAllTracks()
+        public List<Track> FetchAllTracksByOwner(string username)
         {
             // Get the tracks from the database
-            var tracks = DatabaseManager.GetAllTracks();
+            var tracks = DatabaseManager.GetAllTracksByOwner(username);
 
             // Condense them into a list of tracks
             return tracks.ToList();

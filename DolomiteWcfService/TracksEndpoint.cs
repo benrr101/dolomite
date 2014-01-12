@@ -121,13 +121,14 @@ namespace DolomiteWcfService
         {
             try
             {
+                // Art retrieval does not need authentication, since it's shared between users
                 // Are we fetching an art object?
                 if (quality == TrackManager.ArtDirectory)
                 {
                     // Fetch the art with the given GUID
                     string artMime;
                     Stream artStream = TrackManager.GetTrackArt(Guid.Parse(guid), out artMime);
-                    
+
                     // Set the headers
                     string contentDisp = String.Format("attachment; filename=\"{0}\";", guid);
                     WebUtilities.SetStatusCode(HttpStatusCode.OK);
@@ -137,8 +138,14 @@ namespace DolomiteWcfService
                     return artStream;
                 }
 
+                // We're not retrieving art, so the user must be authenticated
+                string apiKey;
+                string sessionToken = WebUtilities.GetDolomiteSessionToken(out apiKey);
+                string username = UserManager.GetUsernameFromSession(sessionToken, apiKey);
+                UserManager.ExtendIdleTimeout(sessionToken);
+
                 // Retrieve the track and return the stream
-                Track track = TrackManager.GetTrack(Guid.Parse(guid));
+                Track track = TrackManager.GetTrack(Guid.Parse(guid), username);
                 Track.Quality qualityObj = TrackManager.GetTrackStream(track, quality);
 
                 // Set special headers that tell the client to download the file
@@ -148,6 +155,14 @@ namespace DolomiteWcfService
                 WebUtilities.SetHeader("Content-Disposition", disposition);
                 WebUtilities.SetHeader(HttpResponseHeader.ContentType, qualityObj.Mimetype);
                 return qualityObj.FileStream;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                WebUtilities.SetStatusCode(HttpStatusCode.Forbidden);
+            }
+            catch (InvalidSessionException)
+            {
+                WebUtilities.GenerateUnauthorizedResponse();
             }
             catch (FormatException)
             {
@@ -176,9 +191,27 @@ namespace DolomiteWcfService
         /// <returns>List of track objects from the track manager</returns>
         public Message GetAllTracks()
         {
-            // Retrieve the track without the stream
-            List<Track> tracks = TrackManager.FetchAllTracks();
-            return WebUtilities.GenerateResponse(tracks, HttpStatusCode.OK);
+            try
+            {
+                // Make sure we have a valid session
+                string apiKey;
+                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
+                string username = UserManager.GetUsernameFromSession(token, apiKey);
+                UserManager.ExtendIdleTimeout(token);
+
+                // Retrieve the track without the stream
+                List<Track> tracks = TrackManager.FetchAllTracksByOwner(username);
+                return WebUtilities.GenerateResponse(tracks, HttpStatusCode.OK);
+            }
+            catch (InvalidSessionException)
+            {
+                return WebUtilities.GenerateUnauthorizedResponse();
+            }
+            catch (Exception)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
+            }
         }
 
         /// <summary>
@@ -191,9 +224,24 @@ namespace DolomiteWcfService
         {
             try
             {
+                // Make sure we have a valid session
+                string apiKey;
+                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
+                string username = UserManager.GetUsernameFromSession(token, apiKey);
+                UserManager.ExtendIdleTimeout(token);
+
                 // Retrieve the track without the stream
-                Track track = TrackManager.GetTrack(Guid.Parse(guid));
+                Track track = TrackManager.GetTrack(Guid.Parse(guid), username);
                 return WebUtilities.GenerateResponse(track, HttpStatusCode.OK);
+            }
+            catch (InvalidSessionException)
+            {
+                return WebUtilities.GenerateUnauthorizedResponse();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                string message = String.Format("The GUID supplied '{0}' refers to a track that is not owned by you.", guid);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Forbidden);
             }
             catch (FormatException)
             {
