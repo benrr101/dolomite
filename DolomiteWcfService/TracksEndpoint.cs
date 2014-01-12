@@ -62,6 +62,8 @@ namespace DolomiteWcfService
 
                 // Step 1: Read the request body
                 MemoryStream memoryStream;
+                if (WebUtilities.GetContentType() == null)
+                    throw new MissingFieldException("The content type header is missing from the request.");
                 if (WebUtilities.GetContentType().StartsWith("multipart/form-data"))
                 {
                     // We need to process out other form data for the stuff we want
@@ -92,6 +94,11 @@ namespace DolomiteWcfService
             catch (InvalidSessionException)
             {
                 return WebUtilities.GenerateUnauthorizedResponse();
+            }
+            catch (MissingFieldException mfe)
+            {
+                ErrorResponse eResponse = new ErrorResponse(mfe.Message);
+                return WebUtilities.GenerateResponse(eResponse, HttpStatusCode.BadRequest);
             }
             catch (DuplicateNameException)
             {
@@ -275,8 +282,16 @@ namespace DolomiteWcfService
         {
             try
             {
+                // Make sure we have a valid session
+                string apiKey;
+                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
+                string username = UserManager.GetUsernameFromSession(token, apiKey);
+                UserManager.ExtendIdleTimeout(token);
+
+                if (WebUtilities.GetContentType() == null)
+                    throw new MissingFieldException("The content type header is missing from the request.");
                 MemoryStream memoryStream;
-                if(WebUtilities.GetContentType().StartsWith("multipart/form-data"))
+                if (WebUtilities.GetContentType().StartsWith("multipart/form-data"))
                 {
                     // Attempt to replace the track with the new file
                     MultipartParser parser = new MultipartParser(file);
@@ -291,18 +306,32 @@ namespace DolomiteWcfService
                         return WebUtilities.GenerateResponse(new ErrorResponse("Failed to process request."),
                             HttpStatusCode.BadRequest);
                     }
-                } 
+                }
                 else
                 {
                     // There's no need to process out anything else. The body is the file.
                     memoryStream = new MemoryStream(file.ToByteArray());
                 }
-                
+
                 // Replace the file
                 string hash;
                 Guid guid = Guid.Parse(trackGuid);
-                TrackManager.ReplaceTrack(memoryStream, guid, out hash);
+                TrackManager.ReplaceTrack(memoryStream, guid, username, out hash);
                 return WebUtilities.GenerateResponse(new UploadSuccessResponse(guid, hash), HttpStatusCode.OK);
+            }
+            catch (InvalidSessionException)
+            {
+                return WebUtilities.GenerateUnauthorizedResponse();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                string message = String.Format("The GUID supplied '{0}' refers to a track that is not owned by you.", trackGuid);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Forbidden);
+            }
+            catch (MissingFieldException mfe)
+            {
+                ErrorResponse eResponse = new ErrorResponse(mfe.Message);
+                return WebUtilities.GenerateResponse(eResponse, HttpStatusCode.BadRequest);
             }
             catch (FormatException)
             {
@@ -332,16 +361,31 @@ namespace DolomiteWcfService
         {
             try
             {
+                // Make sure we have a valid session
+                string apiKey;
+                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
+                string username = UserManager.GetUsernameFromSession(token, apiKey);
+                UserManager.ExtendIdleTimeout(token);
+
                 // Translate the body and guid
                 Guid trackGuid = Guid.Parse(guid);
                 string bodyStr = Encoding.Default.GetString(body.ToByteArray());
                 var metadata = JsonConvert.DeserializeObject<Dictionary<string, string>>(bodyStr);
 
                 // Pass it along to the track manager
-                TrackManager.ReplaceMetadata(trackGuid, metadata);
+                TrackManager.ReplaceMetadata(trackGuid, username, metadata);
 
                 // Sucess
                 return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
+            }
+            catch (InvalidSessionException)
+            {
+                return WebUtilities.GenerateUnauthorizedResponse();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                string message = String.Format("The GUID supplied '{0}' refers to a track that is not owned by you.", guid);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Forbidden);
             }
             catch (FormatException)
             {
@@ -378,16 +422,31 @@ namespace DolomiteWcfService
         {
             try
             {
+                // Make sure we have a valid session
+                string apiKey;
+                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
+                string username = UserManager.GetUsernameFromSession(token, apiKey);
+                UserManager.ExtendIdleTimeout(token);
+
                 // Translate the body and guid
                 Guid trackGuid = Guid.Parse(guid);
                 string bodyStr = Encoding.Default.GetString(body.ToByteArray());
                 var metadata = JsonConvert.DeserializeObject<Dictionary<string, string>>(bodyStr);
 
                 // Pass it along to the track manager
-                TrackManager.ReplaceMetadata(trackGuid, metadata, true);
+                TrackManager.ReplaceMetadata(trackGuid, username, metadata, true);
 
                 // Sucess
                 return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
+            }
+            catch (InvalidSessionException)
+            {
+                return WebUtilities.GenerateUnauthorizedResponse();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                string message = String.Format("The GUID supplied '{0}' refers to a track that is not owned by you.", guid);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Forbidden);
             }
             catch (FormatException)
             {
@@ -423,16 +482,25 @@ namespace DolomiteWcfService
         {
             try
             {
+                // Make sure we have a valid session
+                string apiKey;
+                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
+                string username = UserManager.GetUsernameFromSession(token, apiKey);
+                UserManager.ExtendIdleTimeout(token);
+
                 // Translate the body and guid
                 Guid trackGuid = Guid.Parse(guid);
 
                 MemoryStream memoryStream;
                 if (WebUtilities.GetContentLength() == 0)
                 {
+                    // This allows the art file to be deleted
                     memoryStream = new MemoryStream();
                 }
                 else
                 {
+                    if (WebUtilities.GetContentType() == null)
+                        throw new MissingFieldException("The content type header is missing from the request.");
                     if (WebUtilities.GetContentType().StartsWith("multipart/form-data"))
                     {
                         // Attempt to replace the track with the new file
@@ -457,10 +525,24 @@ namespace DolomiteWcfService
                 }
 
                 // Pass it along to the track manager
-                TrackManager.ReplaceTrackArt(trackGuid, memoryStream);
+                TrackManager.ReplaceTrackArt(trackGuid, username, memoryStream);
 
                 // Sucess
                 return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
+            }
+            catch (InvalidSessionException)
+            {
+                return WebUtilities.GenerateUnauthorizedResponse();
+            }
+            catch (MissingFieldException mfe)
+            {
+                ErrorResponse eResponse = new ErrorResponse(mfe.Message);
+                return WebUtilities.GenerateResponse(eResponse, HttpStatusCode.BadRequest);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                string message = String.Format("The GUID supplied '{0}' refers to a track that is not owned by you.", guid);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Forbidden);
             }
             catch (FormatException)
             {

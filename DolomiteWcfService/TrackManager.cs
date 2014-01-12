@@ -174,11 +174,16 @@ namespace DolomiteWcfService
         /// b/c it follows the precedent of the uploader.</remarks>
         /// <param name="stream">The bytes to replace the track with</param>
         /// <param name="guid">The guid of the track to replace</param>
+        /// <param name="owner">The username of the owner of the track</param>
         /// <param name="hash">The hash of the stream to be calculated by this method</param>
-        public void ReplaceTrack(Stream stream, Guid guid, out string hash)
+        public void ReplaceTrack(Stream stream, Guid guid, string owner, out string hash)
         {
             // Step 0: Fetch the track
             Track track = DatabaseManager.GetTrackByGuid(guid);
+
+            // Step 0.5: Make sure the owners match
+            if (track.Owner != owner)
+                throw new UnauthorizedAccessException("The requested track is not owned by the session owner.");
 
             // Step 1: Upload the track to temporary storage
             hash = LocalStorageManager.StoreStream(stream, guid.ToString(), null);
@@ -198,13 +203,18 @@ namespace DolomiteWcfService
         /// Deletes and reinserts all the metadata in the dictionary of metadatas
         /// </summary>
         /// <param name="guid">GUID for the track to replace metadata for</param>
+        /// <param name="owner">The username for the owner of the session</param>
         /// <param name="metadata">The metadata to replace the existing records with</param>
         /// <param name="clearAll">Whether to delete everything and start over (true) or to
         /// only replace the values that are provided (false, default)</param>
-        public void ReplaceMetadata(Guid guid, Dictionary<string, string> metadata, bool clearAll = false)
+        public void ReplaceMetadata(Guid guid, string owner, Dictionary<string, string> metadata, bool clearAll = false)
         {
             // Grab the track
             Track track = DatabaseManager.GetTrackByGuid(guid);
+
+            // Make sure the owners match
+            if(track.Owner != owner)
+                throw new UnauthorizedAccessException("The requested track is not owned by the session owner.");
 
             // Only delete the fields that need to be deleted
             IEnumerable<string> fieldsToDelete = clearAll ? track.Metadata.Keys : metadata.Keys;
@@ -224,10 +234,14 @@ namespace DolomiteWcfService
         /// </summary>
         /// <param name="guid">The guid of the track to set the art for</param>
         /// <param name="stream">The stream representing the art file</param>
-        public void ReplaceTrackArt(Guid guid, Stream stream)
+        public void ReplaceTrackArt(Guid guid, string owner, Stream stream)
         {
-            // Does the track have art?
+            // Fetch the track and verify its owner
             Track track = DatabaseManager.GetTrackByGuid(guid);
+            if (track.Owner != owner)
+                throw new UnauthorizedAccessException("The requested track is not owned by the session owner.");
+
+            // Does the track have art?
             if (track.ArtId.HasValue && !DatabaseManager.DeleteArtByUsage(track.Id))
             {
                 // Delete the file from Azure -- it's been deleted from the db already
