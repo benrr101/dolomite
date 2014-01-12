@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [dbo].[Tracks]
 (
 	[Id]	UNIQUEIDENTIFIER NOT NULL,
-	[Owner] INT NULL,
+	[Owner] INT NOT NULL,
 	[Hash]	NCHAR(40) NULL, 
     [Album] INT NULL,
 	[Art] UNIQUEIDENTIFIER NULL,

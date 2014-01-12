@@ -52,12 +52,12 @@
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
-          <Property Name="Owner" Type="int" />
+          <Property Name="Owner" Type="int" Nullable="false" />
           <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
-          <Property Name="Limit" Type="int" />
           <Property Name="MatchAll" Type="bit" Nullable="false" />
-          <Property Name="SortDesc" Type="bit" />
+          <Property Name="Limit" Type="int" />
           <Property Name="SortField" Type="int" />
+          <Property Name="SortDesc" Type="bit" />
         </EntityType>
         <EntityType Name="AvailableQualities">
           <Key>
@@ -101,7 +101,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
-          <Property Name="Owner" Type="int" />
+          <Property Name="Owner" Type="int" Nullable="false" />
           <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
         </EntityType>
         <EntityType Name="PlaylistTracks">
@@ -152,7 +152,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
-          <Property Name="Owner" Type="int" />
+          <Property Name="Owner" Type="int" Nullable="false" />
           <Property Name="Hash" Type="nchar" MaxLength="40" />
           <Property Name="Album" Type="int" />
           <Property Name="Art" Type="uniqueidentifier" />
@@ -176,7 +176,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="Username" Type="nvarchar" MaxLength="50" Nullable="false" />
           <Property Name="PasswordHash" Type="nchar" MaxLength="64" Nullable="false" />
           <Property Name="PasswordReset" Type="bit" Nullable="false" />
@@ -243,7 +243,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_AUTOPLAYLISTS_OWNER">
-          <End Role="Users" Type="Self.Users" Multiplicity="0..1" />
+          <End Role="Users" Type="Self.Users" Multiplicity="1" />
           <End Role="Autoplaylists" Type="Self.Autoplaylists" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Users">
@@ -333,7 +333,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_PLAYLISTS_OWNER">
-          <End Role="Users" Type="Self.Users" Multiplicity="0..1" />
+          <End Role="Users" Type="Self.Users" Multiplicity="1" />
           <End Role="Playlists" Type="Self.Playlists" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Users">
@@ -372,8 +372,22 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_SESSION_APIKEY">
+          <End Role="ApiKeys" Type="Self.ApiKeys" Multiplicity="1" />
+          <End Role="Sessions" Type="Self.Sessions" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ApiKeys">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Sessions">
+              <PropertyRef Name="ApiKey" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_SESSION_USER">
-          <End Role="Users" Type="Self.Users" Multiplicity="1" />
+          <End Role="Users" Type="Self.Users" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
           <End Role="Sessions" Type="Self.Sessions" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Users">
@@ -397,7 +411,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_TRACKS_OWNER">
-          <End Role="Users" Type="Self.Users" Multiplicity="0..1" />
+          <End Role="Users" Type="Self.Users" Multiplicity="1" />
           <End Role="Tracks" Type="Self.Tracks" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Users">
@@ -512,6 +526,10 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             <End Role="Tracks" EntitySet="Tracks" />
             <End Role="PlaylistTracks" EntitySet="PlaylistTracks" />
           </AssociationSet>
+          <AssociationSet Name="FK_SESSION_APIKEY" Association="Self.FK_SESSION_APIKEY">
+            <End Role="ApiKeys" EntitySet="ApiKeys" />
+            <End Role="Sessions" EntitySet="Sessions" />
+          </AssociationSet>
           <AssociationSet Name="FK_SESSION_USER" Association="Self.FK_SESSION_USER">
             <End Role="Users" EntitySet="Users" />
             <End Role="Sessions" EntitySet="Sessions" />
@@ -587,7 +605,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="None" />
-          <Property Name="Owner" Type="Int32" />
+          <Property Name="Owner" Type="Int32" Nullable="false" />
           <Property Name="Name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
           <NavigationProperty Name="AutoplaylistRules" Relationship="Self.FK_AUTOPLAYLISTRULES_PLAYLIST" FromRole="Autoplaylists" ToRole="AutoplaylistRules" />
           <NavigationProperty Name="User" Relationship="Self.FK_AUTOPLAYLISTS_OWNER" FromRole="Autoplaylists" ToRole="Users" />
@@ -635,7 +653,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="None" />
-          <Property Name="Owner" Type="Int32" />
+          <Property Name="Owner" Type="Int32" Nullable="false" />
           <Property Name="Name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
           <NavigationProperty Name="User" Relationship="Self.FK_PLAYLISTS_OWNER" FromRole="Playlists" ToRole="Users" />
           <NavigationProperty Name="PlaylistTracks" Relationship="Self.FK_PLAYLISTTRACKS_PLAYLISTS" FromRole="Playlists" ToRole="PlaylistTracks" />
@@ -679,7 +697,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             <PropertyRef Name="Id" />
           </Key>
           <Property Name="Id" Type="Guid" Nullable="false" />
-          <Property Name="Owner" Type="Int32" />
+          <Property Name="Owner" Type="Int32" Nullable="false" />
           <Property Name="Hash" Type="String" MaxLength="40" FixedLength="true" Unicode="true" />
           <Property Name="Album" Type="Int32" />
           <Property Name="Art" Type="Guid" />
@@ -795,7 +813,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_AUTOPLAYLISTS_OWNER">
-          <End Role="Users" Type="Self.User" Multiplicity="0..1" />
+          <End Role="Users" Type="Self.User" Multiplicity="1" />
           <End Role="Autoplaylists" Type="Self.Autoplaylist" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Users">
@@ -861,7 +879,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_PLAYLISTS_OWNER">
-          <End Role="Users" Type="Self.User" Multiplicity="0..1" />
+          <End Role="Users" Type="Self.User" Multiplicity="1" />
           <End Role="Playlists" Type="Self.Playlist" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Users">
@@ -897,7 +915,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_TRACKS_OWNER">
-          <End Role="Users" Type="Self.User" Multiplicity="0..1" />
+          <End Role="Users" Type="Self.User" Multiplicity="1" />
           <End Role="Tracks" Type="Self.Track" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Users">

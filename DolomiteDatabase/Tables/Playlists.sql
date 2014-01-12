@@ -1,6 +1,6 @@
 ﻿CREATE TABLE [dbo].[Playlists]
 (
 	[Id]	UNIQUEIDENTIFIER NOT NULL PRIMARY KEY, 
-	[Owner] INT NULL,
+	[Owner] INT NOT NULL,
     [Name]	NVARCHAR(100) NOT NULL
 )

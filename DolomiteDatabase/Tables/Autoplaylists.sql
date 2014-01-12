@@ -1,7 +1,7 @@
 ﻿CREATE TABLE [dbo].[Autoplaylists]
 (
 	[Id]		UNIQUEIDENTIFIER NOT NULL PRIMARY KEY,
-	[Owner]		INT NULL,
+	[Owner]		INT NOT NULL,
 	[Name]		NVARCHAR(100) NOT NULL,
 	[MatchAll]	BIT NOT NULL DEFAULT ((0)),
 	[Limit]		INT NULL DEFAULT NULL,

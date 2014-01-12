@@ -22,7 +22,7 @@ namespace DolomiteModel.EntityFramework
         }
     
         public System.Guid Id { get; set; }
-        public Nullable<int> Owner { get; set; }
+        public int Owner { get; set; }
         public string Hash { get; set; }
         public Nullable<int> Album { get; set; }
         public Nullable<System.Guid> Art { get; set; }
