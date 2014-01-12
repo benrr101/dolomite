@@ -58,6 +58,7 @@ namespace DolomiteWcfService
                 string api;
                 string token = WebUtilities.GetDolomiteSessionToken(out api);
                 string username = UserManager.GetUsernameFromSession(token, api);
+                UserManager.ExtendIdleTimeout(token);
 
                 // Step 1: Read the request body
                 MemoryStream memoryStream;

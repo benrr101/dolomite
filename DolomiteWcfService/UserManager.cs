@@ -128,6 +128,22 @@ namespace DolomiteWcfService
         #endregion
 
         /// <summary>
+        /// Extends the idle timeout using the config setting for idle timespan.
+        /// The new idle timeout will be the current time + the timespan.
+        /// <remarks>
+        /// This method assumes the session with the given token already exists
+        /// so it should not be called without verifying the session.
+        /// </remarks>
+        /// </summary>
+        /// <param name="sessionToken">The token for identifying the session</param>
+        public void ExtendIdleTimeout(string sessionToken)
+        {
+            // Calculate new idle timeout
+            DateTime idleTimeout = DateTime.Now + IdleTimeoutInterval;
+            DatabaseManager.SetSessionIdleTimeout(sessionToken, idleTimeout);
+        }
+
+        /// <summary>
         /// Invalidates a given session by setting the timeouts on the session
         /// to one hour in the past. If the session doesn't exist, we ignore it
         /// </summary>
