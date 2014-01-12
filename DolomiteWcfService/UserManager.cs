@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using DolomiteModel;
 using DolomiteModel.PublicRepresentations;
+using DolomiteWcfService.Exceptions;
 
 namespace DolomiteWcfService
 {
@@ -164,7 +165,7 @@ namespace DolomiteWcfService
                 throw new ApplicationException("Invalid API key.");
 
             // Validate the login credentials
-            User user = DatabaseManager.GetUser(username);
+            User user = DatabaseManager.GetUserByUsername(username);
             if (user == null)
                 throw new ObjectNotFoundException(String.Format("User with username {0} does not exist", username));
 
@@ -183,6 +184,35 @@ namespace DolomiteWcfService
             DatabaseManager.CreateSession(user, apiKey, token, ipAddress, idleTimeout, absTimeout);
 
             return token;
+        }
+
+        /// <summary>
+        /// Retrieves a username from a session using the given session token
+        /// and api key. This also verifies that the session is valid.
+        /// </summary>
+        /// <exception cref="InvalidSessionException">
+        /// Thrown if the session has expired or the api key does not match
+        /// </exception>
+        /// <param name="sessionToken">The token for identifying the session</param>
+        /// <param name="apiKey">The apikey that the request came from</param>
+        /// <returns>The username from the associated valid session</returns>
+        public string GetUsernameFromSession(string sessionToken, string apiKey)
+        {
+            // Ask the database for the session
+            Session session = DatabaseManager.GetSession(sessionToken);
+
+            // Perform validation
+            // Are the timeouts in the future?
+            
+            if (session.AbsoluteTimeout <= DateTime.Now || session.IdleTimeout <= DateTime.Now) 
+                throw new InvalidSessionException("The session has expired.");
+            
+            // Is the API key the same?
+            if (session.ApiKey != apiKey)
+                throw new InvalidSessionException("The session's apikey does not match the given api key.");
+
+            // We're good to go!
+            return session.Username;
         }
 
         #region Private Methods

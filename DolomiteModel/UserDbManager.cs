@@ -120,7 +120,7 @@ namespace DolomiteModel
         /// </summary>
         /// <param name="username">The username of the user to retrieve</param>
         /// <returns>A user object if the user exists, null if the user doesn't exist</returns>
-        public Pub.User GetUser(string username)
+        public Pub.User GetUserByUsername(string username)
         {
             using (var context = new DbEntities())
             {
@@ -133,6 +133,40 @@ namespace DolomiteModel
                         PasswordHash = u.PasswordHash,
                         Username = u.Username
                     }).FirstOrDefault();
+            }
+        }
+
+        /// <summary>
+        /// Grabs a session object using the given token
+        /// </summary>
+        /// <exception cref="ObjectNotFoundException">
+        /// Thrown if the session does not exist.
+        /// </exception>
+        /// <param name="token">The session token</param>
+        /// <returns>A public representation of the session</returns>
+        public Pub.Session GetSession(string token)
+        {
+            using (var context = new DbEntities())
+            {
+                // Find the matching session
+                Pub.Session session = (from s in context.Sessions
+                    where s.Token == token
+                    select new Pub.Session
+                    {
+                        AbsoluteTimeout = s.AbsoluteTimeout,
+                        ApiKey = s.ApiKey1.Key,
+                        IdleTimeout = s.IdleTimeout,
+                        InitialIpAddress = s.InitialIP,
+                        InitializedTime = s.InitializedTime,
+                        Token = s.Token,
+                        Username = s.User1.Username
+                    }).FirstOrDefault();
+
+                if (session == null)
+                    throw new ObjectNotFoundException("A session with the given session token cannot be found.");
+
+                // Fetch the user
+                return session;
             }
         }
 
@@ -152,7 +186,7 @@ namespace DolomiteModel
                 // Key must exist
                 return apiKey != null;
             }
-        }
+        } 
 
         /// <summary>
         /// Validates a user sign-up key. It checks for a matching key based on
@@ -242,6 +276,32 @@ namespace DolomiteModel
                 userKey.Claimed = value;
                 context.SaveChanges();
             }
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        /// <summary>
+        /// Validates a given session based on the following criteria:
+        /// 1) Both absolute and idle timeouts must be in the future.
+        /// 2) The API key for the current request must be the same as the initial one
+        /// </summary>
+        /// <param name="session">The entity for the session to validate</param>
+        /// <param name="apikey">The API key for the current request</param>
+        /// <returns>True if the session is valid, false otherwise</returns>
+        private bool ValidateSession(Session session, string apikey)
+        {
+            // Are the timeouts in the future?
+            if (session.AbsoluteTimeout <= DateTime.Now || session.IdleTimeout <= DateTime.Now)
+                return false;
+
+            // Is the API key the same?
+            if (session.ApiKey1.Key != apikey)
+                return false;
+
+            // We're good to go!
+            return true;
         }
 
         #endregion

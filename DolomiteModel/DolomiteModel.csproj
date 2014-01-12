@@ -124,6 +124,7 @@
     <Compile Include="PublicRepresentations\AutoPlaylistRule.cs" />
     <Compile Include="PublicRepresentations\Playlist.cs" />
     <Compile Include="PublicRepresentations\Quality.cs" />
+    <Compile Include="PublicRepresentations\Session.cs" />
     <Compile Include="PublicRepresentations\Track.cs" />
     <Compile Include="PublicRepresentations\User.cs" />
     <Compile Include="TrackDbManager.cs" />
