@@ -142,21 +142,36 @@ namespace DolomiteWcfService
         /// Retrieves the requested auto playlist from the database
         /// </summary>
         /// <param name="playlistGuid">GUID of the playlist to look up</param>
+        /// <param name="owner">The username of the owner of the playlist</param>
         /// <returns>A public representation of the autoplaylist</returns>
-        public AutoPlaylist GetAutoPlaylist(Guid playlistGuid)
+        public AutoPlaylist GetAutoPlaylist(Guid playlistGuid, string owner)
         {
-            // Simple, pass it off to the db manager
-            return PlaylistDbManager.GetAutoPlaylist(playlistGuid);
+            // Grab it from the db manager
+            AutoPlaylist playlist = PlaylistDbManager.GetAutoPlaylist(playlistGuid);
+
+            // Verify that the owners are the same
+            if(playlist.Owner != owner)
+                throw new UnauthorizedAccessException("The requested playlist is not owned by the session owner");
+
+            return playlist;
         }
 
         /// <summary>
         /// Get a static playlist by it's guid
         /// </summary>
         /// <param name="playlistGuid">Guid of the playlist to lookup</param>
+        /// <param name="owner">The username of the owner of the playlist</param>
         /// <returns>A public-ready static playlist object</returns>
-        public Playlist GetStaticPlaylist(Guid playlistGuid)
+        public Playlist GetStaticPlaylist(Guid playlistGuid, string owner)
         {
-            return PlaylistDbManager.GetStaticPlaylist(playlistGuid);
+            // Grab it from the db
+            Playlist playlist = PlaylistDbManager.GetStaticPlaylist(playlistGuid);
+
+            // Verify that the owners are the same
+            if (playlist.Owner != owner)
+                throw new UnauthorizedAccessException("The requested playlist is not owned by the session owner");
+
+            return playlist;
         }
 
         #endregion
