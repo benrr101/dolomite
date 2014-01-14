@@ -285,8 +285,19 @@ namespace DolomiteWcfService
         /// Sends the deletion request to the database
         /// </summary>
         /// <param name="guid">The guid of the playlist to delete</param>
-        public void DeleteAutoPlaylist(Guid guid)
+        /// <param name="owner">The username of the owner of the playlist</param>
+        public void DeleteAutoPlaylist(Guid guid, string owner)
         {
+            // Check to see that the playlist exists, verify its owner
+            AutoPlaylist playlist = PlaylistDbManager.GetAutoPlaylist(guid, false);
+            if (playlist.Owner != owner)
+            {
+                string message = String.Format("The playlist {0} cannot be deleted" +
+                                               "because the playlist is not owned by the session owner.",
+                                               guid);
+                throw new UnauthorizedAccessException(message);
+            }
+
             // Send the call to the database
             PlaylistDbManager.DeleteAutoPlaylist(guid);
         }
@@ -294,9 +305,20 @@ namespace DolomiteWcfService
         /// <summary>
         /// Sends the deletion request to the database
         /// </summary>
+        /// <param name="owner">The username of the owner of the playlist</param>
         /// <param name="guid">The guid of the playlist to delete</param>
-        public void DeleteStaticPlaylist(Guid guid)
+        public void DeleteStaticPlaylist(Guid guid, string owner)
         {
+            // Check that the playlist exists and verify its owner
+            Playlist playlist = PlaylistDbManager.GetStaticPlaylist(guid);
+            if (playlist.Owner != owner)
+            {
+                string message = String.Format("The playlist {0} cannot be deleted" +
+                                               "because the playlist is not owned by the session owner.",
+                                               guid);
+                throw new UnauthorizedAccessException(message);
+            }
+
             // Send the call to the database
             PlaylistDbManager.DeleteStaticPlaylist(guid);
         }

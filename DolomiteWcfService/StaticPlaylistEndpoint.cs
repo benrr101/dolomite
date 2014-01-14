@@ -303,9 +303,24 @@ namespace DolomiteWcfService
         {
             try
             {
+                // Make sure we have a valid session
+                string apiKey;
+                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
+                string username = UserManager.GetUsernameFromSession(token, apiKey);
+                UserManager.ExtendIdleTimeout(token);
+
                 // Parse the guid into a Guid and attempt to delete
-                PlaylistManager.DeleteStaticPlaylist(Guid.Parse(guid));
+                PlaylistManager.DeleteStaticPlaylist(Guid.Parse(guid), username);
                 return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
+            }
+            catch (InvalidSessionException)
+            {
+                return WebUtilities.GenerateUnauthorizedResponse();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                string message = String.Format("The GUID supplied '{0}' refers to a playlist that is not owned by you.", guid);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Forbidden);
             }
             catch (FormatException)
             {
@@ -313,7 +328,7 @@ namespace DolomiteWcfService
                 string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", guid);
                 return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.BadRequest);
             }
-            catch (FileNotFoundException)
+            catch (ObjectNotFoundException)
             {
                 string message = String.Format("The static playlist with the specified GUID '{0}' does not exist", guid);
                 return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.NotFound);
