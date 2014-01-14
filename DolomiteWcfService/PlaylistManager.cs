@@ -248,7 +248,7 @@ namespace DolomiteWcfService
             {
                 string message = String.Format("The rule cannot be removed from the autoplaylist {0}" +
                                                "because the playlist is not owned by the session owner.",
-                    playlistGuid);
+                                               playlistGuid);
                 throw new UnauthorizedAccessException(message);
             }
 
@@ -260,9 +260,20 @@ namespace DolomiteWcfService
         /// Sends the call to the database to delete the track from the playlist
         /// </summary>
         /// <param name="playlistGuid">The guid of the playlist to remove the track from</param>
+        /// <param name="owner">The username of the owner of the track</param>
         /// <param name="trackId">The id of the track to remove from the playlist</param>
-        public void DeleteTrackFromStaticPlaylist(Guid playlistGuid, int trackId)
+        public void DeleteTrackFromStaticPlaylist(Guid playlistGuid, string owner, int trackId)
         {
+            // Check that the playlist exists and verify its owner
+            Playlist playlist = PlaylistDbManager.GetStaticPlaylist(playlistGuid);
+            if (playlist.Owner != owner)
+            {
+                string message = String.Format("The track {0} cannot be removed from playlist {1} " +
+                                               "because the playlist is not owned by the session owner.",
+                                               trackId, playlistGuid);
+                throw new UnauthorizedAccessException(message);
+            }
+
             PlaylistDbManager.DeleteTrackFromPlaylist(playlistGuid, trackId);
         }
 

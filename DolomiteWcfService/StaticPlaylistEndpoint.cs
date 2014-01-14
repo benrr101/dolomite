@@ -251,6 +251,12 @@ namespace DolomiteWcfService
         {
             try
             {
+                // Make sure we have a valid session
+                string apiKey;
+                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
+                string username = UserManager.GetUsernameFromSession(token, apiKey);
+                UserManager.ExtendIdleTimeout(token);
+
                 // Parse the guid
                 Guid playlistGuid;
                 int trackId;
@@ -260,8 +266,17 @@ namespace DolomiteWcfService
                     throw new FormatException(String.Format("The track ID supplied '{0}' is an invalid integer.", track));
 
                 // Attempt to delete
-                PlaylistManager.DeleteTrackFromStaticPlaylist(playlistGuid, trackId);
+                PlaylistManager.DeleteTrackFromStaticPlaylist(playlistGuid, username, trackId);
                 return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
+            }
+            catch (InvalidSessionException)
+            {
+                return WebUtilities.GenerateUnauthorizedResponse();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                string message = String.Format("The GUID supplied '{0}' refers to a playlist that is not owned by you.", playlist);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Forbidden);
             }
             catch (FormatException fe)
             {
