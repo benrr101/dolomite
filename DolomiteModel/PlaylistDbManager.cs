@@ -160,19 +160,21 @@ namespace DolomiteModel
         /// Creates a list of all the auto playlists in the database. Does not
         /// store the rules for the playlists.
         /// </summary>
+        /// <param name="owner">The username of the owner playlists to select</param>
         /// <returns>A public-ready list of auto playlists w/o rules</returns>
-        public List<Pub.Playlist> GetAllAutoPlaylists()
+        public List<Pub.Playlist> GetAllAutoPlaylists(string owner)
         {
             using (var context = new DbEntities())
             {
                 return (from p in context.Autoplaylists
-                    select new Pub.Playlist
-                    {
-                        Id = p.Id,
-                        Name = p.Name,
-                        Owner = p.User.Username,
-                        Type = Pub.Playlist.PlaylistType.Auto
-                    }).ToList();
+                        where p.User.Username == owner
+                        select new Pub.Playlist
+                        {
+                            Id = p.Id,
+                            Name = p.Name,
+                            Owner = p.User.Username,
+                            Type = Pub.Playlist.PlaylistType.Auto
+                        }).ToList();
             }
         }
 
@@ -180,19 +182,21 @@ namespace DolomiteModel
         /// Creates a list of all the static playlists in the database. Does 
         /// not return the tracks of the playlist
         /// </summary>
+        /// <param name="owner">The username of the owner playlists to select</param>
         /// <returns>The list of static playlists without tracks</returns>
-        public List<Pub.Playlist> GetAllStaticPlaylists()
+        public List<Pub.Playlist> GetAllStaticPlaylists(string owner)
         {
             using (var context = new DbEntities())
             {
                 return (from p in context.Playlists
-                    select new Pub.Playlist
-                    {
-                        Id = p.Id,
-                        Name = p.Name,
-                        Owner = p.User.Username,
-                        Type = Pub.Playlist.PlaylistType.Static
-                    }).ToList();
+                        where p.User.Username == owner
+                        select new Pub.Playlist
+                        {
+                            Id = p.Id,
+                            Name = p.Name,
+                            Owner = p.User.Username,
+                            Type = Pub.Playlist.PlaylistType.Static
+                        }).ToList();
             }
         }
 

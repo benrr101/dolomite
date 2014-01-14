@@ -120,20 +120,22 @@ namespace DolomiteWcfService
         /// <summary>
         /// Retrieves a list of all auto playlists from the database
         /// </summary>
+        /// <param name="owner">The username of the owner of the playlists to retrieve</param>
         /// <returns>List of all auto playlists</returns>
-        public List<Playlist> GetAllAutoPlaylists()
+        public List<Playlist> GetAllAutoPlaylists(string owner)
         {
-            return PlaylistDbManager.GetAllAutoPlaylists();
+            return PlaylistDbManager.GetAllAutoPlaylists(owner);
         }
 
         /// <summary>
         /// Retrieves a list of all static playlists from the database
         /// </summary>
+        /// <param name="owner">The username of the owner of the playlists to retrieve</param>
         /// <returns>List of all static playlists</returns>
-        public List<Playlist> GetAllStaticPlaylists()
+        public List<Playlist> GetAllStaticPlaylists(string owner)
         {
             // Simple, pass it off to the db wrangler
-            return PlaylistDbManager.GetAllStaticPlaylists();
+            return PlaylistDbManager.GetAllStaticPlaylists(owner);
         }
 
         /// <summary>

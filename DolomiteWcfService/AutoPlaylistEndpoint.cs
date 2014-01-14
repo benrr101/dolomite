@@ -92,8 +92,26 @@ namespace DolomiteWcfService
         /// <returns>A json seriailized version of the list of playlists</returns>
         public Message GetAllAutoPlaylists()
         {
-            List<Playlist> playlists = PlaylistManager.GetAllAutoPlaylists();
-            return WebUtilities.GenerateResponse(playlists, HttpStatusCode.OK);
+            try
+            {
+                // Make sure we have a valid session
+                string apiKey;
+                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
+                string username = UserManager.GetUsernameFromSession(token, apiKey);
+                UserManager.ExtendIdleTimeout(token);
+
+                List<Playlist> playlists = PlaylistManager.GetAllAutoPlaylists(username);
+                return WebUtilities.GenerateResponse(playlists, HttpStatusCode.OK);
+            }
+            catch (InvalidSessionException)
+            {
+                return WebUtilities.GenerateUnauthorizedResponse();
+            }
+            catch (Exception)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
+            }
         }
 
         /// <summary>
