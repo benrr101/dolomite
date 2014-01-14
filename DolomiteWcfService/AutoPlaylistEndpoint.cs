@@ -233,6 +233,12 @@ namespace DolomiteWcfService
         {
             try
             {
+                // Make sure we have a valid session
+                string apiKey;
+                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
+                string username = UserManager.GetUsernameFromSession(token, apiKey);
+                UserManager.ExtendIdleTimeout(token);
+
                 // Parse the guid and id into sensible types
                 Guid playlistGuid;
                 if (!Guid.TryParse(guid, out playlistGuid))
@@ -249,8 +255,17 @@ namespace DolomiteWcfService
                 }
 
                 // Send the request to the db manager
-                PlaylistManager.DeleteRuleFromAutoPlaylist(playlistGuid, ruleId);
+                PlaylistManager.DeleteRuleFromAutoPlaylist(playlistGuid, username, ruleId);
                 return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
+            }
+            catch (InvalidSessionException)
+            {
+                return WebUtilities.GenerateUnauthorizedResponse();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                string message = String.Format("The GUID supplied '{0}' refers to a playlist that is not owned by you.", guid);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Forbidden);
             }
             catch (ObjectNotFoundException)
             {

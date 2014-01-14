@@ -238,9 +238,20 @@ namespace DolomiteWcfService
         /// Deletes a rule from a given autoplaylist
         /// </summary>
         /// <param name="playlistGuid">GUID of the playlist to delete the rule from</param>
+        /// <param name="owner">The username of the owner of the playlist</param>
         /// <param name="ruleId">Id of the rule to delete</param>
-        public void DeleteRuleFromAutoPlaylist(Guid playlistGuid, int ruleId)
+        public void DeleteRuleFromAutoPlaylist(Guid playlistGuid, string owner, int ruleId)
         {
+            // Check to see that the playlist exists, verify its owner
+            AutoPlaylist playlist = PlaylistDbManager.GetAutoPlaylist(playlistGuid, false);
+            if (playlist.Owner != owner)
+            {
+                string message = String.Format("The rule cannot be removed from the autoplaylist {0}" +
+                                               "because the playlist is not owned by the session owner.",
+                    playlistGuid);
+                throw new UnauthorizedAccessException(message);
+            }
+
             // Pass the call to the database
             PlaylistDbManager.DeleteRuleFromAutoplaylist(playlistGuid, ruleId);
         }
