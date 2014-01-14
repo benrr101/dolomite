@@ -40,6 +40,11 @@ namespace DolomiteModel.PublicRepresentations
         public string Name { get; set; }
 
         /// <summary>
+        /// The username of the owner of the playlist.
+        /// </summary>
+        public string Owner { get; set; }
+
+        /// <summary>
         /// List of tracks the playlist contains
         /// </summary>
         [DataMember]

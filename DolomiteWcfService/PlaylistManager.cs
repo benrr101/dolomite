@@ -50,13 +50,14 @@ namespace DolomiteWcfService
         /// If the insertion fails, the playlist will be deleted.
         /// </summary>
         /// <param name="playlist">The playlist object parsed from the request</param>
+        /// <param name="owner">The username of the owner of the playlist</param>
         /// <returns>The guid of the newly created playlist</returns>
-        public Guid CreateAutoPlaylist(AutoPlaylist playlist)
+        public Guid CreateAutoPlaylist(AutoPlaylist playlist, string owner)
         {
             Guid id = Guid.Empty;
             try
             {
-                id = PlaylistDbManager.CreateAutoPlaylist(playlist.Name, playlist.MatchAll);
+                id = PlaylistDbManager.CreateAutoPlaylist(playlist.Name, owner, playlist.MatchAll);
 
                 // Did they send rules to add to the playlist?
                 if (playlist.Rules != null && playlist.Rules.Any())
@@ -83,21 +84,22 @@ namespace DolomiteWcfService
         /// If the insertion fails, the playlist will be deleted.
         /// </summary>
         /// <param name="playlist">The playlist object parsed from the request</param>
+        /// <param name="owner">The username of the owner of the playlist</param>
         /// <returns>The guid of the newly created playlist</returns>
-        public Guid CreateStaticPlaylist(Playlist playlist)
+        public Guid CreateStaticPlaylist(Playlist playlist, string owner)
         {
             Guid id = Guid.Empty;
             try
             {
                 // Create the playlist
-                id = PlaylistDbManager.CreateStandardPlaylist(playlist.Name);
+                id = PlaylistDbManager.CreateStandardPlaylist(playlist.Name, owner);
 
                 // Did they send tracks to add to the playlist?
                 if (playlist.Tracks != null && playlist.Tracks.Any())
                 {
                     foreach (Guid trackId in playlist.Tracks)
                     {
-                        AddTrackToPlaylist(id, trackId);
+                        AddTrackToPlaylist(id, trackId, owner);
                     }
                 }
 
@@ -175,12 +177,30 @@ namespace DolomiteWcfService
         /// </summary>
         /// <param name="playlistGuid">The guid of the playlist</param>
         /// <param name="trackGuid">The guid of the track</param>
+        /// <param name="owner">The username of the owner of the track</param>
         /// <param name="position">The position to insert the track in the playlist</param>
-        public void AddTrackToPlaylist(Guid playlistGuid, Guid trackGuid, int? position = null)
+        public void AddTrackToPlaylist(Guid playlistGuid, Guid trackGuid, string owner, int? position = null)
         {
-            // Check to see if the track and playlist exists
-            TrackDbManager.GetTrackByGuid(trackGuid);
-            PlaylistDbManager.GetStaticPlaylist(playlistGuid);
+            // Check to see if the track and playlist exists, verify the owners of both
+            Track track = TrackDbManager.GetTrackByGuid(trackGuid);
+            if (track.Owner != owner)
+            {
+                string mess1 = String.Format(
+                    "The track {0} cannot be added to playlist {1} " +
+                    "because the track is not owned by the session owner.",
+                    trackGuid, playlistGuid);
+                throw new UnauthorizedAccessException(mess1);
+            }
+
+            Playlist playlist = PlaylistDbManager.GetStaticPlaylist(playlistGuid);
+            if (playlist.Owner != owner)
+            {
+                string mess1 = String.Format(
+                    "The track {0} cannot be added to playlist {1} " +
+                    "because the playlist is not owned by the session owner.",
+                    trackGuid, playlistGuid);
+                throw new UnauthorizedAccessException(mess1);
+            }
 
             // Add the track to the playlist
             PlaylistDbManager.AddTrackToPlaylist(playlistGuid, trackGuid, position);

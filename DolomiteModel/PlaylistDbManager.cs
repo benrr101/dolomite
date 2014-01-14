@@ -67,10 +67,11 @@ namespace DolomiteModel
         /// Creates a new auto playlist
         /// </summary>
         /// <param name="name">The name to give to the playlist</param>
+        /// <param name="owner">The username of the owner of the playlist</param>
         /// <param name="matchAll">Whether or not tracks must match all rules of the playlist</param>
         /// <param name="limit">The optional limit of tracks to satisfy the playlist</param>
         /// <returns>The new guid id for the playlist</returns>
-        public Guid CreateAutoPlaylist(string name, bool matchAll, int? limit = null)
+        public Guid CreateAutoPlaylist(string name, string owner, bool matchAll, int? limit = null)
         {
             using (var context = new DbEntities())
             {
@@ -83,6 +84,7 @@ namespace DolomiteModel
                     Id = guid,
                     Limit = limit,
                     MatchAll = matchAll,
+                    Owner = context.Users.First(u => u.Username == owner).Id,
                     Name = name
                 };
                 context.Autoplaylists.Add(playlist);
@@ -112,8 +114,9 @@ namespace DolomiteModel
         /// Creates a new standard playlist
         /// </summary>
         /// <param name="name">The name to give to the playlist</param>
+        /// <param name="owner">The username of the owner of the playlist</param>
         /// <returns>The new guid id for the playlist</returns>
-        public Guid CreateStandardPlaylist(string name)
+        public Guid CreateStandardPlaylist(string name, string owner)
         {
             using (var context = new DbEntities())
             {
@@ -124,7 +127,8 @@ namespace DolomiteModel
                 Playlist playlist = new Playlist
                 {
                     Id = guid,
-                    Name = name
+                    Name = name,
+                    User = context.Users.First(u => u.Username == owner)
                 };
                 context.Playlists.Add(playlist);
                 try
@@ -166,6 +170,7 @@ namespace DolomiteModel
                     {
                         Id = p.Id,
                         Name = p.Name,
+                        Owner = p.User.Username,
                         Type = Pub.Playlist.PlaylistType.Auto
                     }).ToList();
             }
@@ -185,6 +190,7 @@ namespace DolomiteModel
                     {
                         Id = p.Id,
                         Name = p.Name,
+                        Owner = p.User.Username,
                         Type = Pub.Playlist.PlaylistType.Static
                     }).ToList();
             }
@@ -239,6 +245,7 @@ namespace DolomiteModel
                     Limit = limiter,
                     MatchAll = autoPlaylist.MatchAll,
                     Name = autoPlaylist.Name,
+                    Owner = autoPlaylist.User.Username,
                     Rules = rules,
                     Tracks = TrackRuleProvider.GetAutoplaylistTracks(context, autoPlaylist),
                     Type = Pub.Playlist.PlaylistType.Auto
@@ -268,6 +275,7 @@ namespace DolomiteModel
                 {
                     Id = playlist.Id,
                     Name = playlist.Name,
+                    Owner = playlist.User.Username,
                     Tracks = playlist.PlaylistTracks.OrderBy(spt => spt.Order).Select(spt => spt.Track).ToList(),
                     Type = Pub.Playlist.PlaylistType.Static
                 };

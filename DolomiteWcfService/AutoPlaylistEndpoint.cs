@@ -6,6 +6,7 @@ using System.Net;
 using System.ServiceModel.Channels;
 using System.Text;
 using DolomiteModel.PublicRepresentations;
+using DolomiteWcfService.Exceptions;
 using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
 
@@ -18,11 +19,14 @@ namespace DolomiteWcfService
 
         private PlaylistManager PlaylistManager { get; set; }
 
+        private UserManager UserManager { get; set; }
+
         #endregion
 
         public AutoPlaylistEndpoint()
         {
             PlaylistManager = PlaylistManager.Instance;
+            UserManager = UserManager.Instance;
         }
 
         /// <summary>
@@ -35,16 +39,26 @@ namespace DolomiteWcfService
         {
             try
             {
+                // Make sure the session is valid
+                string api;
+                string token = WebUtilities.GetDolomiteSessionToken(out api);
+                string username = UserManager.GetUsernameFromSession(token, api);
+                UserManager.ExtendIdleTimeout(token);
+
                 // Process the object we're send
                 string bodyStr = Encoding.Default.GetString(body.ToByteArray());
-                Playlist playlist = JsonConvert.DeserializeObject<Playlist>(bodyStr);
+                AutoPlaylist playlist = JsonConvert.DeserializeObject<AutoPlaylist>(bodyStr);
 
                 // Determine what type of processing to do
-                Guid id = PlaylistManager.CreateStaticPlaylist(playlist);
+                Guid id = PlaylistManager.CreateAutoPlaylist(playlist, username);
 
                 return WebUtilities.GenerateResponse(new PlaylistCreationSuccessResponse(id), HttpStatusCode.Created);
             }
-            catch (JsonSerializationException)
+            catch (InvalidSessionException)
+            {
+                return WebUtilities.GenerateUnauthorizedResponse();
+            }
+            catch (JsonReaderException)
             {
                 // The guid was probably incorrect
                 object payload = new ErrorResponse("The supplied autoplaylist object is invalid.");

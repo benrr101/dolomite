@@ -6,6 +6,7 @@ using System.Net;
 using System.ServiceModel.Channels;
 using System.Text;
 using DolomiteModel.PublicRepresentations;
+using DolomiteWcfService.Exceptions;
 using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
 
@@ -18,11 +19,14 @@ namespace DolomiteWcfService
 
         private PlaylistManager PlaylistManager { get; set; }
 
+        private UserManager UserManager { get; set; }
+
         #endregion
 
         public StaticPlaylistEndpoint()
         {
             PlaylistManager = PlaylistManager.Instance;
+            UserManager = UserManager.Instance;
         }
 
         /// <summary>
@@ -35,16 +39,35 @@ namespace DolomiteWcfService
         {
             try
             {
+                // Make sure the session is valid
+                string api;
+                string token = WebUtilities.GetDolomiteSessionToken(out api);
+                string username = UserManager.GetUsernameFromSession(token, api);
+                UserManager.ExtendIdleTimeout(token);
+
                 // Process the object we're send
                 string bodyStr = Encoding.Default.GetString(body.ToByteArray());
-                AutoPlaylist autoPlaylist = JsonConvert.DeserializeObject<AutoPlaylist>(bodyStr);
-                Guid id = PlaylistManager.CreateStaticPlaylist(autoPlaylist);
+                Playlist playlist = JsonConvert.DeserializeObject<Playlist>(bodyStr);
+                Guid id = PlaylistManager.CreateStaticPlaylist(playlist, username);
 
                 return WebUtilities.GenerateResponse(new PlaylistCreationSuccessResponse(id), HttpStatusCode.Created);
             }
+            catch (InvalidSessionException)
+            {
+                return WebUtilities.GenerateUnauthorizedResponse();
+            }
+            catch (UnauthorizedAccessException uae)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse(uae.Message), HttpStatusCode.BadRequest);
+            }
+            catch (ObjectNotFoundException onfe)
+            {
+                string message = "The playlist could not be created: " + onfe.Message;
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.BadRequest);
+            }
             catch (JsonReaderException)
             {
-                // The guid was probably incorrect
+                // The playlist object was probably incorrect
                 object payload = new ErrorResponse("The supplied static playlist object is invalid.");
                 return WebUtilities.GenerateResponse(payload, HttpStatusCode.BadRequest);
             }
@@ -136,11 +159,11 @@ namespace DolomiteWcfService
                 if (WebUtilities.GetQueryParameters()["position"] != null &&
                     Int32.TryParse(WebUtilities.GetQueryParameters()["position"], out position))
                 {
-                    PlaylistManager.AddTrackToPlaylist(playlistId, trackGuid, position);
+                    PlaylistManager.AddTrackToPlaylist(playlistId, trackGuid, null, position);
                 }
                 else
                 {
-                    PlaylistManager.AddTrackToPlaylist(playlistId, trackGuid);
+                    PlaylistManager.AddTrackToPlaylist(playlistId, trackGuid, null);
                 }
 
                 // Send a happy return message

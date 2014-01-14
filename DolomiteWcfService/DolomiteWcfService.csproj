@@ -72,7 +72,7 @@
     <Compile Include="AzureStorageManager.cs" />
     <Compile Include="Exceptions\DuplicateTrackException.cs" />
     <Compile Include="Exceptions\InvalidSessionException.cs" />
-    <Compile Include="IPlaylistEndpoint.cs" />
+    <Compile Include="IAutoPlaylistEndpoint.cs" />
     <Compile Include="IStaticPlaylistEndpoint.cs" />
     <Compile Include="ITracksEndpoint.cs" />
     <Compile Include="IUserEndpoint.cs" />
