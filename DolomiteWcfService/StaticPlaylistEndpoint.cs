@@ -245,21 +245,22 @@ namespace DolomiteWcfService
         /// track orders to make sure everything comes up Millhouse.
         /// </summary>
         /// <param name="playlist">The guid of the playlist to delete the track from</param>
-        /// <param name="track">The track to delete from the playlist</param>
+        /// <param name="track">The id of the track to delete from the playlist</param>
         /// <returns>A success or error message</returns>
         public Message DeleteTrackFromStaticPlaylist(string playlist, string track)
         {
             try
             {
-                // Parse the guids
-                Guid playlistGuid, trackGuid;
+                // Parse the guid
+                Guid playlistGuid;
+                int trackId;
                 if (!Guid.TryParse(playlist, out playlistGuid))
                     throw new FormatException(String.Format("The playlist GUID supplied '{0}' is an invalid GUID.", playlistGuid));
-                if (!Guid.TryParse(track, out trackGuid))
-                    throw new FormatException(String.Format("The track GUID supplied '{0}' is an invalid GUID.", playlistGuid));
+                if (!Int32.TryParse(track, out trackId))
+                    throw new FormatException(String.Format("The track ID supplied '{0}' is an invalid integer.", track));
 
                 // Attempt to delete
-                PlaylistManager.DeleteTrackFromStaticPlaylist(playlistGuid, trackGuid);
+                PlaylistManager.DeleteTrackFromStaticPlaylist(playlistGuid, trackId);
                 return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
             }
             catch (FormatException fe)

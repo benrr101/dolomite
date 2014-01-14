@@ -260,8 +260,8 @@ namespace DolomiteWcfService
         /// Sends the call to the database to delete the track from the playlist
         /// </summary>
         /// <param name="playlistGuid">The guid of the playlist to remove the track from</param>
-        /// <param name="trackId">The guid of the track to remove</param>
-        public void DeleteTrackFromStaticPlaylist(Guid playlistGuid, Guid trackId)
+        /// <param name="trackId">The id of the track to remove from the playlist</param>
+        public void DeleteTrackFromStaticPlaylist(Guid playlistGuid, int trackId)
         {
             PlaylistDbManager.DeleteTrackFromPlaylist(playlistGuid, trackId);
         }

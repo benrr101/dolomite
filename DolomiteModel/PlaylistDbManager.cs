@@ -407,14 +407,14 @@ namespace DolomiteModel
         /// of the tracks in the playist to keep the indices correct.
         /// </summary>
         /// <param name="playlistGuid">GUID of the playlist to remove the track from</param>
-        /// <param name="trackId">GUID of the track to remove from the playlist</param>
-        public void DeleteTrackFromPlaylist(Guid playlistGuid, Guid trackId)
+        /// <param name="trackId">ID of the track to remove from the playlist</param>
+        public void DeleteTrackFromPlaylist(Guid playlistGuid, int trackId)
         {
             using (var context = new DbEntities())
             {
                 // Find the playlist<->track object
                 var playlistTrack =
-                    context.PlaylistTracks.FirstOrDefault(t => t.Playlist == playlistGuid && t.Track == trackId);
+                    context.PlaylistTracks.FirstOrDefault(t => t.Playlist == playlistGuid && t.Order == trackId);
                 if (playlistTrack == null)
                     throw new ObjectNotFoundException("Failed to find track in playlist.");
 
