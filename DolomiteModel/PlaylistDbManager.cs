@@ -208,8 +208,13 @@ namespace DolomiteModel
         /// Thrown if a auto playlist with the given guid could not be found
         /// </exception>
         /// <param name="guid">The guid of the playlist to find</param>
+        /// <param name="fetchTracks">
+        /// Whether or not to fetch matching tracks. Setting to false can
+        /// dramatically speed up playlist fetching times, but is only useful
+        /// in very few situations.
+        /// </param>
         /// <returns>A public-ready auto playlist object.</returns>
-        public Pub.AutoPlaylist GetAutoPlaylist(Guid guid)
+        public Pub.AutoPlaylist GetAutoPlaylist(Guid guid, bool fetchTracks = true)
         {
             using (var context = new DbEntities())
             {
@@ -218,29 +223,31 @@ namespace DolomiteModel
                 if (autoPlaylist == null)
                     throw new ObjectNotFoundException(String.Format("A playlist with id {0} could not be found", guid));
                 
-                // Optionally build the limiter
-                Pub.AutoPlaylistLimiter limiter = null;
-                if (autoPlaylist.Limit.HasValue)
-                {
-                    limiter = new Pub.AutoPlaylistLimiter
-                    {
-                        Limit = autoPlaylist.Limit.Value,
-                        SortDescending = autoPlaylist.SortDesc,
-                        SortField =
-                            autoPlaylist.SortField.HasValue ? autoPlaylist.SortFieldMetadataField.TagName : null
-                    };
-                }
+                // Do we need to fetch the tracks?
 
-                // Build the list of rules
-                List<Pub.AutoPlaylistRule> rules =
-                    autoPlaylist.AutoplaylistRules.Select(
-                        r => new Pub.AutoPlaylistRule
-                             {
-                                 Id = r.Id,
-                                 Comparison = r.Rule1.Name,
-                                 Field = r.MetadataField1.TagName,
-                                 Value = r.Value
-                             }).ToList();
+                    // Optionally build the limiter
+                    Pub.AutoPlaylistLimiter limiter = null;
+                    if (autoPlaylist.Limit.HasValue)
+                    {
+                        limiter = new Pub.AutoPlaylistLimiter
+                        {
+                            Limit = autoPlaylist.Limit.Value,
+                            SortDescending = autoPlaylist.SortDesc,
+                            SortField =
+                                autoPlaylist.SortField.HasValue ? autoPlaylist.SortFieldMetadataField.TagName : null
+                        };
+                    }
+
+                    // Build the list of rules
+                    List<Pub.AutoPlaylistRule> rules =
+                        autoPlaylist.AutoplaylistRules.Select(
+                            r => new Pub.AutoPlaylistRule
+                            {
+                                Id = r.Id,
+                                Comparison = r.Rule1.Name,
+                                Field = r.MetadataField1.TagName,
+                                Value = r.Value
+                            }).ToList();
 
                 // Put it all together
                 Pub.AutoPlaylist pubAutoPlaylist = new Pub.AutoPlaylist
@@ -251,7 +258,7 @@ namespace DolomiteModel
                     Name = autoPlaylist.Name,
                     Owner = autoPlaylist.User.Username,
                     Rules = rules,
-                    Tracks = TrackRuleProvider.GetAutoplaylistTracks(context, autoPlaylist),
+                    Tracks = fetchTracks ? TrackRuleProvider.GetAutoplaylistTracks(context, autoPlaylist) : null,
                     Type = Pub.Playlist.PlaylistType.Auto
                 };
                 return pubAutoPlaylist;

@@ -182,9 +182,20 @@ namespace DolomiteWcfService
         /// Adds the specified rule to the auto playlist with the given guid
         /// </summary>
         /// <param name="playlistGuid">Guid of the auto playlist to add the rule to</param>
+        /// <param name="owner">The username of the owner of the playlist</param>
         /// <param name="rule">The rule to add the playlist</param>
-        public void AddRuleToAutoPlaylist(Guid playlistGuid, AutoPlaylistRule rule)
+        public void AddRuleToAutoPlaylist(Guid playlistGuid, string owner, AutoPlaylistRule rule)
         {
+            // Check to see that the playlist exists, verify its owner
+            AutoPlaylist playlist = PlaylistDbManager.GetAutoPlaylist(playlistGuid, false);
+            if (playlist.Owner != owner)
+            {
+                string message = String.Format("The rule cannot be added to the auto playlist {0}" +
+                                               "because the playlist is not owned by the session owner.",
+                    playlistGuid);
+                throw new UnauthorizedAccessException(message);
+            }
+
             // Add the rule to the playlist
             PlaylistDbManager.AddRuleToAutoplaylist(playlistGuid, rule);
         }
@@ -202,21 +213,21 @@ namespace DolomiteWcfService
             Track track = TrackDbManager.GetTrackByGuid(trackGuid);
             if (track.Owner != owner)
             {
-                string mess1 = String.Format(
+                string message = String.Format(
                     "The track {0} cannot be added to playlist {1} " +
                     "because the track is not owned by the session owner.",
                     trackGuid, playlistGuid);
-                throw new UnauthorizedAccessException(mess1);
+                throw new UnauthorizedAccessException(message);
             }
 
             Playlist playlist = PlaylistDbManager.GetStaticPlaylist(playlistGuid);
             if (playlist.Owner != owner)
             {
-                string mess1 = String.Format(
+                string message = String.Format(
                     "The track {0} cannot be added to playlist {1} " +
                     "because the playlist is not owned by the session owner.",
                     trackGuid, playlistGuid);
-                throw new UnauthorizedAccessException(mess1);
+                throw new UnauthorizedAccessException(message);
             }
 
             // Add the track to the playlist

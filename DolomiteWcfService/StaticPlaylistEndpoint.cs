@@ -181,6 +181,12 @@ namespace DolomiteWcfService
         {
             try
             {
+                // Make sure we have a valid session
+                string apiKey;
+                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
+                string username = UserManager.GetUsernameFromSession(token, apiKey);
+                UserManager.ExtendIdleTimeout(token);
+
                 // Read the body of the request and convert it to the guid of the track to add
                 //TODO: Add support for batch adding tracks
                 string bodyStr = Encoding.Default.GetString(body.ToByteArray());
@@ -192,15 +198,24 @@ namespace DolomiteWcfService
                 if (WebUtilities.GetQueryParameters()["position"] != null &&
                     Int32.TryParse(WebUtilities.GetQueryParameters()["position"], out position))
                 {
-                    PlaylistManager.AddTrackToPlaylist(playlistId, trackGuid, null, position);
+                    PlaylistManager.AddTrackToPlaylist(playlistId, trackGuid, username, position);
                 }
                 else
                 {
-                    PlaylistManager.AddTrackToPlaylist(playlistId, trackGuid, null);
+                    PlaylistManager.AddTrackToPlaylist(playlistId, trackGuid, username);
                 }
 
                 // Send a happy return message
                 return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
+            }
+            catch (InvalidSessionException)
+            {
+                return WebUtilities.GenerateUnauthorizedResponse();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                string message = String.Format("The GUID supplied '{0}' refers to a playlist that is not owned by you.", guid);
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Forbidden);
             }
             catch (FormatException)
             {
