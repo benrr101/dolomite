@@ -149,7 +149,15 @@ namespace DolomiteWcfService.Threads
 
                 string outputFilename = String.Format("{0}.{1}.{2}", trackGuid, quality.Bitrate, quality.Extension);
                 string outputFilePath = LocalStorageManager.GetPath(outputFilename);
-                string arguments = String.Format("-i \"{2}\" -acodec {0} -ab {1}000 -y \"{3}\"", quality.Codec,
+
+                // Arguments:
+                // -i {2}               - input file path
+                // -vn                  - drop all video streams (including album art, as per http://stackoverflow.com/a/20202233)
+                // -acodec {0}          - the codec to transcode to
+                // -ab {1}000           - the bitrate in bps
+                // -y {3}               - the output path
+                // -map_metadata -1     - drop all metadata
+                string arguments = String.Format("-i \"{2}\" -vn -acodec {0} -map_metadata -1 -ab {1}000 -y \"{3}\"", quality.Codec,
                                                  quality.Bitrate, inputFilename, outputFilePath);
 
                 // Borrowing some code from http://stackoverflow.com/a/8726175
