@@ -59,5 +59,8 @@ namespace DolomiteWcfService
         Message DeleteTrack(string guid);
 
         #endregion
+
+        [WebInvoke(Method = "OPTIONS", UriTemplate = "/*")]
+        bool PreflyRequest();
     }
 }

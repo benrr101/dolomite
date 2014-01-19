@@ -52,6 +52,7 @@
       <HintPath>..\packages\taglib.2.1.0.0\lib\policy.2.0.taglib-sharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.Entity" />
     <Reference Include="System.Data.Services.Client" />
@@ -70,6 +71,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AzureStorageManager.cs" />
+    <Compile Include="Cors\CorsMessageInspector.cs" />
+    <Compile Include="Cors\EnableCorsBehavior.cs" />
     <Compile Include="Exceptions\DuplicateTrackException.cs" />
     <Compile Include="Exceptions\InvalidSessionException.cs" />
     <Compile Include="IAutoPlaylistEndpoint.cs" />

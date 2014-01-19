@@ -339,5 +339,15 @@ namespace DolomiteWcfService
                     HttpStatusCode.InternalServerError);
             }
         }
+
+        /// <summary>
+        /// Returns true just to allow the CORS preflight request via OPTIONS
+        /// HTTP method to go through
+        /// </summary>
+        /// <returns>True</returns>
+        public bool PreflyRequest()
+        {
+            return true;
+        }
     }
 }

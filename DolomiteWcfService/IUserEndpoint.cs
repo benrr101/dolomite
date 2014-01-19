@@ -16,5 +16,8 @@ namespace DolomiteWcfService
 
         [WebInvoke(Method = "POST", UriTemplate = "/logout")]
         Message Logout();
+
+        [WebInvoke(Method = "OPTIONS", UriTemplate = "/*")]
+        bool PreflyRequest();
     }
 }

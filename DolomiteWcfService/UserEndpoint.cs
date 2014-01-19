@@ -18,11 +18,11 @@ namespace DolomiteWcfService
         /// <summary>
         /// Instance of the User Manager
         /// </summary>
-        private UserManager UserManager { get; set; }
+        private static UserManager UserManager { get; set; }
 
         #endregion
 
-        public UserEndpoint()
+        static UserEndpoint()
         {
             // Initialize the track manager
             UserManager = UserManager.Instance;
@@ -157,6 +157,16 @@ namespace DolomiteWcfService
             
             // Tell the client everything went "ok"
             return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
+        }
+
+        /// <summary>
+        /// Returns true just to allow the CORS preflight request via OPTIONS
+        /// HTTP method to go through
+        /// </summary>
+        /// <returns>True</returns>
+        public bool PreflyRequest()
+        {
+            return true;
         }
     }
 }

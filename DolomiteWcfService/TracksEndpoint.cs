@@ -22,16 +22,16 @@ namespace DolomiteWcfService
         /// <summary>
         /// Instance of the Track Manager
         /// </summary>
-        private TrackManager TrackManager { get; set; }
+        private static TrackManager TrackManager { get; set; }
 
         /// <summary>
         /// Instance of the User Manager
         /// </summary>
-        private UserManager UserManager { get; set; }
+        private static UserManager UserManager { get; set; }
 
         #endregion
 
-        public TracksEndpoint()
+        static TracksEndpoint()
         {
             // Initialize the track and user manager
             TrackManager = TrackManager.Instance;
@@ -608,6 +608,16 @@ namespace DolomiteWcfService
         }
 
         #endregion
+
+        /// <summary>
+        /// Returns true just to allow the CORS preflight request via OPTIONS
+        /// HTTP method to go through
+        /// </summary>
+        /// <returns>True</returns>
+        public bool PreflyRequest()
+        {
+            return true;
+        }
 
         #endregion
     }

@@ -5,6 +5,7 @@ using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
 using System.Threading;
+using DolomiteWcfService.Cors;
 using DolomiteWcfService.Threads;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
@@ -89,16 +90,24 @@ namespace DolomiteWcfService
                         HttpGetEnabled = true,
                         MetadataExporter = {PolicyVersion = PolicyVersion.Policy15},
                     };
+
+                // Enable CORS on the endpoints
+                IServiceBehavior ecb = new EnableCorsBehavior();
+
                 _tracksHost.Description.Behaviors.Add(smb);
+                _tracksHost.Description.Behaviors.Add(ecb);
                 _tracksHost.Open();
 
                 _autoPlaylistHost.Description.Behaviors.Add(smb);
+                _autoPlaylistHost.Description.Behaviors.Add(ecb);
                 _autoPlaylistHost.Open();
 
                 _staticPlaylistHost.Description.Behaviors.Add(smb);
+                _staticPlaylistHost.Description.Behaviors.Add(ecb);
                 _staticPlaylistHost.Open();
 
                 _userHost.Description.Behaviors.Add(smb);
+                _userHost.Description.Behaviors.Add(ecb);
                 _userHost.Open();
 
                 Trace.TraceInformation("Started Dolomite WCF Endpoint on {0}", baseAddress.AbsoluteUri);
