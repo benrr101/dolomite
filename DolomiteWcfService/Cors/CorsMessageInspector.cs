@@ -11,6 +11,8 @@ namespace DolomiteWcfService.Cors
     /// </source>
     public class CorsMessageInspector : IDispatchMessageInspector
     {
+        private const string OriginHeader = "Access-Control-Allow-Origin";
+
         readonly Dictionary<string, string> _requiredHeaders;
         public CorsMessageInspector(Dictionary<string, string> headers)
         {
@@ -19,16 +21,26 @@ namespace DolomiteWcfService.Cors
 
         public object AfterReceiveRequest(ref Message request, IClientChannel channel, InstanceContext instanceContext)
         {
-            return null;
+            // Grab the HTTP headers from the message. Don't do anything if they don't exist.
+            var httpHeader = request.Properties["httpRequest"] as HttpRequestMessageProperty;
+            if (httpHeader == null)
+                return null;
+
+            // Set the HTTP origin as-defined or * if not defined.
+            return string.IsNullOrWhiteSpace(httpHeader.Headers["Origin"]) ? "*" : httpHeader.Headers["Origin"];;
         }
 
         public void BeforeSendReply(ref Message reply, object correlationState)
         {
+            // Add all the headers to the message
             var httpHeader = reply.Properties["httpResponse"] as HttpResponseMessageProperty;
             foreach (var item in _requiredHeaders)
             {
                 httpHeader.Headers.Add(item.Key, item.Value);
             }
+
+            // Add the origin header to the http headers
+            httpHeader.Headers.Add(OriginHeader, (string)correlationState);
         }
     }
 }
