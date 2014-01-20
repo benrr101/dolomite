@@ -384,7 +384,8 @@ namespace DolomiteWcfService
             }
             catch (UnauthorizedAccessException)
             {
-                string message = String.Format("The GUID supplied '{0}' refers to a track that is not owned by you.", guid);
+                string message = String.Format("The GUID supplied '{0}' refers to a track that is not owned by you.",
+                    guid);
                 return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Forbidden);
             }
             catch (FormatException)
@@ -396,6 +397,11 @@ namespace DolomiteWcfService
             catch (JsonReaderException)
             {
                 // The json was formatted poorly
+                return WebUtilities.GenerateResponse(new ErrorResponse("The JSON is invalid."),
+                    HttpStatusCode.BadRequest);
+            }
+            catch (JsonSerializationException)
+            {
                 return WebUtilities.GenerateResponse(new ErrorResponse("The JSON is invalid."),
                     HttpStatusCode.BadRequest);
             }
@@ -445,7 +451,8 @@ namespace DolomiteWcfService
             }
             catch (UnauthorizedAccessException)
             {
-                string message = String.Format("The GUID supplied '{0}' refers to a track that is not owned by you.", guid);
+                string message = String.Format("The GUID supplied '{0}' refers to a track that is not owned by you.",
+                    guid);
                 return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Forbidden);
             }
             catch (FormatException)
@@ -457,6 +464,11 @@ namespace DolomiteWcfService
             catch (JsonReaderException)
             {
                 // The json was formatted poorly
+                return WebUtilities.GenerateResponse(new ErrorResponse("The JSON is invalid."),
+                    HttpStatusCode.BadRequest);
+            }
+            catch (JsonSerializationException)
+            {
                 return WebUtilities.GenerateResponse(new ErrorResponse("The JSON is invalid."),
                     HttpStatusCode.BadRequest);
             }

@@ -3,7 +3,6 @@ using System.Data;
 using System.IO;
 using System.Net;
 using System.ServiceModel.Channels;
-using System.ServiceModel.Web;
 using System.Text;
 using DolomiteWcfService.Exceptions;
 using DolomiteWcfService.Requests;
@@ -57,8 +56,15 @@ namespace DolomiteWcfService
             }
             catch (JsonSerializationException)
             {
-                return WebUtilities.GenerateResponse(new ErrorResponse("The JSON for the user creation request is invalid."),
-                    HttpStatusCode.BadRequest);
+                return WebUtilities.GenerateResponse(
+                        new ErrorResponse("The JSON for the user creation request is invalid."),
+                        HttpStatusCode.BadRequest);
+            }
+            catch (JsonReaderException)
+            {
+                return WebUtilities.GenerateResponse(
+                        new ErrorResponse("The JSON for the user creation request is invalid."),
+                        HttpStatusCode.BadRequest);
             }
             catch (ArgumentNullException ane)
             {
@@ -119,7 +125,12 @@ namespace DolomiteWcfService
             catch (JsonSerializationException)
             {
                 return WebUtilities.GenerateResponse(new ErrorResponse("The JSON for the login request is invalid."),
-                        HttpStatusCode.BadRequest);
+                    HttpStatusCode.BadRequest);
+            }
+            catch (JsonReaderException)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse("The JSON for the login request is invalid."),
+                    HttpStatusCode.BadRequest);
             }
             catch (ApplicationException)
             {
