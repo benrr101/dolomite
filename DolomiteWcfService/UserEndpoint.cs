@@ -3,6 +3,7 @@ using System.Data;
 using System.IO;
 using System.Net;
 using System.ServiceModel.Channels;
+using System.ServiceModel.Web;
 using System.Text;
 using DolomiteWcfService.Exceptions;
 using DolomiteWcfService.Requests;
@@ -86,6 +87,17 @@ namespace DolomiteWcfService
         {
             try
             {
+                // If there was a cookie sent with a prior session token, invalidate it
+                try
+                {
+                    string apiKey;
+                    string sessionToken = WebUtilities.GetDolomiteSessionToken(out apiKey);
+                    UserManager.InvalidateSession(sessionToken);
+                }
+                catch (InvalidSessionException) // Ideally, this should always happen
+                {
+                }
+
                 // Process the body of the request into a login request object
                 string bodyStr = Encoding.Default.GetString(body.ToByteArray());
                 var request = JsonConvert.DeserializeObject<UserLoginRequest>(bodyStr);
@@ -97,6 +109,11 @@ namespace DolomiteWcfService
 
                 // Send a successful token back via a login success response
                 LoginSuccessResponse response = new LoginSuccessResponse(token);
+
+                // Add a header to handle sending the session cookie
+                string seshToke = String.Format("sesh={0}-{1}; Path=/; Secure", token, request.ApiKey);
+                WebUtilities.SetHeader(HttpResponseHeader.SetCookie, seshToke);
+
                 return WebUtilities.GenerateResponse(response, HttpStatusCode.OK);
             }
             catch (JsonSerializationException)
@@ -120,8 +137,6 @@ namespace DolomiteWcfService
                 return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
                     HttpStatusCode.InternalServerError);
             }
-
-            
         }
 
         /// <summary>
