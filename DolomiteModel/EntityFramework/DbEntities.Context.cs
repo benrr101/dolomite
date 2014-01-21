@@ -108,5 +108,14 @@ namespace DolomiteModel.EntityFramework
     
             return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("DecrementPlaylistTrackOrder", playlistParameter, positionParameter);
         }
+    
+        public virtual int ReleaseAndCompleteMetadataUpdate(Nullable<System.Guid> workItem)
+        {
+            var workItemParameter = workItem.HasValue ?
+                new ObjectParameter("workItem", workItem) :
+                new ObjectParameter("workItem", typeof(System.Guid));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("ReleaseAndCompleteMetadataUpdate", workItemParameter);
+        }
     }
 }

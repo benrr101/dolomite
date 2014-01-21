@@ -5,35 +5,37 @@ Post-Deployment Script
 -- Add some supported metadata fields to the database
 INSERT INTO MetadataFields ([TagName], [DisplayName], [Type]) 
 VALUES 
-	('Title', 'Title', 'string'), 
-	('Artist', 'Artist', 'string'), 
-	('AlbumArtist', 'Album Artist', 'string'),
-	('Composer', 'Composer', 'string'),
-	('Album', 'Album', 'string'),
-	('Genre', 'Genre', 'string'),
-	('Year', 'Year', 'numeric'),
-	('Track', 'Track Number', 'numeric'),
-	('TrackCount', 'Track Count', 'numeric'),
-	('Disc', 'Disc Number', 'numeric'),
-	('Lyrics', 'Lyrics', 'string'),
-	('BeatsPerMinute', 'BPM', 'numeric'),
-	('Conductor', 'Conductor', 'string'),
-	('Copyright', 'Copyright', 'string'),
-	('Comment', 'Comment', 'string'),
-	('DiscCount', 'Disc Count', 'numeric'),
-	('DateAdded', 'Date Added', 'date'),
-	('PlayCount', 'Play Count', 'numeric'),
-	('LastPlayed', 'Last Played', 'date'),
-	('Duration', 'Duration', 'numeric');
+	('Title', 'Title', 'string', ((1))), 
+	('Artist', 'Artist', 'string', ((1))), 
+	('AlbumArtist', 'Album Artist', 'string', ((1))),
+	('Composer', 'Composer', 'string', ((1))),
+	('Album', 'Album', 'string', ((1))),
+	('Genre', 'Genre', 'string', ((1))),
+	('Year', 'Year', 'numeric', ((1))),
+	('Track', 'Track Number', 'numeric', ((1))),
+	('TrackCount', 'Track Count', 'numeric', ((1))),
+	('Disc', 'Disc Number', 'numeric', ((1))),
+	('Lyrics', 'Lyrics', 'string', ((1))),
+	('BeatsPerMinute', 'BPM', 'numeric', ((1))),
+	('Conductor', 'Conductor', 'string', ((1))),
+	('Copyright', 'Copyright', 'string', ((1))),
+	('Comment', 'Comment', 'string', ((1))),
+	('DiscCount', 'Disc Count', 'numeric', ((1))),
+	('DateAdded', 'Date Added', 'date', ((0))),
+	('PlayCount', 'Play Count', 'numeric', ((0))),
+	('LastPlayed', 'Last Played', 'date', ((0))),
+	('Duration', 'Duration', 'numeric', ((0))),
+	('TrackListing', 'Track Listing', 'string', ((0))
+);
 
 -- Add some supported audio qualities for transcoding
 INSERT INTO Qualities (Name, Codec, Bitrate, Extension, Directory, Mimetype) 
 VALUES
 	--('AAC 64Kbps', 'libfdk_aac -aprofile aac_he', 64, 'aac', 'aac_64'),
 	('MP3 128Kbps', 'mp3', 128, 'mp3', 'mp3_128', 'audio/mpeg'),
-	('MP3 160Kbps', 'mp3', 160, 'mp3', 'mp3_160', 'audio/mpeg'),
+	-- ('MP3 160Kbps', 'mp3', 160, 'mp3', 'mp3_160', 'audio/mpeg'),
 	('MP3 192Kbps', 'mp3', 192, 'mp3', 'mp3_192', 'audio/mpeg'),
-	('MP3 256Kbps', 'mp3', 256, 'mp3', 'mp3_256', 'audio/mpeg'),
+	-- ('MP3 256Kbps', 'mp3', 256, 'mp3', 'mp3_256', 'audio/mpeg'),
 	('MP3 320Kbps', 'mp3', 320, 'mp3', 'mp3_320', 'audio/mpeg'),
 	('Original', NULL, NULL, NULL, 'original', NULL);
 GO

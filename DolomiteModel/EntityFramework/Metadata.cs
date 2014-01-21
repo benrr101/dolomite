@@ -18,6 +18,7 @@ namespace DolomiteModel.EntityFramework
         public System.Guid Track { get; set; }
         public int Field { get; set; }
         public string Value { get; set; }
+        public bool WriteOut { get; set; }
     
         public virtual MetadataField MetadataField { get; set; }
         public virtual Track Track1 { get; set; }

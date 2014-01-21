@@ -86,6 +86,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Property Name="Track" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Field" Type="int" Nullable="false" />
           <Property Name="Value" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="WriteOut" Type="bit" Nullable="false" />
         </EntityType>
         <EntityType Name="MetadataFields">
           <Key>
@@ -219,7 +220,9 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_AUTOPLAYLISTRULES_PLAYLIST">
-          <End Role="Autoplaylists" Type="Self.Autoplaylists" Multiplicity="1" />
+          <End Role="Autoplaylists" Type="Self.Autoplaylists" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
           <End Role="AutoplaylistRules" Type="Self.AutoplaylistRules" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Autoplaylists">
@@ -431,6 +434,9 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Parameter Name="playlist" Type="uniqueidentifier" Mode="In" />
           <Parameter Name="position" Type="int" Mode="In" />
         </Function>
+        <Function Name="ReleaseAndCompleteMetadataUpdate" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="workItem" Type="uniqueidentifier" Mode="In" />
+        </Function>
         <Function Name="ReleaseAndCompleteOnboardingItem" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="workItem" Type="uniqueidentifier" Mode="In" />
         </Function>
@@ -635,6 +641,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <Property Name="Value" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
           <NavigationProperty Name="MetadataField" Relationship="Self.FK_METADATA_FIELD" FromRole="Metadata" ToRole="MetadataFields" />
           <NavigationProperty Name="Track1" Relationship="Self.FK_METADATA_TRACK" FromRole="Metadata" ToRole="Tracks" />
+          <Property Name="WriteOut" Type="Boolean" Nullable="false" />
         </EntityType>
         <EntityType Name="MetadataField">
           <Key>
@@ -1052,6 +1059,9 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             <End Role="User" EntitySet="Users" />
             <End Role="Session" EntitySet="Sessions" />
           </AssociationSet>
+          <FunctionImport Name="ReleaseAndCompleteMetadataUpdate">
+            <Parameter Name="workItem" Mode="In" Type="Guid" />
+          </FunctionImport>
         </EntityContainer>
         <Association Name="FK_AUTOPLAYLISTS_SORTFIELD">
           <End Type="DolomiteModel.EntityFramework.MetadataField" Role="MetadataField" Multiplicity="0..1" />
@@ -1190,6 +1200,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <EntitySetMapping Name="Metadatas">
             <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Metadata">
               <MappingFragment StoreEntitySet="Metadata">
+                <ScalarProperty Name="WriteOut" ColumnName="WriteOut" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Track" ColumnName="Track" />
                 <ScalarProperty Name="Field" ColumnName="Field" />
@@ -1325,6 +1336,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
+          <FunctionImportMapping FunctionImportName="ReleaseAndCompleteMetadataUpdate" FunctionName="DolomiteModel.EntityFramework.Store.ReleaseAndCompleteMetadataUpdate" />
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>
