@@ -229,7 +229,7 @@ namespace DolomiteWcfService
             }
 
             // Store the new values
-            DatabaseManager.StoreTrackMetadata(guid, metadata);
+            DatabaseManager.StoreTrackMetadata(guid, metadata, true);
         }
 
         /// <summary>

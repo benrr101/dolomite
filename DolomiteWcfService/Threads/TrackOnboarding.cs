@@ -308,7 +308,7 @@ namespace DolomiteWcfService.Threads
             metadata.Add("PlayCount", "0");
 
             // Send the metadata to the database
-            DatabaseManager.StoreTrackMetadata(trackGuid, metadata);
+            DatabaseManager.StoreTrackMetadata(trackGuid, metadata, false);
 
             // Store the audio metadata to the database
             DatabaseManager.SetAudioQualityInfo(trackGuid, file.Properties.AudioBitrate,
