@@ -25,6 +25,7 @@ namespace DolomiteModel.EntityFramework
         public string TagName { get; set; }
         public string DisplayName { get; set; }
         public string Type { get; set; }
+        public bool FileSupported { get; set; }
     
         public virtual ICollection<AutoplaylistRule> AutoplaylistRules { get; set; }
         public virtual ICollection<Metadata> Metadatas { get; set; }

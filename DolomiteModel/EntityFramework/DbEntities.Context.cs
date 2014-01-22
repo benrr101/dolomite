@@ -117,5 +117,10 @@ namespace DolomiteModel.EntityFramework
     
             return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("ReleaseAndCompleteMetadataUpdate", workItemParameter);
         }
+    
+        public virtual ObjectResult<Nullable<System.Guid>> GetAndLockTopMetadataItem()
+        {
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction<Nullable<System.Guid>>("GetAndLockTopMetadataItem");
+        }
     }
 }
