@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
@@ -126,7 +125,7 @@ namespace DolomiteWcfService.Threads
         /// </summary>
         /// <param name="filePath">Path to the file in local storage</param>
         /// <param name="metadata">The metadata that needs to change</param>
-        public void UpdateLocalFile(string filePath, Dictionary<string, string> metadata)
+        public void UpdateLocalFile(string filePath, MetadataChange[] metadata)
         {
             // Generate a TagLib file for writing the tags
             File file = File.Create(filePath);
@@ -135,8 +134,12 @@ namespace DolomiteWcfService.Threads
             Type tagType = file.Tag.GetType();
             foreach (var md in metadata)
             {
-                PropertyInfo property = tagType.GetProperty(md.Key);
-                property.SetValue(file.Tag, Convert.ChangeType(md.Value, property.PropertyType));
+                string tagName = md.Array ? md.TagName + "s" : md.TagName;
+
+                PropertyInfo property = tagType.GetProperty(tagName);
+                property.SetValue(file.Tag, md.Array
+                    ? new[] {md.Value}
+                    : Convert.ChangeType(md.Value, property.PropertyType));
             }
 
             // Write the changes

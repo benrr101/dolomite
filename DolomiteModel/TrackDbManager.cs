@@ -259,7 +259,7 @@ namespace DolomiteModel
         /// A dictionary of tagname => new value. Or an empty dictionary if there
         /// isn't any eligible metadata to write out.
         /// </returns>
-        public Dictionary<string, string> GetMetadataToWriteOut(Guid trackGuid)
+        public Pub.MetadataChange[] GetMetadataToWriteOut(Guid trackGuid)
         {
             using (var context = new DbEntities())
             {
@@ -268,15 +268,16 @@ namespace DolomiteModel
                 // empty dictionary
                 var items = from md in context.Metadatas
                     where md.WriteOut && md.MetadataField.FileSupported
-                    select new
+                    select new Pub.MetadataChange
                     {
-                        md.MetadataField.TagName,
-                        md.Value
+                        TagName = md.MetadataField.TagName,
+                        Value = md.Value,
+                        Array = md.MetadataField.TagLibArray
                     };
 
                 return items.Any()
-                    ? items.ToDictionary(i => i.TagName, i => i.Value)
-                    : new Dictionary<string, string>();
+                    ? items.ToArray()
+                    : new Pub.MetadataChange[] {};
             }
         } 
 

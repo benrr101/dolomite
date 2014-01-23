@@ -97,6 +97,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Property Name="DisplayName" Type="nvarchar" MaxLength="20" Nullable="false" />
           <Property Name="Type" Type="nvarchar" MaxLength="20" Nullable="false" />
           <Property Name="FileSupported" Type="bit" Nullable="false" />
+          <Property Name="TagLibArray" Type="bit" Nullable="false" />
         </EntityType>
         <EntityType Name="Playlists">
           <Key>
@@ -657,6 +658,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <Property Name="Type" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="Autoplaylists" Relationship="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTS_SORTFIELD" FromRole="MetadataField" ToRole="Autoplaylist" />
           <Property Name="FileSupported" Type="Boolean" Nullable="false" />
+          <Property Name="TagLibArray" Type="Boolean" Nullable="false" />
         </EntityType>
         <EntityType Name="Playlist">
           <Key>
@@ -1215,6 +1217,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <EntitySetMapping Name="MetadataFields">
             <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.MetadataField">
               <MappingFragment StoreEntitySet="MetadataFields">
+                <ScalarProperty Name="TagLibArray" ColumnName="TagLibArray" />
                 <ScalarProperty Name="FileSupported" ColumnName="FileSupported" />
                 <ScalarProperty Name="Type" ColumnName="Type" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
