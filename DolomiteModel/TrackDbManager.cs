@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Security.Cryptography;
 using DolomiteModel.EntityFramework;
 using Pub = DolomiteModel.PublicRepresentations;
 
@@ -120,7 +121,8 @@ namespace DolomiteModel
         /// </summary>
         /// <param name="trackId">GUID of the track</param>
         /// <param name="metadatas">Dictionary of MetadataFieldId => Value</param>
-        public void StoreTrackMetadata(Guid trackId, IDictionary<string, string> metadatas)
+        /// <param name="writeOut">Whether or not the metadata change should be written to the file</param>
+        public void StoreTrackMetadata(Guid trackId, IDictionary<string, string> metadatas, bool writeOut)
         {
             using (var context = new DbEntities())
             {
@@ -137,7 +139,8 @@ namespace DolomiteModel
                     {
                         Field = field.Id,
                         Track = trackId,
-                        Value = metadata.Value
+                        Value = metadata.Value,
+                        WriteOut = writeOut
                     };
 
                     context.Metadatas.Add(md);
@@ -244,6 +247,50 @@ namespace DolomiteModel
                 return (from art in context.Arts
                         where art.Hash == hash
                         select art.Id).FirstOrDefault();
+            }
+        }
+
+        /// <summary>
+        /// Retrieves metadata and metada field names that need to be written
+        /// out and can be written out.
+        /// </summary>
+        /// <param name="trackGuid">The track id to get the metadata to write out</param>
+        /// <returns>
+        /// A dictionary of tagname => new value. Or an empty dictionary if there
+        /// isn't any eligible metadata to write out.
+        /// </returns>
+        public Dictionary<string, string> GetMetadataToWriteOut(Guid trackGuid)
+        {
+            using (var context = new DbEntities())
+            {
+                // We want to make sure that we only fetch the metadata that /can/
+                // be written to a file. If there isn't anything, we'll just return an
+                // empty dictionary
+                var items = from md in context.Metadatas
+                    where md.WriteOut && md.MetadataField.FileSupported
+                    select new
+                    {
+                        md.MetadataField.TagName,
+                        md.Value
+                    };
+
+                return items.Any()
+                    ? items.ToDictionary(i => i.TagName, i => i.Value)
+                    : new Dictionary<string, string>();
+            }
+        } 
+
+        /// <summary>
+        /// Use the stored procedure on the database to grab and lock an
+        /// metadata writing work item.
+        /// </summary>
+        /// <returns>The guid of the track to process, or null if none exists</returns>
+        public Guid? GetMetadataWorkItem()
+        {
+            using (var context = new DbEntities())
+            {
+                // Call the stored proc and get a work item
+                return context.GetAndLockTopMetadataItem().FirstOrDefault();
             }
         }
 
@@ -368,12 +415,26 @@ namespace DolomiteModel
         /// process via a stored procedure
         /// </summary>
         /// <param name="workItem">The work item to release</param>
-        public void ReleaseAndCompleteWorkItem(Guid workItem)
+        public void ReleaseAndCompleteOnboardingItem(Guid workItem)
         {
             using (var context = new DbEntities())
             {
                 // Call the stored procedure to complete the track onboarding
                 context.ReleaseAndCompleteOnboardingItem(workItem);
+            }
+        }
+
+        /// <summary>
+        /// Calls the stored proc to unlock the given track, and remove any flag
+        /// on metadata for the track to show that the metadata needs to be
+        /// written out to file.
+        /// </summary>
+        /// <param name="workItem">The track to release</param>
+        public void ReleaseAndCompleteMetadataItem(Guid workItem)
+        {
+            using (var context = new DbEntities())
+            {
+                context.ReleaseAndCompleteMetadataUpdate(workItem);
             }
         }
 

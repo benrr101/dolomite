@@ -98,7 +98,7 @@ namespace DolomiteWcfService.Threads
                     }
 
                     // Onboarding complete! Release the lock!
-                    DatabaseManager.ReleaseAndCompleteWorkItem(workItemId.Value);
+                    DatabaseManager.ReleaseAndCompleteOnboardingItem(workItemId.Value);
                 }
                 else
                 {
@@ -306,13 +306,16 @@ namespace DolomiteWcfService.Threads
                 Math.Round((DateTime.Now - new DateTime(1970, 1, 1).ToLocalTime()).TotalSeconds)
                     .ToString(CultureInfo.CurrentCulture));
             metadata.Add("PlayCount", "0");
+            metadata.Add("OriginalBitrate", file.Properties.AudioBitrate.ToString(CultureInfo.CurrentCulture));
+            string extension = MimetypeDetector.GetExtension(file.MimeType);
+            metadata.Add("OriginalFormat", extension);
 
             // Send the metadata to the database
             DatabaseManager.StoreTrackMetadata(trackGuid, metadata, false);
 
             // Store the audio metadata to the database
             DatabaseManager.SetAudioQualityInfo(trackGuid, file.Properties.AudioBitrate,
-                file.Properties.AudioSampleRate, file.MimeType, MimetypeDetector.GetExtension(file.MimeType));
+                file.Properties.AudioSampleRate, file.MimeType, extension);
 
             // Rip out the album art (or whatever is the first art in the file)
             if (file.Tag.Pictures.Length > 0)

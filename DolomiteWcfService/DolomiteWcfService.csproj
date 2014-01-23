@@ -99,6 +99,7 @@
     <Compile Include="Responses\UploadSuccessResponse.cs" />
     <Compile Include="Responses\Response.cs" />
     <Compile Include="StaticPlaylistEndpoint.cs" />
+    <Compile Include="Threads\MetadataWriting.cs" />
     <Compile Include="Threads\TrackOnboarding.cs" />
     <Compile Include="TrackManager.cs" />
     <Compile Include="TracksEndpoint.cs" />

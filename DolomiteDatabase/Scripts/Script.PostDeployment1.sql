@@ -3,7 +3,7 @@ Post-Deployment Script
 */
 
 -- Add some supported metadata fields to the database
-INSERT INTO MetadataFields ([TagName], [DisplayName], [Type]) 
+INSERT INTO MetadataFields ([TagName], [DisplayName], [Type], [FileSupported]) 
 VALUES 
 	('Title', 'Title', 'string', ((1))), 
 	('Artist', 'Artist', 'string', ((1))), 
@@ -25,8 +25,10 @@ VALUES
 	('PlayCount', 'Play Count', 'numeric', ((0))),
 	('LastPlayed', 'Last Played', 'date', ((0))),
 	('Duration', 'Duration', 'numeric', ((0))),
-	('TrackListing', 'Track Listing', 'string', ((0))
-);
+	('TrackListing', 'Track Listing', 'string', ((0))),
+	('OriginalBitrate', 'Original Bitrate', 'numeric', ((0))),
+	('OriginalFormat', 'Original Format', 'numeric', ((0)))
+;
 
 -- Add some supported audio qualities for transcoding
 INSERT INTO Qualities (Name, Codec, Bitrate, Extension, Directory, Mimetype) 

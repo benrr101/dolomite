@@ -125,6 +125,10 @@ namespace DolomiteWcfService
                 Trace.TraceInformation("Starting onboarding threads...");
                 StartOnboardingThreads(1);
                 Trace.TraceInformation("Onboarding threads started");
+
+                Trace.TraceInformation("Starting metadata threads...");
+                StartMetadataThreads(1);
+                Trace.TraceInformation("Metadata threads started");
             }
             catch (Exception e)
             {
@@ -174,6 +178,16 @@ namespace DolomiteWcfService
             {
                 TrackOnboarding newOnboarder = new TrackOnboarding();
                 Thread newThread = new Thread(newOnboarder.Run);
+                newThread.Start();
+            }
+        }
+
+        private static void StartMetadataThreads(int threads)
+        {
+            for (int i = 0; i < threads; ++i)
+            {
+                MetadataWriting newWriting = new MetadataWriting();
+                Thread newThread = new Thread(newWriting.Run);
                 newThread.Start();
             }
         }
