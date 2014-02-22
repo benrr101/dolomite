@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
@@ -147,13 +149,21 @@ namespace DolomiteWcfService
             return endpointProperty.Address;
         }
 
-        public static NameValueCollection GetQueryParameters()
+        /// <summary>
+        /// Fetches the query parameters from the latest request
+        /// </summary>
+        /// <returns>A dictionary of variable name => value</returns>
+        public static Dictionary<string, string> GetQueryParameters()
         {
             // Make sure there is a current operation context to use
             if (WebOperationContext.Current == null)
                 throw new CommunicationException(WebContextNullMessage);
 
-            return WebOperationContext.Current.IncomingRequest.UriTemplateMatch.QueryParameters;
+            // Convert to a sensible type
+            NameValueCollection source = WebOperationContext.Current.IncomingRequest.UriTemplateMatch.QueryParameters;
+            return source.Cast<string>()
+                .Select(s => new {Key = s, Value = source[s]})
+                .ToDictionary(p => p.Key, p => p.Value);
         }
 
         #endregion

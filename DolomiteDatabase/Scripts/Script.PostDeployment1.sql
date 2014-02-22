@@ -3,31 +3,31 @@ Post-Deployment Script
 */
 
 -- Add some supported metadata fields to the database
-INSERT INTO MetadataFields ([TagName], [DisplayName], [Type], [FileSupported], [TagLibArray]) 
+INSERT INTO MetadataFields ([TagName], [DisplayName], [Type], [Searchable], [FileSupported], [TagLibArray]) 
 VALUES 
-	('Title', 'Title', 'string', ((1)), ((0))), 
-	('Artist', 'Artist', 'string', ((1)), ((1))), 
-	('AlbumArtist', 'Album Artist', 'string', ((1)), ((1))),
-	('Composer', 'Composer', 'string', ((1)), ((1))),
-	('Album', 'Album', 'string', ((1)), ((0))),
-	('Genre', 'Genre', 'string', ((1)), ((1))),
-	('Year', 'Year', 'numeric', ((1)), ((0))),
-	('Track', 'Track Number', 'numeric', ((1)), ((0))),
-	('TrackCount', 'Track Count', 'numeric', ((1)), ((0))),
-	('Disc', 'Disc Number', 'numeric', ((1)), ((0))),
-	('Lyrics', 'Lyrics', 'string', ((1)), ((0))),
-	('BeatsPerMinute', 'BPM', 'numeric', ((1)), ((0))),
-	('Conductor', 'Conductor', 'string', ((1)), ((0))),
-	('Copyright', 'Copyright', 'string', ((1)), ((0))),
-	('Comment', 'Comment', 'string', ((1)), ((0))),
-	('DiscCount', 'Disc Count', 'numeric', ((1)), ((0))),
-	('DateAdded', 'Date Added', 'date', ((0)), ((0))),
-	('PlayCount', 'Play Count', 'numeric', ((0)), ((0))),
-	('LastPlayed', 'Last Played', 'date', ((0)), ((0))),
-	('Duration', 'Duration', 'numeric', ((0)), ((0))),
-	('TrackListing', 'Track Listing', 'string', ((0)), ((0))),
-	('OriginalBitrate', 'Original Bitrate', 'numeric', ((0)), ((0))),
-	('OriginalFormat', 'Original Format', 'numeric', ((0)), ((0)))
+	('Title', 'Title', 'string', ((1)), ((1)), ((0))), 
+	('Artist', 'Artist', 'string', ((1)), ((1)), ((1))), 
+	('AlbumArtist', 'Album Artist', 'string', ((1)), ((1)), ((1))),
+	('Composer', 'Composer', 'string', ((1)), ((1)), ((1))),
+	('Album', 'Album', 'string', ((1)), ((1)), ((0))),
+	('Genre', 'Genre', 'string', ((1)), ((1)), ((1))),
+	('Year', 'Year', 'numeric', ((0)), ((1)), ((0))),
+	('Track', 'Track Number', 'numeric', ((1)), ((1)), ((0))),
+	('TrackCount', 'Track Count', 'numeric', ((0)), ((1)), ((0))),
+	('Disc', 'Disc Number', 'numeric', ((0)), ((1)), ((0))),
+	('Lyrics', 'Lyrics', 'string', ((0)), ((1)), ((0))),
+	('BeatsPerMinute', 'BPM', 'numeric', ((0)), ((1)), ((0))),
+	('Conductor', 'Conductor', 'string', ((1)), ((1)), ((0))),
+	('Copyright', 'Copyright', 'string', ((1)), ((1)), ((0))),
+	('Comment', 'Comment', 'string', ((1)), ((1)), ((0))),
+	('DiscCount', 'Disc Count', 'numeric', ((0)), ((1)), ((0))),
+	('DateAdded', 'Date Added', 'date', ((0)), ((0)), ((0))),
+	('PlayCount', 'Play Count', 'numeric', ((0)), ((0)), ((0))),
+	('LastPlayed', 'Last Played', 'date', ((0)), ((0)), ((0))),
+	('Duration', 'Duration', 'numeric', ((0)), ((0)), ((0))),
+	('TrackListing', 'Track Listing', 'string', ((1)), ((0)), ((0))),
+	('OriginalBitrate', 'Original Bitrate', 'numeric', ((0)), ((0)), ((0))),
+	('OriginalFormat', 'Original Format', 'numeric', ((0)), ((0)), ((0)))
 ;
 
 -- Add some supported audio qualities for transcoding

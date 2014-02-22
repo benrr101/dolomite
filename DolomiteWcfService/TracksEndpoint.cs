@@ -206,6 +206,11 @@ namespace DolomiteWcfService
                 string username = UserManager.GetUsernameFromSession(token, apiKey);
                 UserManager.ExtendIdleTimeout(token);
 
+                // See if there are search query parameters included
+                Dictionary<string, string> queryParams = WebUtilities.GetQueryParameters();
+                if (queryParams.Count > 0)
+                    return SearchTracks(username, queryParams);
+
                 // Retrieve the track without the stream
                 List<Track> tracks = TrackManager.FetchAllTracksByOwner(username);
                 return WebUtilities.GenerateResponse(tracks, HttpStatusCode.OK);
@@ -266,6 +271,18 @@ namespace DolomiteWcfService
                 return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
                     HttpStatusCode.InternalServerError);
             }
+        }
+
+        /// <summary>
+        /// Searches for a track using the search criteria from the url query parameters
+        /// </summary>
+        /// <param name="username">The username of the track owner</param>
+        /// <param name="queryParameters">The search criteria from the uri query params</param>
+        /// <returns>A message suitable for sending out over the wire</returns>
+        private Message SearchTracks(string username, Dictionary<string, string> queryParameters)
+        {
+            List<Guid> tracks = TrackManager.SearchTracks(username, queryParameters);
+            return WebUtilities.GenerateResponse(tracks, HttpStatusCode.OK);
         }
 
         #endregion

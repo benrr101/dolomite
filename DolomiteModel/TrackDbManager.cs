@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Security.Cryptography;
 using DolomiteModel.EntityFramework;
 using Pub = DolomiteModel.PublicRepresentations;
 
@@ -386,6 +385,55 @@ namespace DolomiteModel
                     select new Pub.Track {Id = track.Id}).FirstOrDefault();
             }
         }
+
+        /// <summary>
+        /// Searches the track database using the search criteria for matching
+        /// tracks. Using "all" allows searching all fields that have searching
+        /// enabled. Searches using LIKE %value%.
+        /// </summary>
+        /// <param name="owner">The username of the track owners</param>
+        /// <param name="searchCriteria">
+        /// A list of criteria to search using. [tagname=>value]. Fields
+        /// and values are not case case sensitivite. "all" is a suitable tagname.
+        /// </param>
+        /// <returns>A list of guids that match the search criteria</returns>
+        public List<Guid> SearchTracks(string owner, Dictionary<string, string> searchCriteria)
+        {
+            using(var context = new DbEntities()) 
+            {
+                // Build a result set -- using hashset prevents defaults to work
+                HashSet<Guid> hashSet = new HashSet<Guid>();
+
+                // Loop over the search fields
+                foreach (var criterion in searchCriteria)
+                {
+                    IQueryable<Guid> trackSearch;
+                    // Check if we're searching all fields
+                    if (criterion.Key == "all")
+                    {
+                        // Search all metadata fields
+                        trackSearch = from md in context.Metadatas
+                            where md.Value.Contains(criterion.Value)
+                            && md.Track1.User.Username == owner
+                            && md.MetadataField.Searchable
+                            select md.Track;
+                    }
+                    else
+                    {
+                        // Search only the specified metadata field
+                        trackSearch = from md in context.Metadatas
+                            where md.Value.Contains(criterion.Value)
+                                  && md.MetadataField.TagName == criterion.Key
+                                  && md.Track1.User.Username == owner
+                                  && md.MetadataField.Searchable
+                            select md.Track;
+                    }
+                    hashSet.UnionWith(trackSearch);
+                }
+
+                return hashSet.ToList();
+            }
+        } 
 
         #endregion
 

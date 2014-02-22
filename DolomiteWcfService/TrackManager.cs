@@ -287,6 +287,17 @@ namespace DolomiteWcfService
         }
 
         /// <summary>
+        /// Does a search for tracks that match the criteria
+        /// </summary>
+        /// <param name="owner">Username of the owner of the tracks to search</param>
+        /// <param name="criteria">A list of criteria to search with</param>
+        /// <returns>A list of track guids that match the criteria</returns>
+        public List<Guid> SearchTracks(string owner, Dictionary<string, string> criteria)
+        {
+            return DatabaseManager.SearchTracks(owner, criteria);
+        }
+
+        /// <summary>
         /// Uploads the track to the system. Places the track in temporary
         /// azure storage then kicks off threads to do the rest of the work. We
         /// detect duplicate tracks based on hash here.
