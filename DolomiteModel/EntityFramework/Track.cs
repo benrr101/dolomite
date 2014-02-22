@@ -33,6 +33,7 @@ namespace DolomiteModel.EntityFramework
         public bool HasBeenOnboarded { get; set; }
         public bool Locked { get; set; }
         public bool TrackInTempStorage { get; set; }
+        public bool ArtChange { get; set; }
     
         public virtual Album Album1 { get; set; }
         public virtual Art Art1 { get; set; }

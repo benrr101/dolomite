@@ -98,7 +98,7 @@ namespace DolomiteWcfService.Threads
                     }
 
                     // Onboarding complete! Release the lock!
-                    DatabaseManager.ReleaseAndCompleteWorkItem(workItemId.Value);
+                    DatabaseManager.ReleaseAndCompleteOnboardingItem(workItemId.Value);
                 }
                 else
                 {
@@ -149,7 +149,15 @@ namespace DolomiteWcfService.Threads
 
                 string outputFilename = String.Format("{0}.{1}.{2}", trackGuid, quality.Bitrate, quality.Extension);
                 string outputFilePath = LocalStorageManager.GetPath(outputFilename);
-                string arguments = String.Format("-i \"{2}\" -acodec {0} -ab {1}000 -y \"{3}\"", quality.Codec,
+
+                // Arguments:
+                // -i {2}               - input file path
+                // -vn                  - drop all video streams (including album art, as per http://stackoverflow.com/a/20202233)
+                // -acodec {0}          - the codec to transcode to
+                // -ab {1}000           - the bitrate in bps
+                // -y {3}               - the output path
+                // -map_metadata -1     - drop all metadata
+                string arguments = String.Format("-i \"{2}\" -vn -acodec {0} -map_metadata -1 -ab {1}000 -y \"{3}\"", quality.Codec,
                                                  quality.Bitrate, inputFilename, outputFilePath);
 
                 // Borrowing some code from http://stackoverflow.com/a/8726175
@@ -298,13 +306,16 @@ namespace DolomiteWcfService.Threads
                 Math.Round((DateTime.Now - new DateTime(1970, 1, 1).ToLocalTime()).TotalSeconds)
                     .ToString(CultureInfo.CurrentCulture));
             metadata.Add("PlayCount", "0");
+            metadata.Add("OriginalBitrate", file.Properties.AudioBitrate.ToString(CultureInfo.CurrentCulture));
+            string extension = MimetypeDetector.GetExtension(file.MimeType);
+            metadata.Add("OriginalFormat", extension);
 
             // Send the metadata to the database
-            DatabaseManager.StoreTrackMetadata(trackGuid, metadata);
+            DatabaseManager.StoreTrackMetadata(trackGuid, metadata, false);
 
             // Store the audio metadata to the database
             DatabaseManager.SetAudioQualityInfo(trackGuid, file.Properties.AudioBitrate,
-                file.Properties.AudioSampleRate, file.MimeType, MimetypeDetector.GetExtension(file.MimeType));
+                file.Properties.AudioSampleRate, file.MimeType, extension);
 
             // Rip out the album art (or whatever is the first art in the file)
             if (file.Tag.Pictures.Length > 0)
@@ -343,7 +354,7 @@ namespace DolomiteWcfService.Threads
             }
 
             // Store the art record to the track
-            DatabaseManager.SetTrackArt(trackGuid, artGuid);
+            DatabaseManager.SetTrackArt(trackGuid, artGuid, false);
         }
 
         /// <summary>

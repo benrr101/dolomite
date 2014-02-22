@@ -48,5 +48,7 @@ namespace DolomiteWcfService
 
         #endregion
 
+        [WebInvoke(Method = "OPTIONS", UriTemplate = "/*")]
+        bool PreflyRequest();
     }
 }

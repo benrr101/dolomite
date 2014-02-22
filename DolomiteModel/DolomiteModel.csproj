@@ -122,6 +122,7 @@
     <Compile Include="PublicRepresentations\AutoPlaylist.cs" />
     <Compile Include="PublicRepresentations\AutoPlaylistLimiter.cs" />
     <Compile Include="PublicRepresentations\AutoPlaylistRule.cs" />
+    <Compile Include="PublicRepresentations\MetadataChange.cs" />
     <Compile Include="PublicRepresentations\Playlist.cs" />
     <Compile Include="PublicRepresentations\Quality.cs" />
     <Compile Include="PublicRepresentations\Session.cs" />

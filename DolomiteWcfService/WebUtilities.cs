@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.ServiceModel;
 using System.ServiceModel.Channels;
@@ -20,6 +22,73 @@ namespace DolomiteWcfService
         /// </summary>
         public const string InternalServerMessage = "An internal server error occurred";
 
+        private const string WebContextNullMessage =
+            "The current web operation context is null. Are you sure you're running this as a web service?";
+
+        #region Header Management
+
+        /// <summary>
+        /// Fetches a header from the current incoming request. Performs a
+        /// check to see that the current web operation context exists.
+        /// </summary>
+        /// <param name="header">The string name of the header to get</param>
+        /// <returns>The string value of the header, if it exists. Null otherwise</returns>
+        public static string GetHeader(string header)
+        {
+            // Make sure there is a current operation context to use
+            if (WebOperationContext.Current == null)
+                throw new CommunicationException(WebContextNullMessage);
+
+            return WebOperationContext.Current.IncomingRequest.Headers[header];
+        }
+
+        /// <summary>
+        /// Fetches a header from the current incoming request. Performs a
+        /// check to see that the current web operation context exists.
+        /// </summary>
+        /// <param name="header">The enum value of the header to get</param>
+        /// <returns>The string value of the header, if it exists. Null otherwise</returns>
+        public static string GetHeader(HttpRequestHeader header)
+        {
+            // Make sure there is a current operation context to use
+            if (WebOperationContext.Current == null)
+                throw new CommunicationException(WebContextNullMessage);
+
+            return WebOperationContext.Current.IncomingRequest.Headers[header];
+        }
+
+        /// <summary>
+        /// Sets a header on the outgoing response. Performs a check to make
+        /// sure there's a web operation context, first.
+        /// </summary>
+        /// <param name="headerName">The string name of the header to perform add to the response</param>
+        /// <param name="content">The value to set the header to</param>
+        public static void SetHeader(string headerName, string content)
+        {
+            // Make sure there is a current operation context to use
+            if (WebOperationContext.Current == null)
+                throw new CommunicationException(WebContextNullMessage);
+
+            WebOperationContext.Current.OutgoingResponse.Headers.Add(headerName, content);
+        }
+
+        /// <summary>
+        /// Sets a header on the outgoing response. Performs a check to make
+        /// sure there's a web operation context, first.
+        /// </summary>
+        /// <param name="header">The enum value of the header to perform add to the response</param>
+        /// <param name="value">The value to set the header to</param>
+        public static void SetHeader(HttpResponseHeader header, string value)
+        {
+            // Make sure there is a current operation context to use
+            if (WebOperationContext.Current == null)
+                throw new CommunicationException(WebContextNullMessage);
+
+            WebOperationContext.Current.OutgoingResponse.Headers.Add(header, value);
+        }
+
+        #endregion
+
         #region Request Getters
 
         /// <summary>
@@ -31,22 +100,15 @@ namespace DolomiteWcfService
         /// <returns>The session token from the authorization header</returns>
         public static string GetDolomiteSessionToken(out string apiKey)
         {
-            // Make sure there is a current operation context to use
-            if (WebOperationContext.Current == null)
-            {
-                throw new CommunicationException(
-                    "The current web operation context is null. Are you sure you're running this as a web service?");
-            }
-
             // Fetch the header
-            string authHeader = WebOperationContext.Current.IncomingRequest.Headers[HttpRequestHeader.Authorization];
+            string authHeader = GetHeader(HttpRequestHeader.Cookie);
             if (String.IsNullOrWhiteSpace(authHeader))
-                throw new InvalidSessionException("The authorization header is missing.");
+                throw new InvalidSessionException("The cookie header is missing.");
 
             // Parse the header to get at the token
-            Regex regex = new Regex(@"DOLOMITE\s*token=""([0-9a-fA-F]{64})""\s*api=""([0-9a-fA-F]{64})""", RegexOptions.Compiled);
+            Regex regex = new Regex(@"sesh=([0-9a-fA-F]{64})-([0-9a-fA-F]{64})", RegexOptions.Compiled);
             if (!regex.IsMatch(authHeader))
-                throw new InvalidSessionException("Authorization header does not match regular expression for the header");
+                throw new InvalidSessionException("Cookie header does not match regular expression for the session header");
 
             var groups = regex.Match(authHeader).Groups;
 
@@ -58,10 +120,7 @@ namespace DolomiteWcfService
         {
             // Make sure there is a current operation context to use
             if (WebOperationContext.Current == null)
-            {
-                throw new CommunicationException(
-                    "The current web operation context is null. Are you sure you're running this as a web service?");
-            }
+                throw new CommunicationException(WebContextNullMessage);
 
             return WebOperationContext.Current.IncomingRequest.ContentType;
         }
@@ -70,10 +129,7 @@ namespace DolomiteWcfService
         {
             // Make sure there is a current operation context to use
             if (WebOperationContext.Current == null)
-            {
-                throw new CommunicationException(
-                    "The current web operation context is null. Are you sure you're running this as a web service?");
-            }
+                throw new CommunicationException(WebContextNullMessage);
 
             return WebOperationContext.Current.IncomingRequest.ContentLength;
         }
@@ -93,16 +149,21 @@ namespace DolomiteWcfService
             return endpointProperty.Address;
         }
 
-        public static NameValueCollection GetQueryParameters()
+        /// <summary>
+        /// Fetches the query parameters from the latest request
+        /// </summary>
+        /// <returns>A dictionary of variable name => value</returns>
+        public static Dictionary<string, string> GetQueryParameters()
         {
             // Make sure there is a current operation context to use
             if (WebOperationContext.Current == null)
-            {
-                throw new CommunicationException(
-                    "The current web operation context is null. Are you sure you're running this as a web service?");
-            }
+                throw new CommunicationException(WebContextNullMessage);
 
-            return WebOperationContext.Current.IncomingRequest.UriTemplateMatch.QueryParameters;
+            // Convert to a sensible type
+            NameValueCollection source = WebOperationContext.Current.IncomingRequest.UriTemplateMatch.QueryParameters;
+            return source.Cast<string>()
+                .Select(s => new {Key = s, Value = source[s]})
+                .ToDictionary(p => p.Key, p => p.Value);
         }
 
         #endregion
@@ -129,10 +190,7 @@ namespace DolomiteWcfService
         {
             // Make sure there is a current operation context to use
             if (WebOperationContext.Current == null)
-            {
-                throw new CommunicationException(
-                    "The current web operation context is null. Are you sure you're running this as a web service?");
-            }
+                throw new CommunicationException(WebContextNullMessage);
 
             // Serialize the response
             string responseJson = JsonConvert.SerializeObject(response);
@@ -146,36 +204,9 @@ namespace DolomiteWcfService
         {
             // Make sure there is a current operation context to use
             if (WebOperationContext.Current == null)
-            {
-                throw new CommunicationException(
-                    "The current web operation context is null. Are you sure you're running this as a web service?");
-            }
+                throw new CommunicationException(WebContextNullMessage);
 
             WebOperationContext.Current.OutgoingResponse.StatusCode = code;
-        }
-
-        public static void SetHeader(string headerName, string content)
-        {
-            // Make sure there is a current operation context to use
-            if (WebOperationContext.Current == null)
-            {
-                throw new CommunicationException(
-                    "The current web operation context is null. Are you sure you're running this as a web service?");
-            }
-
-            WebOperationContext.Current.OutgoingResponse.Headers.Add(headerName, content);
-        }
-
-        public static void SetHeader(HttpResponseHeader header, string value)
-        {
-            // Make sure there is a current operation context to use
-            if (WebOperationContext.Current == null)
-            {
-                throw new CommunicationException(
-                    "The current web operation context is null. Are you sure you're running this as a web service?");
-            }
-
-            WebOperationContext.Current.OutgoingResponse.Headers.Add(header, value);
         }
 
         /// <summary>

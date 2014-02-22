@@ -115,6 +115,10 @@
     <Build Include="Foreign Keys\FK_SESSION_USER.sql" />
     <Build Include="Indexes\IDX_TRACKS_USER_HASH.sql" />
     <Build Include="Indexes\IDX_PLAYLISTTRACKS_PLAYLIST_ORDER.sql" />
+    <Build Include="StoredProcedures\GetAndLockTopMetadataItem.sql" />
+    <Build Include="StoredProcedures\ReleaseAndCompleteMetadataUpdate.sql" />
+    <Build Include="StoredProcedures\GetAndLockTopArtItem.sql" />
+    <Build Include="StoredProcedures\ReleaseAndCompleteArtChange.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Script.PostDeployment1.sql" />

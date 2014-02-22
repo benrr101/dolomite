@@ -8,11 +8,11 @@
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Album" Width="1.5" PointX="11.25" PointY="10" IsExpanded="true" />
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Art" Width="1.5" PointX="9" PointY="10" IsExpanded="true" />
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Artist" Width="1.5" PointX="11.25" PointY="12.625" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.AutoplaylistRule" Width="1.5" PointX="3" PointY="4.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.AutoplaylistRule" Width="1.5" PointX="3" PointY="4.5" IsExpanded="true" />
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Autoplaylist" Width="1.5" PointX="0.875" PointY="2.375" IsExpanded="true" />
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.AvailableQuality" Width="1.5" PointX="11" PointY="4.75" IsExpanded="true" />
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Metadata" Width="1.5" PointX="5.125" PointY="1.5" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.MetadataField" Width="1.5" PointX="3" PointY="1.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.MetadataField" Width="1.5" PointX="3" PointY="1.125" IsExpanded="true" />
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Playlist" Width="1.5" PointX="4.75" PointY="7.375" IsExpanded="true" />
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.PlaylistTrack" Width="1.5" PointX="7" PointY="7.375" IsExpanded="true" />
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Quality" Width="1.5" PointX="12.875" PointY="4.75" IsExpanded="true" />

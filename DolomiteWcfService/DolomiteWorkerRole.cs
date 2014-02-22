@@ -5,6 +5,7 @@ using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
 using System.Threading;
+using DolomiteWcfService.Cors;
 using DolomiteWcfService.Threads;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
@@ -89,16 +90,24 @@ namespace DolomiteWcfService
                         HttpGetEnabled = true,
                         MetadataExporter = {PolicyVersion = PolicyVersion.Policy15},
                     };
+
+                // Enable CORS on the endpoints
+                IServiceBehavior ecb = new EnableCorsBehavior();
+
                 _tracksHost.Description.Behaviors.Add(smb);
+                _tracksHost.Description.Behaviors.Add(ecb);
                 _tracksHost.Open();
 
                 _autoPlaylistHost.Description.Behaviors.Add(smb);
+                _autoPlaylistHost.Description.Behaviors.Add(ecb);
                 _autoPlaylistHost.Open();
 
                 _staticPlaylistHost.Description.Behaviors.Add(smb);
+                _staticPlaylistHost.Description.Behaviors.Add(ecb);
                 _staticPlaylistHost.Open();
 
                 _userHost.Description.Behaviors.Add(smb);
+                _userHost.Description.Behaviors.Add(ecb);
                 _userHost.Open();
 
                 Trace.TraceInformation("Started Dolomite WCF Endpoint on {0}", baseAddress.AbsoluteUri);
@@ -116,6 +125,10 @@ namespace DolomiteWcfService
                 Trace.TraceInformation("Starting onboarding threads...");
                 StartOnboardingThreads(1);
                 Trace.TraceInformation("Onboarding threads started");
+
+                Trace.TraceInformation("Starting metadata threads...");
+                StartMetadataThreads(1);
+                Trace.TraceInformation("Metadata threads started");
             }
             catch (Exception e)
             {
@@ -165,6 +178,16 @@ namespace DolomiteWcfService
             {
                 TrackOnboarding newOnboarder = new TrackOnboarding();
                 Thread newThread = new Thread(newOnboarder.Run);
+                newThread.Start();
+            }
+        }
+
+        private static void StartMetadataThreads(int threads)
+        {
+            for (int i = 0; i < threads; ++i)
+            {
+                MetadataWriting newWriting = new MetadataWriting();
+                Thread newThread = new Thread(newWriting.Run);
                 newThread.Start();
             }
         }

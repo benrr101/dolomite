@@ -18,11 +18,11 @@ namespace DolomiteWcfService
         /// <summary>
         /// Instance of the User Manager
         /// </summary>
-        private UserManager UserManager { get; set; }
+        private static UserManager UserManager { get; set; }
 
         #endregion
 
-        public UserEndpoint()
+        static UserEndpoint()
         {
             // Initialize the track manager
             UserManager = UserManager.Instance;
@@ -56,8 +56,15 @@ namespace DolomiteWcfService
             }
             catch (JsonSerializationException)
             {
-                return WebUtilities.GenerateResponse(new ErrorResponse("The JSON for the user creation request is invalid."),
-                    HttpStatusCode.BadRequest);
+                return WebUtilities.GenerateResponse(
+                        new ErrorResponse("The JSON for the user creation request is invalid."),
+                        HttpStatusCode.BadRequest);
+            }
+            catch (JsonReaderException)
+            {
+                return WebUtilities.GenerateResponse(
+                        new ErrorResponse("The JSON for the user creation request is invalid."),
+                        HttpStatusCode.BadRequest);
             }
             catch (ArgumentNullException ane)
             {
@@ -86,6 +93,17 @@ namespace DolomiteWcfService
         {
             try
             {
+                // If there was a cookie sent with a prior session token, invalidate it
+                try
+                {
+                    string apiKey;
+                    string sessionToken = WebUtilities.GetDolomiteSessionToken(out apiKey);
+                    UserManager.InvalidateSession(sessionToken);
+                }
+                catch (InvalidSessionException) // Ideally, this should always happen
+                {
+                }
+
                 // Process the body of the request into a login request object
                 string bodyStr = Encoding.Default.GetString(body.ToByteArray());
                 var request = JsonConvert.DeserializeObject<UserLoginRequest>(bodyStr);
@@ -97,12 +115,22 @@ namespace DolomiteWcfService
 
                 // Send a successful token back via a login success response
                 LoginSuccessResponse response = new LoginSuccessResponse(token);
+
+                // Add a header to handle sending the session cookie
+                string seshToke = String.Format("sesh={0}-{1}; Path=/; Secure", token, request.ApiKey);
+                WebUtilities.SetHeader(HttpResponseHeader.SetCookie, seshToke);
+
                 return WebUtilities.GenerateResponse(response, HttpStatusCode.OK);
             }
             catch (JsonSerializationException)
             {
                 return WebUtilities.GenerateResponse(new ErrorResponse("The JSON for the login request is invalid."),
-                        HttpStatusCode.BadRequest);
+                    HttpStatusCode.BadRequest);
+            }
+            catch (JsonReaderException)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse("The JSON for the login request is invalid."),
+                    HttpStatusCode.BadRequest);
             }
             catch (ApplicationException)
             {
@@ -120,8 +148,6 @@ namespace DolomiteWcfService
                 return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
                     HttpStatusCode.InternalServerError);
             }
-
-            
         }
 
         /// <summary>
@@ -157,6 +183,16 @@ namespace DolomiteWcfService
             
             // Tell the client everything went "ok"
             return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
+        }
+
+        /// <summary>
+        /// Returns true just to allow the CORS preflight request via OPTIONS
+        /// HTTP method to go through
+        /// </summary>
+        /// <returns>True</returns>
+        public bool PreflyRequest()
+        {
+            return true;
         }
     }
 }

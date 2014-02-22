@@ -229,7 +229,7 @@ namespace DolomiteWcfService
             }
 
             // Store the new values
-            DatabaseManager.StoreTrackMetadata(guid, metadata);
+            DatabaseManager.StoreTrackMetadata(guid, metadata, true);
         }
 
         /// <summary>
@@ -258,7 +258,7 @@ namespace DolomiteWcfService
             // Was there even an art file attached?
             if (stream.Length == 0)
             {
-                DatabaseManager.SetTrackArt(guid, null);
+                DatabaseManager.SetTrackArt(guid, null, true);
                 return;
             }
 
@@ -283,7 +283,18 @@ namespace DolomiteWcfService
             }
 
             // Store the art record to the track
-            DatabaseManager.SetTrackArt(guid, artGuid);
+            DatabaseManager.SetTrackArt(guid, artGuid, true);
+        }
+
+        /// <summary>
+        /// Does a search for tracks that match the criteria
+        /// </summary>
+        /// <param name="owner">Username of the owner of the tracks to search</param>
+        /// <param name="criteria">A list of criteria to search with</param>
+        /// <returns>A list of track guids that match the criteria</returns>
+        public List<Guid> SearchTracks(string owner, Dictionary<string, string> criteria)
+        {
+            return DatabaseManager.SearchTracks(owner, criteria);
         }
 
         /// <summary>

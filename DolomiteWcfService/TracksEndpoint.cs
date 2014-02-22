@@ -22,16 +22,16 @@ namespace DolomiteWcfService
         /// <summary>
         /// Instance of the Track Manager
         /// </summary>
-        private TrackManager TrackManager { get; set; }
+        private static TrackManager TrackManager { get; set; }
 
         /// <summary>
         /// Instance of the User Manager
         /// </summary>
-        private UserManager UserManager { get; set; }
+        private static UserManager UserManager { get; set; }
 
         #endregion
 
-        public TracksEndpoint()
+        static TracksEndpoint()
         {
             // Initialize the track and user manager
             TrackManager = TrackManager.Instance;
@@ -206,6 +206,11 @@ namespace DolomiteWcfService
                 string username = UserManager.GetUsernameFromSession(token, apiKey);
                 UserManager.ExtendIdleTimeout(token);
 
+                // See if there are search query parameters included
+                Dictionary<string, string> queryParams = WebUtilities.GetQueryParameters();
+                if (queryParams.Count > 0)
+                    return SearchTracks(username, queryParams);
+
                 // Retrieve the track without the stream
                 List<Track> tracks = TrackManager.FetchAllTracksByOwner(username);
                 return WebUtilities.GenerateResponse(tracks, HttpStatusCode.OK);
@@ -266,6 +271,18 @@ namespace DolomiteWcfService
                 return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
                     HttpStatusCode.InternalServerError);
             }
+        }
+
+        /// <summary>
+        /// Searches for a track using the search criteria from the url query parameters
+        /// </summary>
+        /// <param name="username">The username of the track owner</param>
+        /// <param name="queryParameters">The search criteria from the uri query params</param>
+        /// <returns>A message suitable for sending out over the wire</returns>
+        private Message SearchTracks(string username, Dictionary<string, string> queryParameters)
+        {
+            List<Guid> tracks = TrackManager.SearchTracks(username, queryParameters);
+            return WebUtilities.GenerateResponse(tracks, HttpStatusCode.OK);
         }
 
         #endregion
@@ -384,7 +401,8 @@ namespace DolomiteWcfService
             }
             catch (UnauthorizedAccessException)
             {
-                string message = String.Format("The GUID supplied '{0}' refers to a track that is not owned by you.", guid);
+                string message = String.Format("The GUID supplied '{0}' refers to a track that is not owned by you.",
+                    guid);
                 return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Forbidden);
             }
             catch (FormatException)
@@ -396,6 +414,11 @@ namespace DolomiteWcfService
             catch (JsonReaderException)
             {
                 // The json was formatted poorly
+                return WebUtilities.GenerateResponse(new ErrorResponse("The JSON is invalid."),
+                    HttpStatusCode.BadRequest);
+            }
+            catch (JsonSerializationException)
+            {
                 return WebUtilities.GenerateResponse(new ErrorResponse("The JSON is invalid."),
                     HttpStatusCode.BadRequest);
             }
@@ -445,7 +468,8 @@ namespace DolomiteWcfService
             }
             catch (UnauthorizedAccessException)
             {
-                string message = String.Format("The GUID supplied '{0}' refers to a track that is not owned by you.", guid);
+                string message = String.Format("The GUID supplied '{0}' refers to a track that is not owned by you.",
+                    guid);
                 return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Forbidden);
             }
             catch (FormatException)
@@ -457,6 +481,11 @@ namespace DolomiteWcfService
             catch (JsonReaderException)
             {
                 // The json was formatted poorly
+                return WebUtilities.GenerateResponse(new ErrorResponse("The JSON is invalid."),
+                    HttpStatusCode.BadRequest);
+            }
+            catch (JsonSerializationException)
+            {
                 return WebUtilities.GenerateResponse(new ErrorResponse("The JSON is invalid."),
                     HttpStatusCode.BadRequest);
             }
@@ -608,6 +637,16 @@ namespace DolomiteWcfService
         }
 
         #endregion
+
+        /// <summary>
+        /// Returns true just to allow the CORS preflight request via OPTIONS
+        /// HTTP method to go through
+        /// </summary>
+        /// <returns>True</returns>
+        public bool PreflyRequest()
+        {
+            return true;
+        }
 
         #endregion
     }

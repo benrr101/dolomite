@@ -120,7 +120,8 @@ namespace DolomiteModel
         /// </summary>
         /// <param name="trackId">GUID of the track</param>
         /// <param name="metadatas">Dictionary of MetadataFieldId => Value</param>
-        public void StoreTrackMetadata(Guid trackId, IDictionary<string, string> metadatas)
+        /// <param name="writeOut">Whether or not the metadata change should be written to the file</param>
+        public void StoreTrackMetadata(Guid trackId, IDictionary<string, string> metadatas, bool writeOut)
         {
             using (var context = new DbEntities())
             {
@@ -137,7 +138,8 @@ namespace DolomiteModel
                     {
                         Field = field.Id,
                         Track = trackId,
-                        Value = metadata.Value
+                        Value = metadata.Value,
+                        WriteOut = writeOut
                     };
 
                     context.Metadatas.Add(md);
@@ -233,6 +235,20 @@ namespace DolomiteModel
         }
 
         /// <summary>
+        /// Use the stored procedure on the database to grab and lock an
+        /// art writing work item.
+        /// </summary>
+        /// <returns>The guid of the track to process, or null if none exists</returns>
+        public Guid? GetArtWorkItem()
+        {
+            using (var context = new DbEntities())
+            {
+                // Call the stored proc and get a work item
+                return context.GetAndLockTopArtItem().FirstOrDefault();
+            }
+        }
+
+        /// <summary>
         /// Fetches the GUID for an art object with the given hash
         /// </summary>
         /// <param name="hash">The hash of the art</param>
@@ -244,6 +260,51 @@ namespace DolomiteModel
                 return (from art in context.Arts
                         where art.Hash == hash
                         select art.Id).FirstOrDefault();
+            }
+        }
+
+        /// <summary>
+        /// Retrieves metadata and metada field names that need to be written
+        /// out and can be written out.
+        /// </summary>
+        /// <param name="trackGuid">The track id to get the metadata to write out</param>
+        /// <returns>
+        /// A dictionary of tagname => new value. Or an empty dictionary if there
+        /// isn't any eligible metadata to write out.
+        /// </returns>
+        public Pub.MetadataChange[] GetMetadataToWriteOut(Guid trackGuid)
+        {
+            using (var context = new DbEntities())
+            {
+                // We want to make sure that we only fetch the metadata that /can/
+                // be written to a file. If there isn't anything, we'll just return an
+                // empty dictionary
+                var items = from md in context.Metadatas
+                    where md.WriteOut && md.MetadataField.FileSupported
+                    select new Pub.MetadataChange
+                    {
+                        TagName = md.MetadataField.TagName,
+                        Value = md.Value,
+                        Array = md.MetadataField.TagLibArray
+                    };
+
+                return items.Any()
+                    ? items.ToArray()
+                    : new Pub.MetadataChange[] {};
+            }
+        } 
+
+        /// <summary>
+        /// Use the stored procedure on the database to grab and lock an
+        /// metadata writing work item.
+        /// </summary>
+        /// <returns>The guid of the track to process, or null if none exists</returns>
+        public Guid? GetMetadataWorkItem()
+        {
+            using (var context = new DbEntities())
+            {
+                // Call the stored proc and get a work item
+                return context.GetAndLockTopMetadataItem().FirstOrDefault();
             }
         }
 
@@ -312,6 +373,7 @@ namespace DolomiteModel
 
                 return new Pub.Track
                 {
+                    ArtChange = track.ArtChange,
                     ArtHref = artHref,
                     ArtId = track.Art,
                     Id = trackId,
@@ -339,6 +401,55 @@ namespace DolomiteModel
             }
         }
 
+        /// <summary>
+        /// Searches the track database using the search criteria for matching
+        /// tracks. Using "all" allows searching all fields that have searching
+        /// enabled. Searches using LIKE %value%.
+        /// </summary>
+        /// <param name="owner">The username of the track owners</param>
+        /// <param name="searchCriteria">
+        /// A list of criteria to search using. [tagname=>value]. Fields
+        /// and values are not case case sensitivite. "all" is a suitable tagname.
+        /// </param>
+        /// <returns>A list of guids that match the search criteria</returns>
+        public List<Guid> SearchTracks(string owner, Dictionary<string, string> searchCriteria)
+        {
+            using(var context = new DbEntities()) 
+            {
+                // Build a result set -- using hashset prevents defaults to work
+                HashSet<Guid> hashSet = new HashSet<Guid>();
+
+                // Loop over the search fields
+                foreach (var criterion in searchCriteria)
+                {
+                    IQueryable<Guid> trackSearch;
+                    // Check if we're searching all fields
+                    if (criterion.Key == "all")
+                    {
+                        // Search all metadata fields
+                        trackSearch = from md in context.Metadatas
+                            where md.Value.Contains(criterion.Value)
+                            && md.Track1.User.Username == owner
+                            && md.MetadataField.Searchable
+                            select md.Track;
+                    }
+                    else
+                    {
+                        // Search only the specified metadata field
+                        trackSearch = from md in context.Metadatas
+                            where md.Value.Contains(criterion.Value)
+                                  && md.MetadataField.TagName == criterion.Key
+                                  && md.Track1.User.Username == owner
+                                  && md.MetadataField.Searchable
+                            select md.Track;
+                    }
+                    hashSet.UnionWith(trackSearch);
+                }
+
+                return hashSet.ToList();
+            }
+        } 
+
         #endregion
 
         #region Update Methods
@@ -364,16 +475,44 @@ namespace DolomiteModel
         }
 
         /// <summary>
+        /// Releases the lock on the work item and completes the art change
+        /// process via a stored procedure
+        /// </summary>
+        /// <param name="workItem">The work item to release</param>
+        public void ReleaseAndCompleteArtItem(Guid workItem)
+        {
+            using (var context = new DbEntities())
+            {
+                // Call the stored procedure to complete the track onboarding
+                context.ReleaseAndCompleteArtChange(workItem);
+            }
+        }
+
+        /// <summary>
         /// Releases the lock on the work item and completes the onboarding
         /// process via a stored procedure
         /// </summary>
         /// <param name="workItem">The work item to release</param>
-        public void ReleaseAndCompleteWorkItem(Guid workItem)
+        public void ReleaseAndCompleteOnboardingItem(Guid workItem)
         {
             using (var context = new DbEntities())
             {
                 // Call the stored procedure to complete the track onboarding
                 context.ReleaseAndCompleteOnboardingItem(workItem);
+            }
+        }
+
+        /// <summary>
+        /// Calls the stored proc to unlock the given track, and remove any flag
+        /// on metadata for the track to show that the metadata needs to be
+        /// written out to file.
+        /// </summary>
+        /// <param name="workItem">The track to release</param>
+        public void ReleaseAndCompleteMetadataItem(Guid workItem)
+        {
+            using (var context = new DbEntities())
+            {
+                context.ReleaseAndCompleteMetadataUpdate(workItem);
             }
         }
 
@@ -405,13 +544,15 @@ namespace DolomiteModel
         /// </summary>
         /// <param name="trackGuid">The GUID of the track</param>
         /// <param name="artGuid">The GUID of the art record. Can be null.</param>
-        public void SetTrackArt(Guid trackGuid, Guid? artGuid)
+        /// <param name="fileChange">Whether or not the art change should be processed to the file</param>
+        public void SetTrackArt(Guid trackGuid, Guid? artGuid, bool fileChange)
         {
             using (var context = new DbEntities())
             {
                 // Search out the track, store art
                 Track track = GetTrackModelByGuid(trackGuid, context);
                 track.Art = artGuid;
+                track.ArtChange = fileChange;
                 context.SaveChanges();
             }
         }

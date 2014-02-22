@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using DolomiteModel;
@@ -94,6 +95,8 @@ namespace DolomiteWcfService
         /// <param name="filename">Name of the file to delete</param>
         public void DeleteFile(string filename)
         {
+            Trace.TraceInformation("Attempting to delete {0} from local storage, w/o wait", filename);
+
             // Delete the file
             string filePath = GetPath(filename);
             if (File.Exists(filePath))

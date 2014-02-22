@@ -61,8 +61,13 @@ namespace DolomiteWcfService
             catch (JsonReaderException)
             {
                 // The guid was probably incorrect
-                object payload = new ErrorResponse("The supplied autoplaylist object is invalid.");
-                return WebUtilities.GenerateResponse(payload, HttpStatusCode.BadRequest);
+                return WebUtilities.GenerateResponse(new ErrorResponse("The JSON for the request is invalid."),
+                    HttpStatusCode.BadRequest);
+            }
+            catch (JsonSerializationException)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse("The JSON for the request is invalid."),
+                    HttpStatusCode.BadRequest);
             }
             catch (DuplicateNameException ex)
             {
@@ -190,6 +195,16 @@ namespace DolomiteWcfService
 
                 // Send a happy return message
                 return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
+            }
+            catch (JsonReaderException)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse("The JSON for the request is invalid."),
+                    HttpStatusCode.BadRequest);
+            }
+            catch (JsonSerializationException)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse("The JSON for the request is invalid."),
+                    HttpStatusCode.BadRequest);
             }
             catch (InvalidSessionException)
             {
@@ -324,6 +339,16 @@ namespace DolomiteWcfService
                 return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
                     HttpStatusCode.InternalServerError);
             }
+        }
+
+        /// <summary>
+        /// Returns true just to allow the CORS preflight request via OPTIONS
+        /// HTTP method to go through
+        /// </summary>
+        /// <returns>True</returns>
+        public bool PreflyRequest()
+        {
+            return true;
         }
     }
 }

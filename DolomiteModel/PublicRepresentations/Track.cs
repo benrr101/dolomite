@@ -79,6 +79,12 @@ namespace DolomiteModel.PublicRepresentations
         public string ArtHref { get; set; }
 
         /// <summary>
+        /// Whether or not there's an art change pending on the track. Not
+        /// intended for use by clients.
+        /// </summary>
+        public bool ArtChange { get; set; }
+
+        /// <summary>
         /// The Guid for the art object for this track. Not intented for use
         /// by clients.
         /// </summary>
