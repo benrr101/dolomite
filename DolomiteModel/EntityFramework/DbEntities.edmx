@@ -167,6 +167,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Property Name="HasBeenOnboarded" Type="bit" Nullable="false" />
           <Property Name="Locked" Type="bit" Nullable="false" />
           <Property Name="TrackInTempStorage" Type="bit" Nullable="false" />
+          <Property Name="ArtChange" Type="bit" Nullable="false" />
         </EntityType>
         <EntityType Name="UserKeys">
           <Key>
@@ -432,11 +433,15 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Parameter Name="playlist" Type="uniqueidentifier" Mode="In" />
           <Parameter Name="position" Type="int" Mode="In" />
         </Function>
+        <Function Name="GetAndLockTopArtItem" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
         <Function Name="GetAndLockTopMetadataItem" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
         <Function Name="GetAndLockTopOnboardingItem" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
         <Function Name="IncrementPlaylistTrackOrder" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="playlist" Type="uniqueidentifier" Mode="In" />
           <Parameter Name="position" Type="int" Mode="In" />
+        </Function>
+        <Function Name="ReleaseAndCompleteArtChange" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="workItem" Type="uniqueidentifier" Mode="In" />
         </Function>
         <Function Name="ReleaseAndCompleteMetadataUpdate" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="workItem" Type="uniqueidentifier" Mode="In" />
@@ -728,6 +733,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <NavigationProperty Name="Metadatas" Relationship="Self.FK_METADATA_TRACK" FromRole="Tracks" ToRole="Metadata" />
           <NavigationProperty Name="PlaylistTracks" Relationship="Self.FK_PLAYLISTTRACKS_TRACKS" FromRole="Tracks" ToRole="PlaylistTracks" />
           <NavigationProperty Name="User" Relationship="Self.FK_TRACKS_OWNER" FromRole="Tracks" ToRole="Users" />
+          <Property Name="ArtChange" Type="Boolean" Nullable="false" />
         </EntityType>
         <EntityType Name="User">
           <Key>
@@ -1070,6 +1076,10 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <Parameter Name="workItem" Mode="In" Type="Guid" />
           </FunctionImport>
           <FunctionImport Name="GetAndLockTopMetadataItem" ReturnType="Collection(Guid)" />
+          <FunctionImport Name="GetAndLockTopArtItem" ReturnType="Collection(Guid)" />
+          <FunctionImport Name="ReleaseAndCompleteArtChange">
+            <Parameter Name="workItem" Mode="In" Type="Guid" />
+          </FunctionImport>
         </EntityContainer>
         <Association Name="FK_AUTOPLAYLISTS_SORTFIELD">
           <End Type="DolomiteModel.EntityFramework.MetadataField" Role="MetadataField" Multiplicity="0..1" />
@@ -1274,6 +1284,7 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <EntitySetMapping Name="Tracks">
             <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Track">
               <MappingFragment StoreEntitySet="Tracks">
+                <ScalarProperty Name="ArtChange" ColumnName="ArtChange" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Owner" ColumnName="Owner" />
                 <ScalarProperty Name="Hash" ColumnName="Hash" />
@@ -1349,6 +1360,8 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           </EntitySetMapping>
           <FunctionImportMapping FunctionImportName="ReleaseAndCompleteMetadataUpdate" FunctionName="DolomiteModel.EntityFramework.Store.ReleaseAndCompleteMetadataUpdate" />
           <FunctionImportMapping FunctionImportName="GetAndLockTopMetadataItem" FunctionName="DolomiteModel.EntityFramework.Store.GetAndLockTopMetadataItem" />
+          <FunctionImportMapping FunctionImportName="GetAndLockTopArtItem" FunctionName="DolomiteModel.EntityFramework.Store.GetAndLockTopArtItem" />
+          <FunctionImportMapping FunctionImportName="ReleaseAndCompleteArtChange" FunctionName="DolomiteModel.EntityFramework.Store.ReleaseAndCompleteArtChange" />
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

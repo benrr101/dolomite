@@ -354,7 +354,7 @@ namespace DolomiteWcfService.Threads
             }
 
             // Store the art record to the track
-            DatabaseManager.SetTrackArt(trackGuid, artGuid);
+            DatabaseManager.SetTrackArt(trackGuid, artGuid, false);
         }
 
         /// <summary>

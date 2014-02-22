@@ -258,7 +258,7 @@ namespace DolomiteWcfService
             // Was there even an art file attached?
             if (stream.Length == 0)
             {
-                DatabaseManager.SetTrackArt(guid, null);
+                DatabaseManager.SetTrackArt(guid, null, true);
                 return;
             }
 
@@ -283,7 +283,7 @@ namespace DolomiteWcfService
             }
 
             // Store the art record to the track
-            DatabaseManager.SetTrackArt(guid, artGuid);
+            DatabaseManager.SetTrackArt(guid, artGuid, true);
         }
 
         /// <summary>

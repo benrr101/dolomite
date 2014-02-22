@@ -235,6 +235,20 @@ namespace DolomiteModel
         }
 
         /// <summary>
+        /// Use the stored procedure on the database to grab and lock an
+        /// art writing work item.
+        /// </summary>
+        /// <returns>The guid of the track to process, or null if none exists</returns>
+        public Guid? GetArtWorkItem()
+        {
+            using (var context = new DbEntities())
+            {
+                // Call the stored proc and get a work item
+                return context.GetAndLockTopArtItem().FirstOrDefault();
+            }
+        }
+
+        /// <summary>
         /// Fetches the GUID for an art object with the given hash
         /// </summary>
         /// <param name="hash">The hash of the art</param>
@@ -359,6 +373,7 @@ namespace DolomiteModel
 
                 return new Pub.Track
                 {
+                    ArtChange = track.ArtChange,
                     ArtHref = artHref,
                     ArtId = track.Art,
                     Id = trackId,
@@ -460,6 +475,20 @@ namespace DolomiteModel
         }
 
         /// <summary>
+        /// Releases the lock on the work item and completes the art change
+        /// process via a stored procedure
+        /// </summary>
+        /// <param name="workItem">The work item to release</param>
+        public void ReleaseAndCompleteArtItem(Guid workItem)
+        {
+            using (var context = new DbEntities())
+            {
+                // Call the stored procedure to complete the track onboarding
+                context.ReleaseAndCompleteArtChange(workItem);
+            }
+        }
+
+        /// <summary>
         /// Releases the lock on the work item and completes the onboarding
         /// process via a stored procedure
         /// </summary>
@@ -515,13 +544,15 @@ namespace DolomiteModel
         /// </summary>
         /// <param name="trackGuid">The GUID of the track</param>
         /// <param name="artGuid">The GUID of the art record. Can be null.</param>
-        public void SetTrackArt(Guid trackGuid, Guid? artGuid)
+        /// <param name="fileChange">Whether or not the art change should be processed to the file</param>
+        public void SetTrackArt(Guid trackGuid, Guid? artGuid, bool fileChange)
         {
             using (var context = new DbEntities())
             {
                 // Search out the track, store art
                 Track track = GetTrackModelByGuid(trackGuid, context);
                 track.Art = artGuid;
+                track.ArtChange = fileChange;
                 context.SaveChanges();
             }
         }
