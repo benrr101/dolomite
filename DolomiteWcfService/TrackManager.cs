@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using TagLib;
@@ -102,6 +103,19 @@ namespace DolomiteWcfService
             // Delete the record for the track in the database
             DatabaseManager.DeleteTrack(trackGuid);
         }
+
+        public Dictionary<string, string> GetTotalTrackInfo(string owner)
+        {
+            // Retrieve the list of tracks from the database
+            List<Track> tracks = DatabaseManager.GetAllTracksByOwner(owner);
+
+            // Build the list of attributes to return
+            return new Dictionary<string, string>
+            {
+                {"Count", tracks.Count.ToString(CultureInfo.CurrentCulture)},
+                {"TotalTime", tracks.Sum(t => int.Parse(t.Metadata["Duration"])).ToString(CultureInfo.CurrentCulture)}
+            };
+        } 
 
         /// <summary>
         /// Retreives the info about the track

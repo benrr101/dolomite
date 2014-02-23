@@ -16,6 +16,11 @@ namespace DolomiteWcfService
         #region Properties
 
         /// <summary>
+        /// Instance of the track manager
+        /// </summary>
+        private static TrackManager TrackManager { get; set; }
+
+        /// <summary>
         /// Instance of the User Manager
         /// </summary>
         private static UserManager UserManager { get; set; }
@@ -26,6 +31,7 @@ namespace DolomiteWcfService
         {
             // Initialize the track manager
             UserManager = UserManager.Instance;
+            TrackManager = TrackManager.Instance;
         }
 
         /// <summary>
@@ -73,6 +79,33 @@ namespace DolomiteWcfService
             catch (DuplicateNameException dne)
             {
                 return WebUtilities.GenerateResponse(new ErrorResponse(dne.Message), HttpStatusCode.BadRequest);
+            }
+            catch (Exception)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
+            }
+        }
+
+        public Message GetUserStatistics(string username)
+        {
+            try
+            {
+                // Make sure we have a valid session
+                string apiKey;
+                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
+                string seshUsername = UserManager.GetUsernameFromSession(token, apiKey);
+                UserManager.ExtendIdleTimeout(token);
+
+                // Make sure the owners are correct
+                if (username != seshUsername)
+                    throw new InvalidSessionException("You may not request information about this user.");
+
+                return WebUtilities.GenerateResponse(TrackManager.GetTotalTrackInfo(username), HttpStatusCode.OK);
+            }
+            catch (InvalidSessionException)
+            {
+                return WebUtilities.GenerateUnauthorizedResponse();
             }
             catch (Exception)
             {
