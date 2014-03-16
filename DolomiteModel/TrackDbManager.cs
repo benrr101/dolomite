@@ -464,6 +464,13 @@ namespace DolomiteModel
         {
             using (var context = new DbEntities())
             {
+                // Check to see if the track is locked
+                if (context.Tracks.FirstOrDefault(t => t.Id == trackGuid && t.Locked) != null)
+                {
+                    string message = String.Format("Track {0} is locked and cannot be modified at this time.", trackGuid);
+                    throw new AccessViolationException(message);
+                }
+
                 // Reset the onboarding status
                 context.ResetOnboardingStatus(trackGuid);
 

@@ -83,9 +83,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>DbEntities.edmx</DependentUpon>
     </Compile>
-    <Compile Include="EntityFramework\Device.cs">
-      <DependentUpon>DbEntities.tt</DependentUpon>
-    </Compile>
     <Compile Include="EntityFramework\Metadata.cs">
       <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
