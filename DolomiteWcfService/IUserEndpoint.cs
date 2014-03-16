@@ -11,6 +11,9 @@ namespace DolomiteWcfService
         [WebInvoke(Method = "PUT", UriTemplate = "/{username}")]
         Message CreateUser(string username, Stream body);
 
+        [WebInvoke(Method = "GET", UriTemplate = "/{username}")]
+        Message GetUserStatistics(string username);
+
         [WebInvoke(Method = "POST", UriTemplate = "/login")]
         Message Login(Stream body);
 

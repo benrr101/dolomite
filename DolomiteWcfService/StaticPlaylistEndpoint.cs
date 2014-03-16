@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.ServiceModel.Channels;
 using System.Text;
@@ -200,7 +201,7 @@ namespace DolomiteWcfService
 
                 // See if a position was passed in as part of the request
                 int position;
-                if (WebUtilities.GetQueryParameters()["position"] != null &&
+                if (WebUtilities.GetQueryParameters().Keys.Contains("position") &&
                     Int32.TryParse(WebUtilities.GetQueryParameters()["position"], out position))
                 {
                     PlaylistManager.AddTrackToPlaylist(playlistId, trackGuid, username, position);

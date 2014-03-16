@@ -19,7 +19,6 @@
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Rule" Width="1.5" PointX="5.125" PointY="4.125" IsExpanded="true" />
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Track" Width="1.5" PointX="9" PointY="4.75" IsExpanded="true" />
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.User" Width="1.5" PointX="0.75" PointY="7.25" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Device" Width="1.5" PointX="2.75" PointY="10.5" IsExpanded="true" />
         <AssociationConnector Association="DolomiteModel.EntityFramework.Album1" ManuallyRouted="false" />
         <AssociationConnector Association="DolomiteModel.EntityFramework.FK_ALBUMS_ARTIST" ManuallyRouted="false" />
         <AssociationConnector Association="DolomiteModel.EntityFramework.FK_TRACKS_ART" ManuallyRouted="false" />
@@ -35,7 +34,6 @@
         <AssociationConnector Association="DolomiteModel.EntityFramework.FK_PLAYLISTTRACKS_PLAYLISTS" ManuallyRouted="false" />
         <AssociationConnector Association="DolomiteModel.EntityFramework.FK_PLAYLISTTRACKS_TRACKS" ManuallyRouted="false" />
         <AssociationConnector Association="DolomiteModel.EntityFramework.FK_TRACKS_OWNER" ManuallyRouted="false" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_DEVICES_OWNER" ManuallyRouted="false" />
         <AssociationConnector Association="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTS_SORTFIELD" />
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.UserKey" Width="1.5" PointX="10.625" PointY="1.375" />
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.ApiKey" Width="1.5" PointX="2.75" PointY="12.75" />

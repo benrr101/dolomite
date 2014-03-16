@@ -127,6 +127,8 @@ namespace DolomiteWcfService
 
         #endregion
 
+        #region Session Methods
+
         /// <summary>
         /// Extends the idle timeout using the config setting for idle timespan.
         /// The new idle timeout will be the current time + the timespan.
@@ -238,6 +240,8 @@ namespace DolomiteWcfService
             // We're good to go!
             return session.Username;
         }
+
+        #endregion
 
         #region Private Methods
 

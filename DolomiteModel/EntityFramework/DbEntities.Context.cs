@@ -42,7 +42,6 @@ namespace DolomiteModel.EntityFramework
         public DbSet<Rule> Rules { get; set; }
         public DbSet<Track> Tracks { get; set; }
         public DbSet<User> Users { get; set; }
-        public DbSet<Device> Devices { get; set; }
         public DbSet<UserKey> UserKeys { get; set; }
         public DbSet<ApiKey> ApiKeys { get; set; }
         public DbSet<Session> Sessions { get; set; }

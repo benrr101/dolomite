@@ -69,15 +69,6 @@
         </EntityType>
         <!--Errors Found During Generation:
 warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
-        <EntityType Name="Devices">
-          <Key>
-            <PropertyRef Name="Key" />
-            <PropertyRef Name="Owner" />
-          </Key>
-          <Property Name="Key" Type="uniqueidentifier" Nullable="false" />
-          <Property Name="Owner" Type="int" Nullable="false" />
-          <Property Name="PreferredQuality" Type="int" />
-        </EntityType>
         <EntityType Name="Metadata">
           <Key>
             <PropertyRef Name="Id" />
@@ -299,18 +290,6 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_DEVICES_OWNER">
-          <End Role="Users" Type="Self.Users" Multiplicity="1" />
-          <End Role="Devices" Type="Self.Devices" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Users">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="Devices">
-              <PropertyRef Name="Owner" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <Association Name="FK_METADATA_FIELD">
           <End Role="MetadataFields" Type="Self.MetadataFields" Multiplicity="1">
             <OnDelete Action="Cascade" />
@@ -474,13 +453,6 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <EntitySet Name="Tracks" EntityType="Self.Tracks" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="UserKeys" EntityType="Self.UserKeys" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Users" EntityType="Self.Users" Schema="dbo" store:Type="Tables" />
-          <EntitySet Name="Devices" EntityType="Self.Devices" store:Type="Tables" store:Schema="dbo">
-            <DefiningQuery>SELECT 
-[Devices].[Key] AS [Key], 
-[Devices].[Owner] AS [Owner], 
-[Devices].[PreferredQuality] AS [PreferredQuality]
-FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
-          </EntitySet>
           <AssociationSet Name="Album" Association="Self.Album">
             <End Role="Albums" EntitySet="Albums" />
             <End Role="Tracks" EntitySet="Tracks" />
@@ -516,10 +488,6 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <AssociationSet Name="FK_AVAILABLEQUALITIES_TRACK" Association="Self.FK_AVAILABLEQUALITIES_TRACK">
             <End Role="Tracks" EntitySet="Tracks" />
             <End Role="AvailableQualities" EntitySet="AvailableQualities" />
-          </AssociationSet>
-          <AssociationSet Name="FK_DEVICES_OWNER" Association="Self.FK_DEVICES_OWNER">
-            <End Role="Users" EntitySet="Users" />
-            <End Role="Devices" EntitySet="Devices" />
           </AssociationSet>
           <AssociationSet Name="FK_METADATA_FIELD" Association="Self.FK_METADATA_FIELD">
             <End Role="MetadataFields" EntitySet="MetadataFields" />
@@ -744,21 +712,10 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <NavigationProperty Name="Autoplaylists" Relationship="Self.FK_AUTOPLAYLISTS_OWNER" FromRole="Users" ToRole="Autoplaylists" />
           <NavigationProperty Name="Playlists" Relationship="Self.FK_PLAYLISTS_OWNER" FromRole="Users" ToRole="Playlists" />
           <NavigationProperty Name="Tracks" Relationship="Self.FK_TRACKS_OWNER" FromRole="Users" ToRole="Tracks" />
-          <NavigationProperty Name="Devices" Relationship="Self.FK_DEVICES_OWNER" FromRole="Users" ToRole="Devices" />
           <Property Name="PasswordHash" Type="String" Nullable="false" MaxLength="64" FixedLength="true" Unicode="true" />
           <Property Name="PasswordReset" Type="Boolean" Nullable="false" />
           <Property Name="Email" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="Sessions" Relationship="DolomiteModel.EntityFramework.FK_SESSION_USER" FromRole="User" ToRole="Session" />
-        </EntityType>
-        <EntityType Name="Device">
-          <Key>
-            <PropertyRef Name="Key" />
-            <PropertyRef Name="Owner" />
-          </Key>
-          <Property Name="Key" Type="Guid" Nullable="false" />
-          <Property Name="Owner" Type="Int32" Nullable="false" />
-          <Property Name="PreferredQuality" Type="Int32" />
-          <NavigationProperty Name="User" Relationship="Self.FK_DEVICES_OWNER" FromRole="Devices" ToRole="Users" />
         </EntityType>
         <Association Name="Album1">
           <End Role="Albums" Type="Self.Album" Multiplicity="0..1" />
@@ -946,18 +903,6 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_DEVICES_OWNER">
-          <End Role="Users" Type="Self.User" Multiplicity="1" />
-          <End Role="Devices" Type="Self.Device" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Users">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="Devices">
-              <PropertyRef Name="Owner" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <EntityContainer Name="DbEntities" annotation:LazyLoadingEnabled="true">
           <EntitySet Name="Albums" EntityType="Self.Album" />
           <EntitySet Name="Arts" EntityType="Self.Art" />
@@ -973,7 +918,6 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <EntitySet Name="Rules" EntityType="Self.Rule" />
           <EntitySet Name="Tracks" EntityType="Self.Track" />
           <EntitySet Name="Users" EntityType="Self.User" />
-          <EntitySet Name="Devices" EntityType="Self.Device" />
           <AssociationSet Name="Album" Association="Self.Album1">
             <End Role="Albums" EntitySet="Albums" />
             <End Role="Tracks" EntitySet="Tracks" />
@@ -1033,10 +977,6 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
           <AssociationSet Name="FK_TRACKS_OWNER" Association="Self.FK_TRACKS_OWNER">
             <End Role="Users" EntitySet="Users" />
             <End Role="Tracks" EntitySet="Tracks" />
-          </AssociationSet>
-          <AssociationSet Name="FK_DEVICES_OWNER" Association="Self.FK_DEVICES_OWNER">
-            <End Role="Users" EntitySet="Users" />
-            <End Role="Devices" EntitySet="Devices" />
           </AssociationSet>
           <FunctionImport Name="GetAndLockTopOnboardingItem" ReturnType="Collection(Guid)" />
           <FunctionImport Name="ReleaseAndCompleteOnboardingItem">
@@ -1308,15 +1248,6 @@ FROM [dbo].[Devices] AS [Devices]</DefiningQuery>
                 <ScalarProperty Name="PasswordHash" ColumnName="PasswordHash" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Username" ColumnName="Username" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="Devices">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Device">
-              <MappingFragment StoreEntitySet="Devices">
-                <ScalarProperty Name="Key" ColumnName="Key" />
-                <ScalarProperty Name="Owner" ColumnName="Owner" />
-                <ScalarProperty Name="PreferredQuality" ColumnName="PreferredQuality" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

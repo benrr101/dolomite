@@ -1,4 +1,0 @@
-﻿ALTER TABLE [dbo].[Devices]
-	ADD CONSTRAINT [FK_DEVICES_OWNER]
-	FOREIGN KEY (Owner)
-	REFERENCES [Users] (Id)

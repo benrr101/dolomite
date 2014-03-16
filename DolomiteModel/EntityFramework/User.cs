@@ -19,7 +19,6 @@ namespace DolomiteModel.EntityFramework
             this.Autoplaylists = new HashSet<Autoplaylist>();
             this.Playlists = new HashSet<Playlist>();
             this.Tracks = new HashSet<Track>();
-            this.Devices = new HashSet<Device>();
             this.Sessions = new HashSet<Session>();
         }
     
@@ -32,7 +31,6 @@ namespace DolomiteModel.EntityFramework
         public virtual ICollection<Autoplaylist> Autoplaylists { get; set; }
         public virtual ICollection<Playlist> Playlists { get; set; }
         public virtual ICollection<Track> Tracks { get; set; }
-        public virtual ICollection<Device> Devices { get; set; }
         public virtual ICollection<Session> Sessions { get; set; }
     }
 }

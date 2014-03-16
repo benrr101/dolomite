@@ -65,6 +65,6 @@ VALUES
 	('notinlastdays', 'Not In Last n Days', 'date');
 
 -- Add important error messages
-EXEC sp_addmessage 50010, 13, 
-   N'The track that has been requested is currently locked.';
-GO
+-- EXEC sp_addmessage 50010, 13, 
+--    N'The track that has been requested is currently locked.';
+-- GO
