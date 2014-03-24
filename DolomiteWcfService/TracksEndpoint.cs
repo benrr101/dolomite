@@ -4,7 +4,6 @@ using System.Data;
 using System.IO;
 using System.Net;
 using System.ServiceModel.Channels;
-using System.Text;
 using DolomiteModel.PublicRepresentations;
 using DolomiteWcfService.Exceptions;
 using DolomiteWcfService.Responses;
@@ -386,7 +385,7 @@ namespace DolomiteWcfService
 
                 // Translate the body and guid
                 Guid trackGuid = Guid.Parse(guid);
-                string bodyStr = Encoding.Default.GetString(body.ToByteArray());
+                string bodyStr = WebUtilities.GetUtf8String(body);
                 var metadata = JsonConvert.DeserializeObject<Dictionary<string, string>>(bodyStr);
 
                 // Pass it along to the track manager
@@ -453,7 +452,7 @@ namespace DolomiteWcfService
 
                 // Translate the body and guid
                 Guid trackGuid = Guid.Parse(guid);
-                string bodyStr = Encoding.Default.GetString(body.ToByteArray());
+                string bodyStr = WebUtilities.GetUtf8String(body);
                 var metadata = JsonConvert.DeserializeObject<Dictionary<string, string>>(bodyStr);
 
                 // Pass it along to the track manager

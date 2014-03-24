@@ -4,7 +4,6 @@ using System.Data;
 using System.IO;
 using System.Net;
 using System.ServiceModel.Channels;
-using System.Text;
 using DolomiteModel.PublicRepresentations;
 using DolomiteWcfService.Exceptions;
 using DolomiteWcfService.Responses;
@@ -46,7 +45,7 @@ namespace DolomiteWcfService
                 UserManager.ExtendIdleTimeout(token);
 
                 // Process the object we're send
-                string bodyStr = Encoding.Default.GetString(body.ToByteArray());
+                string bodyStr = WebUtilities.GetUtf8String(body);
                 AutoPlaylist playlist = JsonConvert.DeserializeObject<AutoPlaylist>(bodyStr);
 
                 // Determine what type of processing to do
@@ -188,7 +187,7 @@ namespace DolomiteWcfService
                 Guid playlistId = Guid.Parse(guid);
 
                 // Process the object we're send, attempt to deserialize it as a rule
-                string bodyStr = Encoding.Default.GetString(body.ToByteArray());
+                string bodyStr = WebUtilities.GetUtf8String(body);
                 AutoPlaylistRule rule = JsonConvert.DeserializeObject<AutoPlaylistRule>(bodyStr);
                 // Success! Now, add the rule to the playlist
                 PlaylistManager.AddRuleToAutoPlaylist(playlistId, username, rule);

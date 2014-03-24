@@ -149,6 +149,17 @@ namespace DolomiteWcfService
             return endpointProperty.Address;
         }
 
+        public static string GetUtf8String(Stream stream)
+        {
+            // Get the string as per the usual
+            string s = Encoding.UTF8.GetString(stream.ToByteArray());
+            string preamble = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
+            if (s.StartsWith(preamble, StringComparison.Ordinal))
+                s = s.Remove(0, preamble.Length);
+
+            return s;
+        }
+
         /// <summary>
         /// Fetches the query parameters from the latest request
         /// </summary>
@@ -224,10 +235,10 @@ namespace DolomiteWcfService
                     int read = stream.Read(buffer, 0, buffer.Length);
                     if (read <= 0)
                         return ms.ToArray();
+
                     ms.Write(buffer, 0, read);
                 }
             }
         }
-
     }
 }

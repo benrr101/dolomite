@@ -257,12 +257,12 @@ namespace DolomiteWcfService
             // The algo: use RIPEMD160 to hash the user's email, use that as a salt and SHA256 the whole thing
             RIPEMD160 saltHasher = new RIPEMD160Managed();
             SHA256 passHasher = new SHA256Cng();
-            byte[] salt = saltHasher.ComputeHash(Encoding.Default.GetBytes(email));
-            byte[] hashBytes = passHasher.ComputeHash(Encoding.Default.GetBytes(password + salt));
+            byte[] salt = saltHasher.ComputeHash(Encoding.UTF8.GetBytes(email));
+            byte[] hashBytes = passHasher.ComputeHash(Encoding.UTF8.GetBytes(password + salt));
 
             // Convrt the password bytes to a string.
-            // Why use the bitconverter for this and not the encoding.default.getstring?
-            // Because we bitconverter gives us a hex string, instead of unintelligble
+            // Why use the bitconverter for this and not the encoding.UTF8.getstring?
+            // Because the bitconverter gives us a hex string, instead of unintelligble
             // unicode characters.
             return BitConverter.ToString(hashBytes).Replace("-", String.Empty);
         }
@@ -276,7 +276,7 @@ namespace DolomiteWcfService
         {
             // The algo: sha256 the username + the current timestamp + a new guid
             SHA256 hasher = new SHA256Cng();
-            byte[] toHash = Encoding.Default.GetBytes(username + DateTime.Now + Guid.NewGuid());
+            byte[] toHash = Encoding.UTF8.GetBytes(username + DateTime.Now + Guid.NewGuid());
             byte[] hashBytes = hasher.ComputeHash(toHash);
 
             return BitConverter.ToString(hashBytes).Replace("-", String.Empty);

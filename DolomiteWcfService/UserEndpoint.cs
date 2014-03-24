@@ -3,7 +3,6 @@ using System.Data;
 using System.IO;
 using System.Net;
 using System.ServiceModel.Channels;
-using System.Text;
 using DolomiteWcfService.Exceptions;
 using DolomiteWcfService.Requests;
 using DolomiteWcfService.Responses;
@@ -53,7 +52,7 @@ namespace DolomiteWcfService
             try
             {
                 // Deserialize the body of the request for the user details
-                string bodyStr = Encoding.Default.GetString(body.ToByteArray());
+                string bodyStr = WebUtilities.GetUtf8String(body);
                 var request = JsonConvert.DeserializeObject<UserCreationRequest>(bodyStr);
 
                 // Attempt to create a new user
@@ -138,7 +137,7 @@ namespace DolomiteWcfService
                 }
 
                 // Process the body of the request into a login request object
-                string bodyStr = Encoding.Default.GetString(body.ToByteArray());
+                string bodyStr = WebUtilities.GetUtf8String(body);
                 var request = JsonConvert.DeserializeObject<UserLoginRequest>(bodyStr);
 
                 // Attempt to login the user

@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.ServiceModel.Channels;
-using System.Text;
 using DolomiteModel.PublicRepresentations;
 using DolomiteWcfService.Exceptions;
 using DolomiteWcfService.Responses;
@@ -47,7 +46,7 @@ namespace DolomiteWcfService
                 UserManager.ExtendIdleTimeout(token);
 
                 // Process the object we're send
-                string bodyStr = Encoding.Default.GetString(body.ToByteArray());
+                string bodyStr = WebUtilities.GetUtf8String(body);
                 Playlist playlist = JsonConvert.DeserializeObject<Playlist>(bodyStr);
                 Guid id = PlaylistManager.CreateStaticPlaylist(playlist, username);
 
@@ -195,7 +194,7 @@ namespace DolomiteWcfService
 
                 // Read the body of the request and convert it to the guid of the track to add
                 //TODO: Add support for batch adding tracks
-                string bodyStr = Encoding.Default.GetString(body.ToByteArray());
+                string bodyStr = WebUtilities.GetUtf8String(body);
                 Guid trackGuid = Guid.Parse(bodyStr);
                 Guid playlistId = Guid.Parse(guid);
 
