@@ -6,9 +6,9 @@ using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 
-namespace DolomiteWcfService
+namespace DolomiteManagement
 {
-    class AzureStorageManager
+    public class AzureStorageManager
     {
         /// <summary>
         /// Internal instance of the blob client

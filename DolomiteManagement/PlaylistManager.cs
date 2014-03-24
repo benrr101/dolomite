@@ -4,9 +4,9 @@ using System.Linq;
 using DolomiteModel;
 using DolomiteModel.PublicRepresentations;
 
-namespace DolomiteWcfService
+namespace DolomiteManagement
 {
-    class PlaylistManager
+    public class PlaylistManager
     {
 
         #region Properties

@@ -3,13 +3,13 @@ using System.Data;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using DolomiteManagement.Exceptions;
 using DolomiteModel;
 using DolomiteModel.PublicRepresentations;
-using DolomiteWcfService.Exceptions;
 
-namespace DolomiteWcfService
+namespace DolomiteManagement
 {
-    class UserManager
+    public class UserManager
     {
 
         #region Constant

@@ -7,9 +7,9 @@ using TagLib;
 using DolomiteModel;
 using DolomiteModel.PublicRepresentations;
 
-namespace DolomiteWcfService
+namespace DolomiteManagement
 {
-    class TrackManager
+    public class TrackManager
     {
 
         #region Constants

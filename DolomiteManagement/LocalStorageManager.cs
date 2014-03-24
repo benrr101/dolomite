@@ -6,9 +6,9 @@ using System.Security.Cryptography;
 using DolomiteModel;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
-namespace DolomiteWcfService
+namespace DolomiteManagement
 {
-    class LocalStorageManager
+    public class LocalStorageManager
     {
         #region Singleton Instance
 
