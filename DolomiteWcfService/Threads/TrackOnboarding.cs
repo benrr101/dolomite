@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using DolomiteManagement;
 using DolomiteModel.PublicRepresentations;
-using Microsoft.WindowsAzure.Storage.Blob;
 using IO = System.IO;
 using System.Linq;
 using System.Reflection;
@@ -18,13 +18,12 @@ namespace DolomiteWcfService.Threads
 
         #region Internal Asynchronous Callback Object
 
-        public class AsynchronousState
+        public class AsynchronousState : DolomiteManagement.Asynchronous.AzureAsynchronousState
         {
             public IO.FileStream FileStream { get; set; }
             public string OriginalPath { get; set; }
             public Guid TrackGuid { get; set; }
             public bool Delete { get; set; }
-            public CloudBlockBlob Blob { get; set; }
         }
 
         #endregion

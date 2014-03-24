@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using DolomiteWcfService.Threads;
+using DolomiteManagement.Asynchronous;
 using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
@@ -78,7 +78,7 @@ namespace DolomiteManagement
         /// <param name="callback">The callback to perform when completed</param>
         /// <param name="state">The object to pass to the callback</param>
         /// @TODO Should replace the type of the asynchronous state to some inheritance thingy
-        public void StoreBlobAsync(string containerNameKey, string fileName, Stream bytes, AsyncCallback callback, TrackOnboarding.AsynchronousState state)
+        public void StoreBlobAsync(string containerNameKey, string fileName, Stream bytes, AsyncCallback callback, AzureAsynchronousState state)
         {
             try
             {

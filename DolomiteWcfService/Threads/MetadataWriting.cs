@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
 using IO = System.IO;
+using DolomiteManagement;
 using DolomiteModel;
 using DolomiteModel.PublicRepresentations;
 using TagLib;
