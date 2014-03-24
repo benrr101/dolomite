@@ -165,7 +165,7 @@ namespace DolomiteWcfService.Threads
                 {
                     // Step 2b1: Get the art file from azure
                     string azureArtPath = IO.Path.Combine(new[] {"art", track.ArtId.ToString()});
-                    IO.Stream artStream = AzureStorageManager.GetBlob(TrackManager.StorageContainerKey, azureArtPath);
+                    IO.Stream artStream = AzureStorageManager.GetBlob(String.Empty, azureArtPath);
 
                     // Step 2b2: Store the art in the original file
                     UpdateLocalFileArt(localTrackPath, artStream);
@@ -195,7 +195,7 @@ namespace DolomiteWcfService.Threads
         private static void CopyToLocalStorage(string azurePath, string localPath)
         {
             // Get the stream from Azure
-            IO.Stream origStream = AzureStorageManager.GetBlob(TrackManager.StorageContainerKey, azurePath);
+            IO.Stream origStream = AzureStorageManager.GetBlob(String.Empty, azurePath);
 
             // Copy the stream to local storage
             IO.Stream localFile = IO.File.Create(localPath);
@@ -262,7 +262,7 @@ namespace DolomiteWcfService.Threads
             IO.Stream stream = IO.File.OpenRead(localPath);
 
             // Copy the file to azure
-            AzureStorageManager.StoreBlob(TrackManager.StorageContainerKey, remotePath, stream);
+            AzureStorageManager.StoreBlob(String.Empty, remotePath, stream);
             stream.Close();
         }
 

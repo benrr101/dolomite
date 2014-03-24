@@ -45,16 +45,15 @@ namespace DolomiteManagement
         /// Stores the given stream into a block blob in the given storage
         /// container.
         /// </summary>
-        /// <param name="containerNameKey"></param>
+        /// <param name="containerName">Name of the container to store the blob to</param>
         /// <param name="fileName">The path for the file to be stored</param>
         /// <param name="bytes">A stream of the bytes to store</param>
-        public void StoreBlob(string containerNameKey, string fileName, Stream bytes)
+        public void StoreBlob(string containerName, string fileName, Stream bytes)
         {
-            Trace.TraceInformation("Attempting to upload block blob '{0}' to container '{1}'", fileName, containerNameKey);
+            Trace.TraceInformation("Attempting to upload block blob '{0}' to container '{1}'", fileName, containerName);
             try
             {
                 // Grab the container that is being used
-                string containerName = GetContainerNameFromSettings(containerNameKey);
                 CloudBlobContainer container = BlobClient.GetContainerReference(containerName);
                 
                 // Grab the 
@@ -72,18 +71,17 @@ namespace DolomiteManagement
         /// <summary>
         /// Start the upload of a blob to the blob storage
         /// </summary>
-        /// <param name="containerNameKey">KEY to the container name</param>
+        /// <param name="containerName">Name of the container name</param>
         /// <param name="fileName">Target name of the file in Azure</param>
         /// <param name="bytes">The bytes to upload to Azure</param>
         /// <param name="callback">The callback to perform when completed</param>
         /// <param name="state">The object to pass to the callback</param>
         /// @TODO Should replace the type of the asynchronous state to some inheritance thingy
-        public void StoreBlobAsync(string containerNameKey, string fileName, Stream bytes, AsyncCallback callback, AzureAsynchronousState state)
+        public void StoreBlobAsync(string containerName, string fileName, Stream bytes, AsyncCallback callback, AzureAsynchronousState state)
         {
             try
             {
                 // Grab the container that is being used
-                string containerName = GetContainerNameFromSettings(containerNameKey);
                 CloudBlobContainer container = BlobClient.GetContainerReference(containerName);
 
                 Trace.TraceInformation("Attempting asynchronous upload of block blob '{0}' to container '{1}'", fileName, containerName);
@@ -108,17 +106,16 @@ namespace DolomiteManagement
         /// Retrieve a specific track at a the given path.
         /// </summary>
         /// <param name="path">The path to find the track</param>
-        /// <param name="containerNameKey">KEY to the name of the container to retrieve the blob from</param>
+        /// <param name="containerName">The name of the container to retrieve the blob from</param>
         /// <returns>
         /// A stream that represents contains the track. 
         /// The position will be reset to the beginning.
         /// </returns>
-        public Stream GetBlob(string containerNameKey, string path)
+        public Stream GetBlob(string containerName, string path)
         {
             try
             {
                 // Retreive a reference to the track container
-                string containerName = GetContainerNameFromSettings(containerNameKey);
                 Trace.TraceInformation("Attempting to retrieve '{0}' from container '{1}'", path, containerName);
                 CloudBlobContainer container = BlobClient.GetContainerReference(containerName);
 
@@ -147,12 +144,11 @@ namespace DolomiteManagement
         /// <summary>
         /// Deletes the blob with the given path from the given container
         /// </summary>
-        /// <param name="containerNameKey">Key to the name of the container that houses the blob</param>
+        /// <param name="containerName">The name of the container that houses the blob</param>
         /// <param name="path">Path of the blob</param>
-        public void DeleteBlob(string containerNameKey, string path)
+        public void DeleteBlob(string containerName, string path)
         {
             // Retreive a reference to the container
-            string containerName = GetContainerNameFromSettings(containerNameKey);
             Trace.TraceInformation("Attempting to delete '{0}' from container '{1}'", path, containerName);
             CloudBlobContainer container = BlobClient.GetContainerReference(containerName);
 
@@ -168,11 +164,10 @@ namespace DolomiteManagement
         /// <summary>
         /// Attempts to create a container with the specified.
         /// </summary>
-        /// <param name="containerNameKey">Name of the container to create</param>
-        public void InitializeContainer(string containerNameKey)
+        /// <param name="containerName">Name of the container to create</param>
+        public void InitializeContainer(string containerName)
         {
             // Check for the existence of the container
-            string containerName = GetContainerNameFromSettings(containerNameKey);
             CloudBlobContainer container = BlobClient.GetContainerReference(containerName);
             if (container.Exists())
                 return;

@@ -1,10 +1,12 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Net;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
 using System.Threading;
+using DolomiteManagement;
 using DolomiteWcfService.Cors;
 using DolomiteWcfService.Threads;
 using Microsoft.WindowsAzure.ServiceRuntime;
@@ -13,6 +15,14 @@ namespace DolomiteWcfService
 {
     public class DolomiteWorkerRole : RoleEntryPoint
     {
+        #region Constants
+
+        private const string IdleTimeoutKey = "IdleTimeout";
+        private const string AbsolulteTimeoutKey = "AbsoluteTimeout";
+        private const string TrackContainerKey = "TrackStorageContainer";
+        private const string UserKeyEnabledKey = "UserKeysEnabled";
+
+        #endregion
 
         #region Member Variables
 
@@ -55,6 +65,19 @@ namespace DolomiteWcfService
         public override bool OnStart()
         {
             Trace.TraceInformation("Starting Dolomite WCF Service...");
+
+            // Initialize the managers
+            try
+            {
+                InitializeUserManager();
+                InitializeTrackManager();
+            }
+            catch (Exception e)
+            {
+                Trace.TraceError("Failed to initialize managers: {0}", e.Message);
+                Trace.TraceError("Giving up on starting service.");
+                return false;
+            }
 
             // Set the maximum number of concurrent connections 
             ServicePointManager.DefaultConnectionLimit = 12;
@@ -122,13 +145,13 @@ namespace DolomiteWcfService
             // Start up the onboarding thread
             try
             {
-                Trace.TraceInformation("Starting onboarding threads...");
-                StartOnboardingThreads(1);
-                Trace.TraceInformation("Onboarding threads started");
+                //Trace.TraceInformation("Starting onboarding threads...");
+                //StartOnboardingThreads(1);
+                //Trace.TraceInformation("Onboarding threads started");
 
-                Trace.TraceInformation("Starting metadata threads...");
-                StartMetadataThreads(1);
-                Trace.TraceInformation("Metadata threads started");
+                //Trace.TraceInformation("Starting metadata threads...");
+                //StartMetadataThreads(1);
+                //Trace.TraceInformation("Metadata threads started");
             }
             catch (Exception e)
             {
@@ -189,6 +212,42 @@ namespace DolomiteWcfService
                 MetadataWriting newWriting = new MetadataWriting();
                 Thread newThread = new Thread(newWriting.Run);
                 newThread.Start();
+            }
+        }
+
+        private static void InitializeUserManager()
+        {
+            try
+            {
+                // Get the user enabled key
+                var ukEnabled = RoleEnvironment.GetConfigurationSettingValue(UserKeyEnabledKey);
+                UserManager.UserKeysEnabled = bool.Parse(ukEnabled);
+
+                // Get the idle timeout
+                var idleTimeout = RoleEnvironment.GetConfigurationSettingValue(IdleTimeoutKey);
+                UserManager.IdleTimeoutInterval = TimeSpan.Parse(idleTimeout);
+
+                // Get the absolute timeout
+                var absTimeout = RoleEnvironment.GetConfigurationSettingValue(AbsolulteTimeoutKey);
+                UserManager.AbsoluteTimeoutInterval = TimeSpan.Parse(absTimeout);
+            }
+            catch (Exception e)
+            {
+                throw new InvalidDataException("Failed to initialize the User Manager.", e);
+            }
+        }
+
+        private static void InitializeTrackManager()
+        {
+            try
+            {
+                // Get the track storage container
+                var trackContainer = RoleEnvironment.GetConfigurationSettingValue(TrackContainerKey);
+                TrackManager.TrackStorageContainer = trackContainer;
+            }
+            catch (Exception e)
+            {
+                throw new InvalidDataException("Failed to initialize the Track Manager.", e);
             }
         }
     }

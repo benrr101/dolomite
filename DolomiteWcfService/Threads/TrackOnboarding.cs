@@ -231,7 +231,7 @@ namespace DolomiteWcfService.Threads
                     OriginalPath = tempPath,
                     TrackGuid = trackGuid
                 };
-            AzureStorageManager.StoreBlobAsync(TrackManager.StorageContainerKey, targetPath, file, CompleteMoveFileToAzure, state);
+            AzureStorageManager.StoreBlobAsync(String.Empty, targetPath, file, CompleteMoveFileToAzure, state);
         }
 
         /// <summary>
@@ -345,7 +345,7 @@ namespace DolomiteWcfService.Threads
             {
                 // We need to store the art and create a new db record for it
                 string artPath = TrackManager.ArtDirectory + "/" + trackGuid;
-                AzureStorageManager.StoreBlob(TrackManager.StorageContainerKey, artPath, artFile);
+                AzureStorageManager.StoreBlob(String.Empty, artPath, artFile);
 
                 // The art guid is the guid of the track
                 artGuid = trackGuid;
@@ -365,7 +365,7 @@ namespace DolomiteWcfService.Threads
         {
             // Delete the original file from the local storage
             DeleteFileWithWait(workItemGuid.ToString());
-            AzureStorageManager.DeleteBlob(TrackManager.StorageContainerKey, String.Format("original/{0}", workItemGuid));
+            AzureStorageManager.DeleteBlob(String.Empty, String.Format("original/{0}", workItemGuid));
 
             // Iterate over the qualities and delete them from local storage and azure
             foreach (Quality quality in DatabaseManager.GetAllQualities())
@@ -376,7 +376,7 @@ namespace DolomiteWcfService.Threads
 
                 // Delete the file from Azure
                 string azurePath = String.Format("{0}/{1}", quality.Directory, workItemGuid);
-                AzureStorageManager.DeleteBlob(TrackManager.StorageContainerKey, azurePath);
+                AzureStorageManager.DeleteBlob(String.Empty, azurePath);
             }
 
             // Delete the track from the database

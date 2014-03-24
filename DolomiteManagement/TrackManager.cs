@@ -16,8 +16,6 @@ namespace DolomiteManagement
 
         public const string ArtDirectory = "art";
 
-        public const string StorageContainerKey = "trackStorageContainer";
-
         #endregion
 
         #region Properties and Member Variables
@@ -26,9 +24,9 @@ namespace DolomiteManagement
 
         private TrackDbManager DatabaseManager { get; set; }
 
-        private LocalStorageManager LocalStorageManager { get; set; }
+        public static string TrackStorageContainer { private get; set; }
 
-        private UserManager UserManager { get; set; }
+        private LocalStorageManager LocalStorageManager { get; set; }
 
         #endregion
 
@@ -49,26 +47,17 @@ namespace DolomiteManagement
         /// </summary>
         private TrackManager() 
         {
-            // Check for the existence of the track container and store it
-            if (Properties.Settings.Default[StorageContainerKey] == null)
-            {
-                throw new InvalidDataException("Track storage container key not set in settings.");
-            }
-
             // Get an instance of the azure storage manager
             AzureStorageManager = AzureStorageManager.Instance;
 
             // Make sure the track container exists
-            AzureStorageManager.InitializeContainer(StorageContainerKey);
+            AzureStorageManager.InitializeContainer(TrackStorageContainer);
 
             // Get an instance of the database manager
             DatabaseManager = TrackDbManager.Instance;
 
             // Get an instance of the local storage manager
             LocalStorageManager = LocalStorageManager.Instance;
-
-            // Get an instance of the user manager
-            UserManager = UserManager.Instance;
         }
 
         #endregion
@@ -97,7 +86,7 @@ namespace DolomiteManagement
             foreach (Track.Quality quality in track.Qualities)
             {
                 string path = quality.Directory + '/' + trackGuid;
-                AzureStorageManager.DeleteBlob(StorageContainerKey, path);
+                AzureStorageManager.DeleteBlob(TrackStorageContainer, path);
             }
 
             // Delete the record for the track in the database
@@ -151,7 +140,7 @@ namespace DolomiteManagement
                     String.Format("The track with guid {0} and quality {1} does not exist", track.Id, quality));
 
             // Fetch the file from Azure
-            qualityObj.FileStream = AzureStorageManager.GetBlob(StorageContainerKey, qualityObj.Directory + "/" + track.Id);
+            qualityObj.FileStream = AzureStorageManager.GetBlob(TrackStorageContainer, qualityObj.Directory + "/" + track.Id);
             return qualityObj;
         }
 
@@ -168,7 +157,7 @@ namespace DolomiteManagement
 
             mimetype = art.Mimetype;
             string path = ArtDirectory + "/" + art.Id;
-            return AzureStorageManager.GetBlob(StorageContainerKey, path);
+            return AzureStorageManager.GetBlob(TrackStorageContainer, path);
         }
 
         /// <summary>
@@ -211,7 +200,7 @@ namespace DolomiteManagement
             foreach (Track.Quality quality in track.Qualities)
             {
                 string path = quality.Directory + '/' + guid;
-                AzureStorageManager.DeleteBlob(StorageContainerKey, path);
+                AzureStorageManager.DeleteBlob(TrackStorageContainer, path);
             }
 
             // Step 3: Mark the track as not onboarded
@@ -266,7 +255,7 @@ namespace DolomiteManagement
             {
                 // Delete the file from Azure -- it's been deleted from the db already
                 string path = ArtDirectory + "/" + track.ArtId.Value;
-                AzureStorageManager.DeleteBlob(StorageContainerKey, path);
+                AzureStorageManager.DeleteBlob(TrackStorageContainer, path);
             }
 
             // Was there even an art file attached?
@@ -292,7 +281,7 @@ namespace DolomiteManagement
 
                 // We need to store the art and create a new db record for it
                 string artPath = ArtDirectory + "/" + artGuid;
-                AzureStorageManager.StoreBlob(StorageContainerKey, artPath, stream);
+                AzureStorageManager.StoreBlob(TrackStorageContainer, artPath, stream);
                 DatabaseManager.CreateArtRecord(artGuid, mimetype, hash);
             }
 

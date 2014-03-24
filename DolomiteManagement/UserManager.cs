@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using DolomiteManagement.Exceptions;
@@ -11,24 +10,13 @@ namespace DolomiteManagement
 {
     public class UserManager
     {
-
-        #region Constant
-
-        public const string UserKeysEnabledKey = "userKeysEnabled";
-
-        public const string AbsoluteTimeoutKey = "absoluteTimeout";
-
-        public const string IdleTimeoutKey = "IdleTimeout";
-
-        #endregion
-
         #region Properties and Member Variables
 
-        private bool UserKeysEnabled { get; set; }
+        public static bool UserKeysEnabled { private get; set; }
 
-        private TimeSpan AbsoluteTimeoutInterval { get; set; }
+        public static TimeSpan AbsoluteTimeoutInterval { private get; set; }
 
-        private TimeSpan IdleTimeoutInterval { get; set; }
+        public static TimeSpan IdleTimeoutInterval { private get; set; }
 
         private UserDbManager DatabaseManager { get; set; }
 
@@ -51,23 +39,6 @@ namespace DolomiteManagement
         /// </summary>
         private UserManager() 
         {
-            // Check if the user keys checking is enabled in the configuration file
-            if (Properties.Settings.Default[UserKeysEnabledKey] as Boolean? == null)
-                throw new InvalidDataException("Track storage container key not set in settings.");
-
-            UserKeysEnabled = (bool)Properties.Settings.Default[UserKeysEnabledKey];
-
-            // Determine the absolute and idle timeout intervals
-            if (Properties.Settings.Default[IdleTimeoutKey] as TimeSpan? == null)
-                throw new InvalidDataException("Session idle timeout interval not set in settings.");
-
-            IdleTimeoutInterval = (TimeSpan) Properties.Settings.Default[IdleTimeoutKey];
-
-            if (Properties.Settings.Default[AbsoluteTimeoutKey] as TimeSpan? == null)
-                throw new InvalidDataException("Session absolute timeout interval not set in settings.");
-
-            AbsoluteTimeoutInterval = (TimeSpan)Properties.Settings.Default[AbsoluteTimeoutKey];
-
             // Grab an instance of the User database manager
             DatabaseManager = UserDbManager.Instance;
         }
