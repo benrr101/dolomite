@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace DolomiteWcfService
+namespace DolomiteManagement
 {
-    internal class MimetypeDetector
+    public class MimetypeDetector
     {
         private const string FlacBytes = "fLaC";
 

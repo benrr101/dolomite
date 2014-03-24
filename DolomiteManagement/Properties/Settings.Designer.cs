@@ -22,5 +22,53 @@ namespace DolomiteManagement.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("trackstorage")]
+        public string trackStorageContainer {
+            get {
+                return ((string)(this["trackStorageContainer"]));
+            }
+            set {
+                this["trackStorageContainer"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool userKeysEnabled {
+            get {
+                return ((bool)(this["userKeysEnabled"]));
+            }
+            set {
+                this["userKeysEnabled"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("02:00:00")]
+        public global::System.TimeSpan idleTimeout {
+            get {
+                return ((global::System.TimeSpan)(this["idleTimeout"]));
+            }
+            set {
+                this["idleTimeout"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("06:00:00")]
+        public global::System.TimeSpan absoluteTimeout {
+            get {
+                return ((global::System.TimeSpan)(this["absoluteTimeout"]));
+            }
+            set {
+                this["absoluteTimeout"] = value;
+            }
+        }
     }
 }
