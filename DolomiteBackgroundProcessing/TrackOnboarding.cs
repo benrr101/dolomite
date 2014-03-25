@@ -99,6 +99,13 @@ namespace DolomiteBackgroundProcessing
                         CancelOnboarding(workItemId.Value);
                         continue;
                     }
+                    catch (CorruptFileException)
+                    {
+                        // File is corrupt for whatever reason. We don't want this file.
+                        Trace.TraceError("{1} found corrupt file for track {0}. Removing record...", workItemId, GetHashCode());
+                        CancelOnboarding(workItemId.Value);
+                        continue;
+                    }
 
                     // Create all the qualities for the track
                     try
