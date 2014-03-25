@@ -18,8 +18,18 @@
       <Setting name="AbsoluteTimeout" />
     </ConfigurationSettings>
     <LocalResources>
-      <LocalStorage name="onboardingStorage" cleanOnRoleRecycle="true" sizeInMB="2048" />
-      <LocalStorage name="LocalStorage1" cleanOnRoleRecycle="false" />
+    </LocalResources>
+  </WorkerRole>
+  <WorkerRole name="DolomiteBackgroundProcessing" vmsize="ExtraSmall">
+    <Imports>
+      <Import moduleName="Diagnostics" />
+    </Imports>
+    <ConfigurationSettings>
+      <Setting name="TrackStorageContainer" />
+      <Setting name="StorageConnectionString" />
+    </ConfigurationSettings>
+    <LocalResources>
+      <LocalStorage name="OnboardingStorage" cleanOnRoleRecycle="true" sizeInMB="4096" />
     </LocalResources>
   </WorkerRole>
 </ServiceDefinition>

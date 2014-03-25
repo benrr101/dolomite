@@ -1,19 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{EF8D794F-D078-4AC6-9159-ECDDDE11091F}</ProjectGuid>
+    <ProjectGuid>{16709AC6-84D7-498D-A65F-7B1CFD6211F1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DolomiteWcfService</RootNamespace>
-    <AssemblyName>DolomiteWcfService</AssemblyName>
+    <RootNamespace>DolomiteBackgroundProcessing</RootNamespace>
+    <AssemblyName>DolomiteBackgroundProcessing</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <RoleType>Worker</RoleType>
-    <WcfConfigValidationEnabled>True</WcfConfigValidationEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -55,21 +54,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\WindowsAzure.Storage.3.1.0.0\lib\net40\Microsoft.WindowsAzure.Storage.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json">
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.5.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="policy.2.0.taglib-sharp">
       <HintPath>..\packages\taglib.2.1.0.0\lib\policy.2.0.taglib-sharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Data.Entity" />
     <Reference Include="System.Data.Services.Client" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.ServiceModel.Web" />
     <Reference Include="System.Spatial, Version=5.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Spatial.5.6.0\lib\net40\System.Spatial.dll</HintPath>
     </Reference>
@@ -83,28 +76,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Cors\CorsMessageInspector.cs" />
-    <Compile Include="Cors\EnableCorsBehavior.cs" />
-    <Compile Include="IAutoPlaylistEndpoint.cs" />
-    <Compile Include="IStaticPlaylistEndpoint.cs" />
-    <Compile Include="ITracksEndpoint.cs" />
-    <Compile Include="IUserEndpoint.cs" />
-    <Compile Include="MultipartParser.cs" />
-    <Compile Include="AutoPlaylistEndpoint.cs" />
+    <Compile Include="MetadataWriting.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="DolomiteWcfService.cs" />
-    <Compile Include="Responses\LoginSuccessResponse.cs" />
-    <Compile Include="Requests\UserCreationRequest.cs" />
-    <Compile Include="Requests\UserLoginRequest.cs" />
-    <Compile Include="Responses\ErrorResponse.cs" />
-    <Compile Include="Responses\PlaylistCreateSuccessResponse.cs" />
-    <Compile Include="Responses\UploadSuccessResponse.cs" />
-    <Compile Include="Responses\Response.cs" />
-    <Compile Include="StaticPlaylistEndpoint.cs" />
-    <Compile Include="TracksEndpoint.cs" />
-    <Compile Include="Settings.cs" />
-    <Compile Include="UserEndpoint.cs" />
-    <Compile Include="WebUtilities.cs" />
+    <Compile Include="TrackOnboarding.cs" />
+    <Compile Include="DolomiteBackgroundProcessing.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -119,12 +94,6 @@
       <Project>{220f4eac-a673-4534-825b-a0fe9ce76564}</Project>
       <Name>DolomiteModel</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup />
-  <ItemGroup>
-    <Content Include="Externals\ffmpeg.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

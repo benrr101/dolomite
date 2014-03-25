@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DolomiteModel", "DolomiteMo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DolomiteManagement", "DolomiteManagement\DolomiteManagement.csproj", "{133D0E5C-8DD3-4112-BB7D-352BF3BA28DD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DolomiteBackgroundProcessing", "DolomiteBackgroundProcessing\DolomiteBackgroundProcessing.csproj", "{16709AC6-84D7-498D-A65F-7B1CFD6211F1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,10 @@ Global
 		{133D0E5C-8DD3-4112-BB7D-352BF3BA28DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{133D0E5C-8DD3-4112-BB7D-352BF3BA28DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{133D0E5C-8DD3-4112-BB7D-352BF3BA28DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16709AC6-84D7-498D-A65F-7B1CFD6211F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16709AC6-84D7-498D-A65F-7B1CFD6211F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16709AC6-84D7-498D-A65F-7B1CFD6211F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16709AC6-84D7-498D-A65F-7B1CFD6211F1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

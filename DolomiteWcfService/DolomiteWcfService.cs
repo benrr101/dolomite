@@ -8,12 +8,11 @@ using System.ServiceModel.Web;
 using System.Threading;
 using DolomiteManagement;
 using DolomiteWcfService.Cors;
-using DolomiteWcfService.Threads;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
 namespace DolomiteWcfService
 {
-    public class DolomiteWorkerRole : RoleEntryPoint
+    public class DolomiteWcfService : RoleEntryPoint
     {
         #region Constants
 
@@ -142,24 +141,6 @@ namespace DolomiteWcfService
                 return false;
             }
 
-            // Start up the onboarding thread
-            try
-            {
-                //Trace.TraceInformation("Starting onboarding threads...");
-                //StartOnboardingThreads(1);
-                //Trace.TraceInformation("Onboarding threads started");
-
-                //Trace.TraceInformation("Starting metadata threads...");
-                //StartMetadataThreads(1);
-                //Trace.TraceInformation("Metadata threads started");
-            }
-            catch (Exception e)
-            {
-                Trace.TraceError("Failed to start onboarding thread: {0}", e.Message);
-                Trace.TraceError("Giving up on starting service");
-                return false;
-            }
-
             return base.OnStart();
         }
 
@@ -189,30 +170,6 @@ namespace DolomiteWcfService
             Trace.TraceInformation("Stopped Dolomite WCF Endpoint");
 
             base.OnStop();
-        }
-
-        /// <summary>
-        /// Used for starting up the onboarding threads.
-        /// </summary>
-        /// <param name="threads">The number of threads to start</param>
-        private static void StartOnboardingThreads(int threads)
-        {
-            for (int i = 0; i < threads; ++i)
-            {
-                TrackOnboarding newOnboarder = new TrackOnboarding();
-                Thread newThread = new Thread(newOnboarder.Run);
-                newThread.Start();
-            }
-        }
-
-        private static void StartMetadataThreads(int threads)
-        {
-            for (int i = 0; i < threads; ++i)
-            {
-                MetadataWriting newWriting = new MetadataWriting();
-                Thread newThread = new Thread(newWriting.Run);
-                newThread.Start();
-            }
         }
 
         private static void InitializeUserManager()

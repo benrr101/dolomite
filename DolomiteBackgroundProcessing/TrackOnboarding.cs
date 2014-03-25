@@ -11,7 +11,7 @@ using System.Threading;
 using DolomiteModel;
 using TagLib;
 
-namespace DolomiteWcfService.Threads
+namespace DolomiteBackgroundProcessing
 {
     class TrackOnboarding
     {
@@ -37,6 +37,8 @@ namespace DolomiteWcfService.Threads
         private static LocalStorageManager LocalStorageManager { get; set; }
 
         private static AzureStorageManager AzureStorageManager { get; set; }
+
+        public static string TrackStorageContainer { private get; set; }
 
         #endregion
 
@@ -231,7 +233,7 @@ namespace DolomiteWcfService.Threads
                     OriginalPath = tempPath,
                     TrackGuid = trackGuid
                 };
-            AzureStorageManager.StoreBlobAsync(String.Empty, targetPath, file, CompleteMoveFileToAzure, state);
+            AzureStorageManager.StoreBlobAsync(TrackStorageContainer, targetPath, file, CompleteMoveFileToAzure, state);
         }
 
         /// <summary>
@@ -345,7 +347,7 @@ namespace DolomiteWcfService.Threads
             {
                 // We need to store the art and create a new db record for it
                 string artPath = TrackManager.ArtDirectory + "/" + trackGuid;
-                AzureStorageManager.StoreBlob(String.Empty, artPath, artFile);
+                AzureStorageManager.StoreBlob(TrackStorageContainer, artPath, artFile);
 
                 // The art guid is the guid of the track
                 artGuid = trackGuid;
@@ -365,7 +367,7 @@ namespace DolomiteWcfService.Threads
         {
             // Delete the original file from the local storage
             DeleteFileWithWait(workItemGuid.ToString());
-            AzureStorageManager.DeleteBlob(String.Empty, String.Format("original/{0}", workItemGuid));
+            AzureStorageManager.DeleteBlob(TrackStorageContainer, String.Format("original/{0}", workItemGuid));
 
             // Iterate over the qualities and delete them from local storage and azure
             foreach (Quality quality in DatabaseManager.GetAllQualities())
@@ -376,7 +378,7 @@ namespace DolomiteWcfService.Threads
 
                 // Delete the file from Azure
                 string azurePath = String.Format("{0}/{1}", quality.Directory, workItemGuid);
-                AzureStorageManager.DeleteBlob(String.Empty, azurePath);
+                AzureStorageManager.DeleteBlob(TrackStorageContainer, azurePath);
             }
 
             // Delete the track from the database
