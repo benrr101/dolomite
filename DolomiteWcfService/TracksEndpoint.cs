@@ -93,21 +93,25 @@ namespace DolomiteWcfService
             }
             catch (InvalidSessionException)
             {
+                file.Close();
                 return WebUtilities.GenerateUnauthorizedResponse();
             }
             catch (MissingFieldException mfe)
             {
+                file.Close();
                 ErrorResponse eResponse = new ErrorResponse(mfe.Message);
                 return WebUtilities.GenerateResponse(eResponse, HttpStatusCode.BadRequest);
             }
             catch (DuplicateNameException)
             {
+                file.Close();
                 ErrorResponse eResponse = new ErrorResponse("The request could not be completed. A track with the same hash already exists." +
                                                             " Duplicate tracks are not permitted");
                 return WebUtilities.GenerateResponse(eResponse, HttpStatusCode.Conflict);
             }
             catch (Exception)
             {
+                file.Close();
                 return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
                     HttpStatusCode.InternalServerError);
             }

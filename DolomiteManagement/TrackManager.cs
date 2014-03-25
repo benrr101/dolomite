@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using DolomiteManagement.Asynchronous;
 using TagLib;
 using DolomiteModel;
 using DolomiteModel.PublicRepresentations;
@@ -320,12 +321,39 @@ namespace DolomiteManagement
             // Step 0: Calculate hash to determine if the track is a duplicate
             hash = LocalStorageManager.CalculateHash(stream, owner);
 
-            // Step 1: Upload the track to temporary storage in azure
+            // Step 1: Upload the track to temporary storage in azure, asynchronously
             guid = Guid.NewGuid();
-            AzureStorageManager.StoreBlob(TrackStorageContainer, OnboardingDirectory + '/' + guid, stream);
+            string azurePath = OnboardingDirectory + '/' + guid;
+            UploadAsynchronousState state = new UploadAsynchronousState
+            {
+                Owner = owner,
+                Stream = stream,
+                TrackGuid = guid,
+                TrackHash = hash
+            };
 
-            // Step 2: Create the inital record of the track in the database
-            DatabaseManager.CreateInitialTrackRecord(owner, guid, hash);
+            AzureStorageManager.StoreBlobAsync(TrackStorageContainer, azurePath, stream, UploadTrackAsyncCallback, state);
+        }
+
+        /// <summary>
+        /// Callback for when the upload to Azure has completed
+        /// </summary>
+        /// <param name="state">The result from the async call</param>
+        private void UploadTrackAsyncCallback(IAsyncResult state)
+        {
+            // Verify the async state object
+            UploadAsynchronousState asyncState = state.AsyncState as UploadAsynchronousState;
+            if (asyncState == null)
+            {
+                // Something really went wrong.
+                throw new InvalidDataException("Expected AsynchronousState object.");
+            }
+
+            // Create the initial DB record for the track in the DB
+            DatabaseManager.CreateInitialTrackRecord(asyncState.Owner, asyncState.TrackGuid, asyncState.TrackHash);
+
+            // Close the stream
+            asyncState.Stream.Close();
         }
 
         #endregion
