@@ -132,7 +132,7 @@ namespace DolomiteBackgroundProcessing
             {
                 // Get the track storage container
                 var trackContainer = RoleEnvironment.GetConfigurationSettingValue(TrackContainerKey);
-                TrackManager.TrackStorageContainer = trackContainer;
+                TrackOnboarding.TrackStorageContainer = trackContainer;
             }
             catch (Exception e)
             {

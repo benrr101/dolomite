@@ -186,23 +186,6 @@ namespace DolomiteManagement
             }
         }
 
-        /// <summary>
-        /// Fetches the container name from the settings table
-        /// </summary>
-        /// <param name="containerNameKey">Key used to lookup the container name from the settings</param>
-        /// <returns>The container name</returns>
-        private static string GetContainerNameFromSettings(string containerNameKey)
-        {
-            // Fetch the string from the settings
-            string containerName = Properties.Settings.Default[containerNameKey] as string;
-            if (containerName == null)
-            {
-                throw new NullReferenceException(String.Format("Setting with key {0} does not exist or is not a string", containerNameKey));
-            }
-
-            return containerName;
-        }
-
         #endregion
     }
 }

@@ -32,6 +32,8 @@ namespace DolomiteBackgroundProcessing
 
         private const int SleepSeconds = 10;
 
+        public const string OnboardingDirectory = "onboarding";
+
         private static TrackDbManager DatabaseManager { get; set; }
 
         private static LocalStorageManager LocalStorageManager { get; set; }
@@ -73,7 +75,19 @@ namespace DolomiteBackgroundProcessing
                     // We have work to do!
                     Trace.TraceInformation("Work item {0} picked up by {1}", workItemId.Value, GetHashCode());
                     
-                    // Grab the metadata for the track
+                    // Step 1: Grab the track from Azure
+                    try
+                    {
+                        CopyFileToLocalStorage(LocalStorageManager.GetPath(workItemId.Value.ToString()), workItemId.Value);
+                    }
+                    catch (Exception)
+                    {
+                        Trace.TraceError("{1} failed to retrieve uploaded track {0} from Azure. Removing record...", workItemId, GetHashCode());
+                        CancelOnboarding(workItemId.Value);
+                        continue;
+                    }
+
+                    // Step 2: Grab the metadata for the track
                     try
                     {
                         StoreMetadata(workItemId.Value);
@@ -98,7 +112,8 @@ namespace DolomiteBackgroundProcessing
                         continue;
                     }
 
-                    // Onboarding complete! Release the lock!
+                    // Onboarding complete! Delete the temp copy! Release the lock!
+                    AzureStorageManager.DeleteBlob(TrackStorageContainer, OnboardingDirectory + '/' + workItemId.Value);
                     DatabaseManager.ReleaseAndCompleteOnboardingItem(workItemId.Value);
                 }
                 else
@@ -220,7 +235,7 @@ namespace DolomiteBackgroundProcessing
         private void MoveFileToAzure(string tempPath, string directory, Guid trackGuid, bool deleteOnComplete = true)
         { 
             // Open a file stream to the file to move
-            IO.FileStream file = LocalStorageManager.RetrieveFile(tempPath);
+            IO.FileStream file = LocalStorageManager.RetrieveReadableFile(tempPath);
 
             // Construct the target destination
             string targetPath = directory + '/' + trackGuid;
@@ -234,6 +249,26 @@ namespace DolomiteBackgroundProcessing
                     TrackGuid = trackGuid
                 };
             AzureStorageManager.StoreBlobAsync(TrackStorageContainer, targetPath, file, CompleteMoveFileToAzure, state);
+        }
+
+        /// <summary>
+        /// Copies the file from azure to the local, temporary storage
+        /// </summary>
+        /// <param name="tempPath">Path for the file in local storage</param>
+        /// <param name="trackGuid">The guid of the track to pull from azure</param>
+        private void CopyFileToLocalStorage(string tempPath, Guid trackGuid)
+        {
+            // Get the stream from Azure
+            string azurePath = OnboardingDirectory + '/' + trackGuid;
+            IO.Stream origStream = AzureStorageManager.GetBlob(TrackStorageContainer, azurePath);
+
+            // Copy the stream to local storage
+            IO.Stream localFile = IO.File.Create(tempPath);
+            origStream.CopyTo(localFile);
+
+            // We only need the path for future ops, so close the stream
+            origStream.Close();
+            localFile.Close();
         }
 
         /// <summary>
@@ -271,7 +306,7 @@ namespace DolomiteBackgroundProcessing
             // Generate the mimetype of the track
             // Why? b/c tag lib isn't smart enough to figure it out for me,
             // except for determining it based on extension -- which is silly.
-            IO.FileStream localFile = LocalStorageManager.RetrieveFile(trackGuid.ToString());
+            IO.FileStream localFile = LocalStorageManager.RetrieveReadableFile(trackGuid.ToString());
             string mimetype = MimetypeDetector.GetAudioMimetype(localFile);
             if (mimetype == null)
             {
@@ -368,6 +403,9 @@ namespace DolomiteBackgroundProcessing
             // Delete the original file from the local storage
             DeleteFileWithWait(workItemGuid.ToString());
             AzureStorageManager.DeleteBlob(TrackStorageContainer, String.Format("original/{0}", workItemGuid));
+
+            // Delete the original file from azure
+            AzureStorageManager.DeleteBlob(TrackStorageContainer, OnboardingDirectory + '/' + workItemGuid);
 
             // Iterate over the qualities and delete them from local storage and azure
             foreach (Quality quality in DatabaseManager.GetAllQualities())

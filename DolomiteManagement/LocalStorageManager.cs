@@ -37,7 +37,7 @@ namespace DolomiteManagement
         public string GetPath(string filename)
         {
             // Create reference to the local storage
-            LocalResource localStorage = RoleEnvironment.GetLocalResource("onboardingStorage");
+            LocalResource localStorage = RoleEnvironment.GetLocalResource("OnboardingStorage");
 
             // Build the path of the file
             return Path.Combine(localStorage.RootPath, filename);
@@ -79,7 +79,7 @@ namespace DolomiteManagement
         /// </summary>
         /// <param name="filename">The name of the file to retrieve</param>
         /// <returns>The filestream of the file requested</returns>
-        public FileStream RetrieveFile(string filename)
+        public FileStream RetrieveReadableFile(string filename)
         {
             // Return a stream of the file
             return File.OpenRead(GetPath(filename));

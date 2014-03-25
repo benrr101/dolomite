@@ -16,6 +16,8 @@ namespace DolomiteManagement
 
         public const string ArtDirectory = "art";
 
+        public const string OnboardingDirectory = "onboarding";
+
         #endregion
 
         #region Properties and Member Variables
@@ -193,8 +195,11 @@ namespace DolomiteManagement
             if (track.Owner != owner)
                 throw new UnauthorizedAccessException("The requested track is not owned by the session owner.");
 
+            // Step 0.75: Calculate hash to determine if the track is a duplicate
+            hash = LocalStorageManager.CalculateHash(stream, owner);
+
             // Step 1: Upload the track to temporary storage
-            hash = LocalStorageManager.StoreStream(stream, guid.ToString(), null);
+            AzureStorageManager.StoreBlob(TrackStorageContainer, OnboardingDirectory + '/' + guid, stream);
 
             // Step 2: Delete existing blobs from azure
             foreach (Track.Quality quality in track.Qualities)
@@ -312,9 +317,12 @@ namespace DolomiteManagement
         /// <returns>The guid for identifying the track</returns>
         public void UploadTrack(Stream stream, string owner, out Guid guid, out string hash)
         {
+            // Step 0: Calculate hash to determine if the track is a duplicate
+            hash = LocalStorageManager.CalculateHash(stream, owner);
+
             // Step 1: Upload the track to temporary storage in azure
             guid = Guid.NewGuid();
-            hash = LocalStorageManager.StoreStream(stream, guid.ToString(), owner);
+            AzureStorageManager.StoreBlob(TrackStorageContainer, OnboardingDirectory + '/' + guid, stream);
 
             // Step 2: Create the inital record of the track in the database
             DatabaseManager.CreateInitialTrackRecord(owner, guid, hash);
