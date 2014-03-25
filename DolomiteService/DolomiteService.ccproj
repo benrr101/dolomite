@@ -55,6 +55,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="DolomiteBackgroundProcessingContent\" />
     <Folder Include="DolomiteWcfServiceContent\" />
   </ItemGroup>
   <ItemGroup>
