@@ -3,20 +3,21 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using DolomiteManagement.Asynchronous;
 using TagLib;
 using DolomiteModel;
 using DolomiteModel.PublicRepresentations;
 
-namespace DolomiteWcfService
+namespace DolomiteManagement
 {
-    class TrackManager
+    public class TrackManager
     {
 
         #region Constants
 
         public const string ArtDirectory = "art";
 
-        public const string StorageContainerKey = "trackStorageContainer";
+        public const string OnboardingDirectory = "onboarding";
 
         #endregion
 
@@ -26,9 +27,9 @@ namespace DolomiteWcfService
 
         private TrackDbManager DatabaseManager { get; set; }
 
-        private LocalStorageManager LocalStorageManager { get; set; }
+        public static string TrackStorageContainer { private get; set; }
 
-        private UserManager UserManager { get; set; }
+        private LocalStorageManager LocalStorageManager { get; set; }
 
         #endregion
 
@@ -49,26 +50,17 @@ namespace DolomiteWcfService
         /// </summary>
         private TrackManager() 
         {
-            // Check for the existence of the track container and store it
-            if (Properties.Settings.Default[StorageContainerKey] == null)
-            {
-                throw new InvalidDataException("Track storage container key not set in settings.");
-            }
-
             // Get an instance of the azure storage manager
             AzureStorageManager = AzureStorageManager.Instance;
 
             // Make sure the track container exists
-            AzureStorageManager.InitializeContainer(StorageContainerKey);
+            AzureStorageManager.InitializeContainer(TrackStorageContainer);
 
             // Get an instance of the database manager
             DatabaseManager = TrackDbManager.Instance;
 
             // Get an instance of the local storage manager
             LocalStorageManager = LocalStorageManager.Instance;
-
-            // Get an instance of the user manager
-            UserManager = UserManager.Instance;
         }
 
         #endregion
@@ -97,7 +89,7 @@ namespace DolomiteWcfService
             foreach (Track.Quality quality in track.Qualities)
             {
                 string path = quality.Directory + '/' + trackGuid;
-                AzureStorageManager.DeleteBlob(StorageContainerKey, path);
+                AzureStorageManager.DeleteBlob(TrackStorageContainer, path);
             }
 
             // Delete the record for the track in the database
@@ -151,7 +143,7 @@ namespace DolomiteWcfService
                     String.Format("The track with guid {0} and quality {1} does not exist", track.Id, quality));
 
             // Fetch the file from Azure
-            qualityObj.FileStream = AzureStorageManager.GetBlob(StorageContainerKey, qualityObj.Directory + "/" + track.Id);
+            qualityObj.FileStream = AzureStorageManager.GetBlob(TrackStorageContainer, qualityObj.Directory + "/" + track.Id);
             return qualityObj;
         }
 
@@ -168,7 +160,7 @@ namespace DolomiteWcfService
 
             mimetype = art.Mimetype;
             string path = ArtDirectory + "/" + art.Id;
-            return AzureStorageManager.GetBlob(StorageContainerKey, path);
+            return AzureStorageManager.GetBlob(TrackStorageContainer, path);
         }
 
         /// <summary>
@@ -204,18 +196,19 @@ namespace DolomiteWcfService
             if (track.Owner != owner)
                 throw new UnauthorizedAccessException("The requested track is not owned by the session owner.");
 
-            // Step 1: Upload the track to temporary storage
-            hash = LocalStorageManager.StoreStream(stream, guid.ToString(), null);
+            // Step 0.75: Calculate hash to determine if the track is a duplicate
+            hash = LocalStorageManager.CalculateHash(stream, owner);
 
-            // Step 2: Delete existing blobs from azure
-            foreach (Track.Quality quality in track.Qualities)
+            // Step 1: Upload the track to temporary storage in azure, asynchronously
+            string azurePath = OnboardingDirectory + '/' + guid;
+            UploadAsynchronousState state = new UploadAsynchronousState
             {
-                string path = quality.Directory + '/' + guid;
-                AzureStorageManager.DeleteBlob(StorageContainerKey, path);
-            }
-
-            // Step 3: Mark the track as not onboarded
-            DatabaseManager.MarkTrackAsNotOnboarderd(guid, hash);
+                Owner = owner,
+                Stream = stream,
+                TrackGuid = guid,
+                TrackHash = hash
+            };
+            AzureStorageManager.StoreBlobAsync(TrackStorageContainer, azurePath, stream, ReplaceTrackAsyncCallback, state);
         }
 
         /// <summary>
@@ -266,7 +259,7 @@ namespace DolomiteWcfService
             {
                 // Delete the file from Azure -- it's been deleted from the db already
                 string path = ArtDirectory + "/" + track.ArtId.Value;
-                AzureStorageManager.DeleteBlob(StorageContainerKey, path);
+                AzureStorageManager.DeleteBlob(TrackStorageContainer, path);
             }
 
             // Was there even an art file attached?
@@ -292,7 +285,7 @@ namespace DolomiteWcfService
 
                 // We need to store the art and create a new db record for it
                 string artPath = ArtDirectory + "/" + artGuid;
-                AzureStorageManager.StoreBlob(StorageContainerKey, artPath, stream);
+                AzureStorageManager.StoreBlob(TrackStorageContainer, artPath, stream);
                 DatabaseManager.CreateArtRecord(artGuid, mimetype, hash);
             }
 
@@ -323,12 +316,73 @@ namespace DolomiteWcfService
         /// <returns>The guid for identifying the track</returns>
         public void UploadTrack(Stream stream, string owner, out Guid guid, out string hash)
         {
-            // Step 1: Upload the track to temporary storage in azure
-            guid = Guid.NewGuid();
-            hash = LocalStorageManager.StoreStream(stream, guid.ToString(), owner);
+            // Step 0: Calculate hash to determine if the track is a duplicate
+            hash = LocalStorageManager.CalculateHash(stream, owner);
 
-            // Step 2: Create the inital record of the track in the database
-            DatabaseManager.CreateInitialTrackRecord(owner, guid, hash);
+            // Step 1: Upload the track to temporary storage in azure, asynchronously
+            guid = Guid.NewGuid();
+            string azurePath = OnboardingDirectory + '/' + guid;
+            UploadAsynchronousState state = new UploadAsynchronousState
+            {
+                Owner = owner,
+                Stream = stream,
+                TrackGuid = guid,
+                TrackHash = hash
+            };
+
+            AzureStorageManager.StoreBlobAsync(TrackStorageContainer, azurePath, stream, UploadTrackAsyncCallback, state);
+        }
+
+        /// <summary>
+        /// Callback for when the upload to Azure has completed
+        /// </summary>
+        /// <param name="state">The result from the async call</param>
+        private void UploadTrackAsyncCallback(IAsyncResult state)
+        {
+            // Verify the async state object
+            UploadAsynchronousState asyncState = state.AsyncState as UploadAsynchronousState;
+            if (asyncState == null)
+            {
+                // Something really went wrong.
+                throw new InvalidDataException("Expected UploadAsynchronousState object.");
+            }
+
+            // Create the initial DB record for the track in the DB
+            DatabaseManager.CreateInitialTrackRecord(asyncState.Owner, asyncState.TrackGuid, asyncState.TrackHash);
+
+            // Close the stream
+            asyncState.Stream.Close();
+        }
+
+        /// <summary>
+        /// Callback for when the replacement track upload has completed. This
+        /// will delete all existing qualities for the track and reset the
+        /// onboarding status for the track
+        /// </summary>
+        /// <param name="state">The result from the async call</param>
+        private void ReplaceTrackAsyncCallback(IAsyncResult state)
+        {
+            // Verify the async state object
+            UploadAsynchronousState asyncState = state.AsyncState as UploadAsynchronousState;
+            if (asyncState == null)
+            {
+                // Something really went wrong.
+                throw new InvalidDataException("Expected UploadAsynchronousState object.");
+            }
+
+            // Close the stream, we're done with it
+            asyncState.Stream.Close();
+
+            // Delete existing blobs for the track in azure
+            Track track = DatabaseManager.GetTrackByGuid(asyncState.TrackGuid);
+            foreach (Track.Quality quality in track.Qualities)
+            {
+                string path = quality.Directory + '/' + track.Id;
+                AzureStorageManager.DeleteBlob(TrackStorageContainer, path);
+            }
+
+            // Mark the track a needing re-onboarding
+            DatabaseManager.MarkTrackAsNotOnboarderd(track.Id, asyncState.TrackHash);
         }
 
         #endregion

@@ -4,8 +4,9 @@ using System.Data;
 using System.IO;
 using System.Net;
 using System.ServiceModel.Channels;
+using DolomiteManagement;
+using DolomiteManagement.Exceptions;
 using DolomiteModel.PublicRepresentations;
-using DolomiteWcfService.Exceptions;
 using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
 using AntsCode.Util;
@@ -92,21 +93,25 @@ namespace DolomiteWcfService
             }
             catch (InvalidSessionException)
             {
+                file.Close();
                 return WebUtilities.GenerateUnauthorizedResponse();
             }
             catch (MissingFieldException mfe)
             {
+                file.Close();
                 ErrorResponse eResponse = new ErrorResponse(mfe.Message);
                 return WebUtilities.GenerateResponse(eResponse, HttpStatusCode.BadRequest);
             }
             catch (DuplicateNameException)
             {
+                file.Close();
                 ErrorResponse eResponse = new ErrorResponse("The request could not be completed. A track with the same hash already exists." +
                                                             " Duplicate tracks are not permitted");
                 return WebUtilities.GenerateResponse(eResponse, HttpStatusCode.Conflict);
             }
             catch (Exception)
             {
+                file.Close();
                 return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
                     HttpStatusCode.InternalServerError);
             }

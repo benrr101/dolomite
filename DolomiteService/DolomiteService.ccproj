@@ -37,6 +37,14 @@
     <ServiceConfiguration Include="ServiceConfiguration.Cloud.cscfg" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DolomiteBackgroundProcessing\DolomiteBackgroundProcessing.csproj">
+      <Name>DolomiteBackgroundProcessing</Name>
+      <Project>{16709ac6-84d7-498d-a65f-7b1cfd6211f1}</Project>
+      <Private>True</Private>
+      <RoleType>Worker</RoleType>
+      <RoleName>DolomiteBackgroundProcessing</RoleName>
+      <UpdateDiagnosticsConnectionStringOnPublish>True</UpdateDiagnosticsConnectionStringOnPublish>
+    </ProjectReference>
     <ProjectReference Include="..\DolomiteWcfService\DolomiteWcfService.csproj">
       <Name>DolomiteWcfService</Name>
       <Project>{ef8d794f-d078-4ac6-9159-ecddde11091f}</Project>
@@ -47,10 +55,14 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="DolomiteBackgroundProcessingContent\" />
     <Folder Include="DolomiteWcfServiceContent\" />
     <Folder Include="Profiles" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="DolomiteBackgroundProcessingContent\diagnostics.wadcfg">
+      <SubType>Content</SubType>
+    </Content>
     <Content Include="DolomiteWcfServiceContent\diagnostics.wadcfg">
       <SubType>Content</SubType>
     </Content>

@@ -4,11 +4,12 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
 using IO = System.IO;
+using DolomiteManagement;
 using DolomiteModel;
 using DolomiteModel.PublicRepresentations;
 using TagLib;
 
-namespace DolomiteWcfService.Threads
+namespace DolomiteBackgroundProcessing
 {
     class MetadataWriting
     {
@@ -17,11 +18,13 @@ namespace DolomiteWcfService.Threads
 
         private const int SleepSeconds = 10;
 
-        private static TrackDbManager DatabaseManager { get; set; }
+        private static TrackDbManager TrackDatabaseManager { get; set; }
 
         private static LocalStorageManager LocalStorageManager { get; set; }
 
         private static AzureStorageManager AzureStorageManager { get; set; }
+
+        public static string TrackStorageContainer { private get; set; }
 
         #endregion
 
@@ -42,7 +45,7 @@ namespace DolomiteWcfService.Threads
         public void Run()
         {
             // Set up the thread with some managers
-            DatabaseManager = TrackDbManager.Instance;
+            TrackDatabaseManager = TrackDbManager.Instance;
             LocalStorageManager = LocalStorageManager.Instance;
             AzureStorageManager = AzureStorageManager.Instance;
 
@@ -50,7 +53,7 @@ namespace DolomiteWcfService.Threads
             while (!_shouldStop)
             {
                 // Check for metadata work items
-                Guid? workItemId = DatabaseManager.GetMetadataWorkItem();
+                Guid? workItemId = TrackDatabaseManager.GetMetadataWorkItem();
                 if (workItemId.HasValue)
                 {
                     // We have work to do!
@@ -59,8 +62,8 @@ namespace DolomiteWcfService.Threads
                     try
                     {
                         // Step 1: Get the track from the db and the metadata to write to the file
-                        Track track = DatabaseManager.GetTrackByGuid(workItemId.Value);
-                        var metadata = DatabaseManager.GetMetadataToWriteOut(workItemId.Value);
+                        Track track = TrackDatabaseManager.GetTrackByGuid(workItemId.Value);
+                        var metadata = TrackDatabaseManager.GetMetadataToWriteOut(workItemId.Value);
 
                         // Step 2: Store the track's original stream to local storage
                         string azurePath = IO.Path.Combine(new[]
@@ -93,8 +96,8 @@ namespace DolomiteWcfService.Threads
                     {
                         Trace.TraceError("Failed to update metadata on original file: {0}", e.Message);
                     }
-                    DatabaseManager.ReleaseAndCompleteMetadataItem(workItemId.Value);
-                    DatabaseManager.ReleaseAndCompleteArtItem(workItemId.Value);
+                    TrackDatabaseManager.ReleaseAndCompleteMetadataItem(workItemId.Value);
+                    TrackDatabaseManager.ReleaseAndCompleteArtItem(workItemId.Value);
                 }
                 else
                 {
@@ -102,16 +105,16 @@ namespace DolomiteWcfService.Threads
                 }
 
                 // Check for art work items
-                Guid? artWorkItem = DatabaseManager.GetArtWorkItem();
+                Guid? artWorkItem = TrackDatabaseManager.GetArtWorkItem();
                 if (artWorkItem.HasValue)
                 {
                     try
                     {
                         // Get the track, process it, release it to the wild
-                        Track track = DatabaseManager.GetTrackByGuid(artWorkItem.Value);
+                        Track track = TrackDatabaseManager.GetTrackByGuid(artWorkItem.Value);
                         ProcessArtChange(track, true);
 
-                        DatabaseManager.ReleaseAndCompleteArtItem(artWorkItem.Value);
+                        TrackDatabaseManager.ReleaseAndCompleteArtItem(artWorkItem.Value);
                     }
                     catch (Exception e)
                     {
@@ -164,7 +167,7 @@ namespace DolomiteWcfService.Threads
                 {
                     // Step 2b1: Get the art file from azure
                     string azureArtPath = IO.Path.Combine(new[] {"art", track.ArtId.ToString()});
-                    IO.Stream artStream = AzureStorageManager.GetBlob(TrackManager.StorageContainerKey, azureArtPath);
+                    IO.Stream artStream = AzureStorageManager.GetBlob(TrackStorageContainer, azureArtPath);
 
                     // Step 2b2: Store the art in the original file
                     UpdateLocalFileArt(localTrackPath, artStream);
@@ -194,7 +197,7 @@ namespace DolomiteWcfService.Threads
         private static void CopyToLocalStorage(string azurePath, string localPath)
         {
             // Get the stream from Azure
-            IO.Stream origStream = AzureStorageManager.GetBlob(TrackManager.StorageContainerKey, azurePath);
+            IO.Stream origStream = AzureStorageManager.GetBlob(TrackStorageContainer, azurePath);
 
             // Copy the stream to local storage
             IO.Stream localFile = IO.File.Create(localPath);
@@ -261,7 +264,7 @@ namespace DolomiteWcfService.Threads
             IO.Stream stream = IO.File.OpenRead(localPath);
 
             // Copy the file to azure
-            AzureStorageManager.StoreBlob(TrackManager.StorageContainerKey, remotePath, stream);
+            AzureStorageManager.StoreBlob(TrackStorageContainer, remotePath, stream);
             stream.Close();
         }
 

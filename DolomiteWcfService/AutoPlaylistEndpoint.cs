@@ -4,8 +4,9 @@ using System.Data;
 using System.IO;
 using System.Net;
 using System.ServiceModel.Channels;
+using DolomiteManagement;
+using DolomiteManagement.Exceptions;
 using DolomiteModel.PublicRepresentations;
-using DolomiteWcfService.Exceptions;
 using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
 

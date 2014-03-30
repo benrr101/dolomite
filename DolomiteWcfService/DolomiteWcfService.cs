@@ -1,18 +1,27 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Net;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 using System.ServiceModel.Web;
 using System.Threading;
+using DolomiteManagement;
 using DolomiteWcfService.Cors;
-using DolomiteWcfService.Threads;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
 namespace DolomiteWcfService
 {
-    public class DolomiteWorkerRole : RoleEntryPoint
+    public class DolomiteWcfService : RoleEntryPoint
     {
+        #region Constants
+
+        private const string IdleTimeoutKey = "IdleTimeout";
+        private const string AbsolulteTimeoutKey = "AbsoluteTimeout";
+        private const string TrackContainerKey = "TrackStorageContainer";
+        private const string UserKeyEnabledKey = "UserKeysEnabled";
+
+        #endregion
 
         #region Member Variables
 
@@ -55,6 +64,19 @@ namespace DolomiteWcfService
         public override bool OnStart()
         {
             Trace.TraceInformation("Starting Dolomite WCF Service...");
+
+            // Initialize the managers
+            try
+            {
+                InitializeUserManager();
+                InitializeTrackManager();
+            }
+            catch (Exception e)
+            {
+                Trace.TraceError("Failed to initialize managers: {0}", e.Message);
+                Trace.TraceError("Giving up on starting service.");
+                return false;
+            }
 
             // Set the maximum number of concurrent connections 
             ServicePointManager.DefaultConnectionLimit = 12;
@@ -119,24 +141,6 @@ namespace DolomiteWcfService
                 return false;
             }
 
-            // Start up the onboarding thread
-            try
-            {
-                Trace.TraceInformation("Starting onboarding threads...");
-                StartOnboardingThreads(1);
-                Trace.TraceInformation("Onboarding threads started");
-
-                Trace.TraceInformation("Starting metadata threads...");
-                StartMetadataThreads(1);
-                Trace.TraceInformation("Metadata threads started");
-            }
-            catch (Exception e)
-            {
-                Trace.TraceError("Failed to start onboarding thread: {0}", e.Message);
-                Trace.TraceError("Giving up on starting service");
-                return false;
-            }
-
             return base.OnStart();
         }
 
@@ -168,27 +172,39 @@ namespace DolomiteWcfService
             base.OnStop();
         }
 
-        /// <summary>
-        /// Used for starting up the onboarding threads.
-        /// </summary>
-        /// <param name="threads">The number of threads to start</param>
-        private static void StartOnboardingThreads(int threads)
+        private static void InitializeUserManager()
         {
-            for (int i = 0; i < threads; ++i)
+            try
             {
-                TrackOnboarding newOnboarder = new TrackOnboarding();
-                Thread newThread = new Thread(newOnboarder.Run);
-                newThread.Start();
+                // Get the user enabled key
+                var ukEnabled = RoleEnvironment.GetConfigurationSettingValue(UserKeyEnabledKey);
+                UserManager.UserKeysEnabled = bool.Parse(ukEnabled);
+
+                // Get the idle timeout
+                var idleTimeout = RoleEnvironment.GetConfigurationSettingValue(IdleTimeoutKey);
+                UserManager.IdleTimeoutInterval = TimeSpan.Parse(idleTimeout);
+
+                // Get the absolute timeout
+                var absTimeout = RoleEnvironment.GetConfigurationSettingValue(AbsolulteTimeoutKey);
+                UserManager.AbsoluteTimeoutInterval = TimeSpan.Parse(absTimeout);
+            }
+            catch (Exception e)
+            {
+                throw new InvalidDataException("Failed to initialize the User Manager.", e);
             }
         }
 
-        private static void StartMetadataThreads(int threads)
+        private static void InitializeTrackManager()
         {
-            for (int i = 0; i < threads; ++i)
+            try
             {
-                MetadataWriting newWriting = new MetadataWriting();
-                Thread newThread = new Thread(newWriting.Run);
-                newThread.Start();
+                // Get the track storage container
+                var trackContainer = RoleEnvironment.GetConfigurationSettingValue(TrackContainerKey);
+                TrackManager.TrackStorageContainer = trackContainer;
+            }
+            catch (Exception e)
+            {
+                throw new InvalidDataException("Failed to initialize the Track Manager.", e);
             }
         }
     }

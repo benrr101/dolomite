@@ -5,9 +5,21 @@
     <ConfigurationSettings>
       <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="UseDevelopmentStorage=true" />
       <Setting name="StorageConnectionString" value="UseDevelopmentStorage=true" />
+      <Setting name="TrackStorageContainer" value="trackstorage" />
+      <Setting name="UserKeysEnabled" value="True" />
+      <Setting name="IdleTimeout" value="02:00:00" />
+      <Setting name="AbsoluteTimeout" value="06:00:00" />
     </ConfigurationSettings>
     <Certificates>
       <Certificate name="LocalSSLCert" thumbprint="9688A35DE15C0C15AA604C5C119F78A191749247" thumbprintAlgorithm="sha1" />
     </Certificates>
+  </Role>
+  <Role name="DolomiteBackgroundProcessing">
+    <Instances count="1" />
+    <ConfigurationSettings>
+      <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="UseDevelopmentStorage=true" />
+      <Setting name="TrackStorageContainer" value="trackstorage" />
+      <Setting name="StorageConnectionString" value="UseDevelopmentStorage=true" />
+    </ConfigurationSettings>
   </Role>
 </ServiceConfiguration>

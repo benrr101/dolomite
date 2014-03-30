@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using DolomiteManagement;
 using DolomiteModel.PublicRepresentations;
-using Microsoft.WindowsAzure.Storage.Blob;
 using IO = System.IO;
 using System.Linq;
 using System.Reflection;
@@ -11,20 +11,19 @@ using System.Threading;
 using DolomiteModel;
 using TagLib;
 
-namespace DolomiteWcfService.Threads
+namespace DolomiteBackgroundProcessing
 {
     class TrackOnboarding
     {
 
         #region Internal Asynchronous Callback Object
 
-        public class AsynchronousState
+        public class AsynchronousState : DolomiteManagement.Asynchronous.AzureAsynchronousState
         {
             public IO.FileStream FileStream { get; set; }
             public string OriginalPath { get; set; }
             public Guid TrackGuid { get; set; }
             public bool Delete { get; set; }
-            public CloudBlockBlob Blob { get; set; }
         }
 
         #endregion
@@ -33,11 +32,15 @@ namespace DolomiteWcfService.Threads
 
         private const int SleepSeconds = 10;
 
+        public const string OnboardingDirectory = "onboarding";
+
         private static TrackDbManager DatabaseManager { get; set; }
 
         private static LocalStorageManager LocalStorageManager { get; set; }
 
         private static AzureStorageManager AzureStorageManager { get; set; }
+
+        public static string TrackStorageContainer { private get; set; }
 
         #endregion
 
@@ -72,7 +75,19 @@ namespace DolomiteWcfService.Threads
                     // We have work to do!
                     Trace.TraceInformation("Work item {0} picked up by {1}", workItemId.Value, GetHashCode());
                     
-                    // Grab the metadata for the track
+                    // Step 1: Grab the track from Azure
+                    try
+                    {
+                        CopyFileToLocalStorage(LocalStorageManager.GetPath(workItemId.Value.ToString()), workItemId.Value);
+                    }
+                    catch (Exception)
+                    {
+                        Trace.TraceError("{1} failed to retrieve uploaded track {0} from Azure. Removing record...", workItemId, GetHashCode());
+                        CancelOnboarding(workItemId.Value);
+                        continue;
+                    }
+
+                    // Step 2: Grab the metadata for the track
                     try
                     {
                         StoreMetadata(workItemId.Value);
@@ -81,6 +96,13 @@ namespace DolomiteWcfService.Threads
                     {
                         // Failed to determine type. We don't want this file.
                         Trace.TraceError("{1} failed to determine the type of track {0}. Removing record...", workItemId, GetHashCode());
+                        CancelOnboarding(workItemId.Value);
+                        continue;
+                    }
+                    catch (CorruptFileException)
+                    {
+                        // File is corrupt for whatever reason. We don't want this file.
+                        Trace.TraceError("{1} found corrupt file for track {0}. Removing record...", workItemId, GetHashCode());
                         CancelOnboarding(workItemId.Value);
                         continue;
                     }
@@ -97,7 +119,8 @@ namespace DolomiteWcfService.Threads
                         continue;
                     }
 
-                    // Onboarding complete! Release the lock!
+                    // Onboarding complete! Delete the temp copy! Release the lock!
+                    AzureStorageManager.DeleteBlob(TrackStorageContainer, OnboardingDirectory + '/' + workItemId.Value);
                     DatabaseManager.ReleaseAndCompleteOnboardingItem(workItemId.Value);
                 }
                 else
@@ -219,7 +242,7 @@ namespace DolomiteWcfService.Threads
         private void MoveFileToAzure(string tempPath, string directory, Guid trackGuid, bool deleteOnComplete = true)
         { 
             // Open a file stream to the file to move
-            IO.FileStream file = LocalStorageManager.RetrieveFile(tempPath);
+            IO.FileStream file = LocalStorageManager.RetrieveReadableFile(tempPath);
 
             // Construct the target destination
             string targetPath = directory + '/' + trackGuid;
@@ -232,7 +255,27 @@ namespace DolomiteWcfService.Threads
                     OriginalPath = tempPath,
                     TrackGuid = trackGuid
                 };
-            AzureStorageManager.StoreBlobAsync(TrackManager.StorageContainerKey, targetPath, file, CompleteMoveFileToAzure, state);
+            AzureStorageManager.StoreBlobAsync(TrackStorageContainer, targetPath, file, CompleteMoveFileToAzure, state);
+        }
+
+        /// <summary>
+        /// Copies the file from azure to the local, temporary storage
+        /// </summary>
+        /// <param name="tempPath">Path for the file in local storage</param>
+        /// <param name="trackGuid">The guid of the track to pull from azure</param>
+        private void CopyFileToLocalStorage(string tempPath, Guid trackGuid)
+        {
+            // Get the stream from Azure
+            string azurePath = OnboardingDirectory + '/' + trackGuid;
+            IO.Stream origStream = AzureStorageManager.GetBlob(TrackStorageContainer, azurePath);
+
+            // Copy the stream to local storage
+            IO.Stream localFile = IO.File.Create(tempPath);
+            origStream.CopyTo(localFile);
+
+            // We only need the path for future ops, so close the stream
+            origStream.Close();
+            localFile.Close();
         }
 
         /// <summary>
@@ -270,7 +313,7 @@ namespace DolomiteWcfService.Threads
             // Generate the mimetype of the track
             // Why? b/c tag lib isn't smart enough to figure it out for me,
             // except for determining it based on extension -- which is silly.
-            IO.FileStream localFile = LocalStorageManager.RetrieveFile(trackGuid.ToString());
+            IO.FileStream localFile = LocalStorageManager.RetrieveReadableFile(trackGuid.ToString());
             string mimetype = MimetypeDetector.GetAudioMimetype(localFile);
             if (mimetype == null)
             {
@@ -346,7 +389,7 @@ namespace DolomiteWcfService.Threads
             {
                 // We need to store the art and create a new db record for it
                 string artPath = TrackManager.ArtDirectory + "/" + trackGuid;
-                AzureStorageManager.StoreBlob(TrackManager.StorageContainerKey, artPath, artFile);
+                AzureStorageManager.StoreBlob(TrackStorageContainer, artPath, artFile);
 
                 // The art guid is the guid of the track
                 artGuid = trackGuid;
@@ -366,7 +409,10 @@ namespace DolomiteWcfService.Threads
         {
             // Delete the original file from the local storage
             DeleteFileWithWait(workItemGuid.ToString());
-            AzureStorageManager.DeleteBlob(TrackManager.StorageContainerKey, String.Format("original/{0}", workItemGuid));
+            AzureStorageManager.DeleteBlob(TrackStorageContainer, String.Format("original/{0}", workItemGuid));
+
+            // Delete the original file from azure
+            AzureStorageManager.DeleteBlob(TrackStorageContainer, OnboardingDirectory + '/' + workItemGuid);
 
             // Iterate over the qualities and delete them from local storage and azure
             foreach (Quality quality in DatabaseManager.GetAllQualities())
@@ -377,7 +423,7 @@ namespace DolomiteWcfService.Threads
 
                 // Delete the file from Azure
                 string azurePath = String.Format("{0}/{1}", quality.Directory, workItemGuid);
-                AzureStorageManager.DeleteBlob(TrackManager.StorageContainerKey, azurePath);
+                AzureStorageManager.DeleteBlob(TrackStorageContainer, azurePath);
             }
 
             // Delete the track from the database

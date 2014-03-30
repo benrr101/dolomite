@@ -1,21 +1,36 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ServiceDefinition name="DolomiteService" xmlns="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition" schemaVersion="2013-10.2.2">
   <WorkerRole name="DolomiteWcfService" vmsize="ExtraSmall">
+    <Runtime executionContext="elevated" /> <!-- DO NOT REMOVE, cert store will be inaccessible to the role otherwise, See http://stackoverflow.com/a/14468164 for more details-->
     <Imports>
       <Import moduleName="Diagnostics" />
     </Imports>
     <Endpoints>
-      <InputEndpoint name="DolomiteRest" protocol="https" port="8080" localPort="8080" certificate="LocalSSLCert" />
+      <InputEndpoint name="DolomiteRest" protocol="https" port="443" localPort="8080" certificate="LocalSSLCert" />
     </Endpoints>
     <Certificates>
       <Certificate name="LocalSSLCert" storeLocation="LocalMachine" storeName="My" />
     </Certificates>
     <ConfigurationSettings>
       <Setting name="StorageConnectionString" />
+      <Setting name="TrackStorageContainer" />
+      <Setting name="UserKeysEnabled" />
+      <Setting name="IdleTimeout" />
+      <Setting name="AbsoluteTimeout" />
     </ConfigurationSettings>
     <LocalResources>
-      <LocalStorage name="onboardingStorage" cleanOnRoleRecycle="true" sizeInMB="2048" />
-      <LocalStorage name="LocalStorage1" cleanOnRoleRecycle="false" />
+    </LocalResources>
+  </WorkerRole>
+  <WorkerRole name="DolomiteBackgroundProcessing" vmsize="ExtraSmall">
+    <Imports>
+      <Import moduleName="Diagnostics" />
+    </Imports>
+    <ConfigurationSettings>
+      <Setting name="TrackStorageContainer" />
+      <Setting name="StorageConnectionString" />
+    </ConfigurationSettings>
+    <LocalResources>
+      <LocalStorage name="OnboardingStorage" cleanOnRoleRecycle="true" sizeInMB="4096" />
     </LocalResources>
   </WorkerRole>
 </ServiceDefinition>

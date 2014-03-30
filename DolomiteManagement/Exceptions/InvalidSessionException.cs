@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace DolomiteWcfService.Exceptions
+﻿namespace DolomiteManagement.Exceptions
 {
-    class InvalidSessionException : Exception
+    public class InvalidSessionException : System.Exception
     {
         public InvalidSessionException(string message) : base(message)
         {

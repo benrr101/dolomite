@@ -9,7 +9,7 @@ using System.ServiceModel.Channels;
 using System.ServiceModel.Web;
 using System.Text;
 using System.Text.RegularExpressions;
-using DolomiteWcfService.Exceptions;
+using DolomiteManagement.Exceptions;
 using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
 
