@@ -78,11 +78,11 @@ namespace DolomiteModel
             switch (rule.Rule1.Name)
             {
                 case "contains":
-                    query = query.Where(m => m.Value.IndexOf(rule.Value, StringComparison.CurrentCultureIgnoreCase) >= 0);
+                    query = query.Where(m => m.Value.ToUpper().Contains(rule.Value.ToUpper()));
                     break;
 
                 case "notcontains":
-                    query = query.Where(m => m.Value.IndexOf(rule.Value, StringComparison.CurrentCultureIgnoreCase) < 0);
+                    query = query.Where(m => !m.Value.ToUpper().Contains(rule.Value.ToUpper()));
                     break;
 
                 case "sequals":
@@ -94,11 +94,11 @@ namespace DolomiteModel
                     break;
 
                 case "startswith":
-                    query = query.Where(m => m.Value.StartsWith(rule.Value, StringComparison.CurrentCultureIgnoreCase));
+                    query = query.Where(m => m.Value.ToUpper().StartsWith(rule.Value.ToUpper()));
                     break;
 
                 case "endswith":
-                    query = query.Where(m => m.Value.EndsWith(rule.Value, StringComparison.CurrentCultureIgnoreCase));
+                    query = query.Where(m => m.Value.ToUpper().EndsWith(rule.Value.ToUpper()));
                     break;
             }
 
