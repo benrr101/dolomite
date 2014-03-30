@@ -199,18 +199,16 @@ namespace DolomiteManagement
             // Step 0.75: Calculate hash to determine if the track is a duplicate
             hash = LocalStorageManager.CalculateHash(stream, owner);
 
-            // Step 1: Upload the track to temporary storage
-            AzureStorageManager.StoreBlob(TrackStorageContainer, OnboardingDirectory + '/' + guid, stream);
-
-            // Step 2: Delete existing blobs from azure
-            foreach (Track.Quality quality in track.Qualities)
+            // Step 1: Upload the track to temporary storage in azure, asynchronously
+            string azurePath = OnboardingDirectory + '/' + guid;
+            UploadAsynchronousState state = new UploadAsynchronousState
             {
-                string path = quality.Directory + '/' + guid;
-                AzureStorageManager.DeleteBlob(TrackStorageContainer, path);
-            }
-
-            // Step 3: Mark the track as not onboarded
-            DatabaseManager.MarkTrackAsNotOnboarderd(guid, hash);
+                Owner = owner,
+                Stream = stream,
+                TrackGuid = guid,
+                TrackHash = hash
+            };
+            AzureStorageManager.StoreBlobAsync(TrackStorageContainer, azurePath, stream, ReplaceTrackAsyncCallback, state);
         }
 
         /// <summary>
@@ -346,7 +344,7 @@ namespace DolomiteManagement
             if (asyncState == null)
             {
                 // Something really went wrong.
-                throw new InvalidDataException("Expected AsynchronousState object.");
+                throw new InvalidDataException("Expected UploadAsynchronousState object.");
             }
 
             // Create the initial DB record for the track in the DB
@@ -354,6 +352,37 @@ namespace DolomiteManagement
 
             // Close the stream
             asyncState.Stream.Close();
+        }
+
+        /// <summary>
+        /// Callback for when the replacement track upload has completed. This
+        /// will delete all existing qualities for the track and reset the
+        /// onboarding status for the track
+        /// </summary>
+        /// <param name="state">The result from the async call</param>
+        private void ReplaceTrackAsyncCallback(IAsyncResult state)
+        {
+            // Verify the async state object
+            UploadAsynchronousState asyncState = state.AsyncState as UploadAsynchronousState;
+            if (asyncState == null)
+            {
+                // Something really went wrong.
+                throw new InvalidDataException("Expected UploadAsynchronousState object.");
+            }
+
+            // Close the stream, we're done with it
+            asyncState.Stream.Close();
+
+            // Delete existing blobs for the track in azure
+            Track track = DatabaseManager.GetTrackByGuid(asyncState.TrackGuid);
+            foreach (Track.Quality quality in track.Qualities)
+            {
+                string path = quality.Directory + '/' + track.Id;
+                AzureStorageManager.DeleteBlob(TrackStorageContainer, path);
+            }
+
+            // Mark the track a needing re-onboarding
+            DatabaseManager.MarkTrackAsNotOnboarderd(track.Id, asyncState.TrackHash);
         }
 
         #endregion
