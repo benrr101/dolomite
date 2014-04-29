@@ -57,7 +57,7 @@ namespace DolomiteManagement
             Guid id = Guid.Empty;
             try
             {
-                id = PlaylistDbManager.CreateAutoPlaylist(playlist.Name, owner, playlist.MatchAll);
+                id = PlaylistDbManager.CreateAutoPlaylist(playlist, owner);
 
                 // Did they send rules to add to the playlist?
                 if (playlist.Rules != null && playlist.Rules.Any())

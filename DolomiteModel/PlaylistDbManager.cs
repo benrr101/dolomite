@@ -66,12 +66,10 @@ namespace DolomiteModel
         /// <summary>
         /// Creates a new auto playlist
         /// </summary>
-        /// <param name="name">The name to give to the playlist</param>
+        /// <param name="input">The playlist to input into the database</param>
         /// <param name="owner">The username of the owner of the playlist</param>
-        /// <param name="matchAll">Whether or not tracks must match all rules of the playlist</param>
-        /// <param name="limit">The optional limit of tracks to satisfy the playlist</param>
         /// <returns>The new guid id for the playlist</returns>
-        public Guid CreateAutoPlaylist(string name, string owner, bool matchAll, int? limit = null)
+        public Guid CreateAutoPlaylist(Pub.AutoPlaylist input, string owner)
         {
             using (var context = new DbEntities())
             {
@@ -79,13 +77,21 @@ namespace DolomiteModel
                 Guid guid = Guid.NewGuid();
 
                 // Create the playlist and add to db
+                int? sortField;
+                if (input.Limit.SortField != null)
+                    sortField = context.MetadataFields.First(f => f.TagName == input.Limit.SortField).Id;
+                else
+                    sortField = null;
+
                 Autoplaylist playlist = new Autoplaylist
                 {
                     Id = guid,
-                    Limit = limit,
-                    MatchAll = matchAll,
+                    Limit = input.Limit.Limit,
+                    MatchAll = input.MatchAll,
                     Owner = context.Users.First(u => u.Username == owner).Id,
-                    Name = name
+                    Name = input.Name,
+                    SortField = sortField,
+                    SortDesc = input.Limit.SortDescending
                 };
                 context.Autoplaylists.Add(playlist);
 
@@ -99,7 +105,7 @@ namespace DolomiteModel
                     SqlException sex = ex.InnerException.InnerException as SqlException;
                     if (sex != null && sex.Number == 2601)
                     {
-                        throw new DuplicateNameException(name);
+                        throw new DuplicateNameException(input.Name);
                     }
                     
                     // Default to rethrowing
