@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using DolomiteModel.EntityFramework;
 using Pub = DolomiteModel.PublicRepresentations;
@@ -82,6 +83,10 @@ namespace DolomiteModel
                     sortField = context.MetadataFields.First(f => f.TagName == input.Limit.SortField).Id;
                 else
                     sortField = null;
+
+                // Check to make sure that a descending bool is provided if a limiter is provided
+                if (sortField.HasValue && !input.Limit.SortDescending.HasValue)
+                    throw new InvalidExpressionException("A boolean value for SortDescending must be provided.");
 
                 Autoplaylist playlist = new Autoplaylist
                 {

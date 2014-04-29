@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using DolomiteModel.EntityFramework;
 
 namespace DolomiteModel
@@ -292,7 +293,8 @@ namespace DolomiteModel
 
             if (!sortDesc.HasValue)
             {
-                throw new Exception(); //TODO: Decide on a better exception type to throw
+                throw new InvalidFilterCriteriaException(
+                    "The sort descending field cannot be null if there is a non-random limiter is applied.");
             }
 
             // Do not randomize it. Sort it based on the selected field
