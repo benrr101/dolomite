@@ -43,7 +43,7 @@ namespace DolomiteWcfService.Cors
         {
             var requiredHeaders = new Dictionary<string, string>
             {
-                {"Access-Control-Request-Method", "POST,GET,PUT,DELETE,OPTIONS"},
+                {"Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS"},
                 {"Access-Control-Allow-Headers", "Content-Type,Authorization"},
                 {"Access-Control-Max-Age", "1728000"},
                 {"Access-Control-Allow-Credentials", "true"}
