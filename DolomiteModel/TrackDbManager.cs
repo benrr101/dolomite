@@ -119,7 +119,7 @@ namespace DolomiteModel
         /// Stores the metadata for the given track
         /// </summary>
         /// <param name="trackId">GUID of the track</param>
-        /// <param name="metadatas">Dictionary of MetadataFieldId => Value</param>
+        /// <param name="metadatas">Dictionary of Metadata Tag Name => Value</param>
         /// <param name="writeOut">Whether or not the metadata change should be written to the file</param>
         public void StoreTrackMetadata(Guid trackId, IDictionary<string, string> metadatas, bool writeOut)
         {
@@ -174,7 +174,7 @@ namespace DolomiteModel
                     {
                         Id = t.Id,
                         Metadata =
-                            t.Metadatas.AsEnumerable().ToDictionary(o => o.MetadataField.DisplayName, o => o.Value)
+                            t.Metadatas.AsEnumerable().ToDictionary(o => o.MetadataField.TagName, o => o.Value)
                     }).ToList();
             }
         }
@@ -341,7 +341,7 @@ namespace DolomiteModel
                 // Build the track with the necessary information
                 var metadata = (from m in context.Metadatas
                                 where m.Track == trackId
-                                select new { Name = m.MetadataField.DisplayName, m.Value });
+                                select new { Name = m.MetadataField.TagName, m.Value });
 
                 var dbQualities = context.AvailableQualities.Where(q => q.Track == trackId && q.Quality1.Bitrate != null).ToList();
                 var qualities = (from q in dbQualities
@@ -633,7 +633,7 @@ namespace DolomiteModel
             {
                 // Search for the metadata record for the track with the field
                 var field = (from v in context.Metadatas
-                             where v.Track == trackGuid && v.MetadataField.DisplayName == metadataField
+                             where v.Track == trackGuid && v.MetadataField.TagName == metadataField
                              select v).FirstOrDefault();
 
                 // If it doesn't exist, we succeeeded in deleting it, right?

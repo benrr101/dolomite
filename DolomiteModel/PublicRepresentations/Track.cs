@@ -97,7 +97,7 @@ namespace DolomiteModel.PublicRepresentations
         public Guid Id;
 
         /// <summary>
-        /// The metadata about the track
+        /// The metadata about the track, formatted such that TagName => Value
         /// </summary>
         [DataMember]
         public Dictionary<string, string> Metadata;
