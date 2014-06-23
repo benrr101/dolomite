@@ -100,6 +100,7 @@ namespace DolomiteBackgroundProcessing
             {
                 // Get the track storage container
                 var trackContainer = RoleEnvironment.GetConfigurationSettingValue(TrackContainerKey);
+                TrackOnboarding.TrackStorageContainer = trackContainer;
                 TrackManager.TrackStorageContainer = trackContainer;
             }
             catch (Exception e)
@@ -132,7 +133,7 @@ namespace DolomiteBackgroundProcessing
             {
                 // Get the track storage container
                 var trackContainer = RoleEnvironment.GetConfigurationSettingValue(TrackContainerKey);
-                TrackOnboarding.TrackStorageContainer = trackContainer;
+                MetadataWriting.TrackStorageContainer = trackContainer;
             }
             catch (Exception e)
             {

@@ -73,7 +73,7 @@ namespace DolomiteBackgroundProcessing
                         });
                         string localTrackPath = String.Format("{0}.{1}",
                             LocalStorageManager.GetPath(track.Id.ToString()),
-                            track.Metadata["Original Format"]);
+                            track.Metadata["OriginalFormat"]);
                         CopyToLocalStorage(azurePath, localTrackPath);
 
                         // Step 3: Update the ID3 of the file in local storage
@@ -148,7 +148,7 @@ namespace DolomiteBackgroundProcessing
             {
                 // Determine the local path
                 string localTrackPath = String.Format("{0}.{1}", LocalStorageManager.GetPath(track.Id.ToString()),
-                        track.Metadata["Original Format"]);
+                        track.Metadata["OriginalFormat"]);
                 string azureTrackPath = IO.Path.Combine(new[] { "original", track.Id.ToString() });
 
                 // Step 1: Copy from azure, if necessary
