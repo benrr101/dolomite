@@ -226,8 +226,8 @@ namespace DolomiteBackgroundProcessing
 
                 PropertyInfo property = tagType.GetProperty(tagName);
                 property.SetValue(file.Tag, md.Array
-                    ? new[] {md.Value}
-                    : Convert.ChangeType(md.Value, property.PropertyType));
+                    ? new[] {String.IsNullOrWhiteSpace(md.Value) ? null : md.Value}
+                    : String.IsNullOrWhiteSpace(md.Value) ? null : Convert.ChangeType(md.Value, property.PropertyType));
             }
 
             // Write the changes
