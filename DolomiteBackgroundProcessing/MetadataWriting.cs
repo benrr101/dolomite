@@ -91,6 +91,9 @@ namespace DolomiteBackgroundProcessing
                         // If there was metadata that isn't file-supported, this will be
                         // still be set in the DB, but there's no need to flag it any more.
                         LocalStorageManager.DeleteFile(localTrackPath);
+
+                        // Step 6: Purge empty tags from the database. There's no reason to keep them.
+                        TrackDatabaseManager.DeleteEmptyMetadata(track.Id);
                     }
                     catch (Exception e)
                     {

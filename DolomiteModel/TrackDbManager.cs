@@ -622,6 +622,30 @@ namespace DolomiteModel
         }
 
         /// <summary>
+        /// Deletes all metadata records for the given track that are empty.
+        /// Used by the MetadataWriting background process to keep the db tidy.
+        /// </summary>
+        /// <param name="trackGuid">The guid of the track to remove blank metadata for.</param>
+        public void DeleteEmptyMetadata(Guid trackGuid)
+        {
+            using (var context = new DbEntities())
+            {
+                // Find all the metadata for the track that is empty
+                var emptyTags = from v in context.Metadatas
+                    where v.Track == trackGuid && v.Value == ""
+                    select v;
+
+                // Now go through and delete them
+                foreach (var tag in emptyTags)
+                {
+                    context.Metadatas.Remove(tag);
+                }
+
+                context.SaveChanges();
+            }
+        }
+
+        /// <summary>
         /// Deletes the given metadata record from the metadatas for the
         /// given track guid
         /// </summary>
