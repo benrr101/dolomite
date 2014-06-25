@@ -381,6 +381,14 @@ namespace DolomiteManagement
                 AzureStorageManager.DeleteBlob(TrackStorageContainer, path);
             }
 
+            // Delete the album art if it is no longer in use
+            if (track.ArtId.HasValue && !DatabaseManager.DeleteArtByUsage(track.Id))
+            {
+                // Delete the file from Azure -- it's been deleted from the db already
+                string path = ArtDirectory + "/" + track.ArtId.Value;
+                AzureStorageManager.DeleteBlob(TrackStorageContainer, path);
+            }
+
             // Mark the track a needing re-onboarding
             DatabaseManager.MarkTrackAsNotOnboarderd(track.Id, asyncState.TrackHash);
         }

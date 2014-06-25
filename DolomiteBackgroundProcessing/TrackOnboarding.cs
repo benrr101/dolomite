@@ -387,12 +387,14 @@ namespace DolomiteBackgroundProcessing
             var artGuid = DatabaseManager.GetArtIdByHash(hash);
             if (artGuid == Guid.Empty)
             {
-                // We need to store the art and create a new db record for it
-                string artPath = TrackManager.ArtDirectory + "/" + trackGuid;
-                AzureStorageManager.StoreBlob(TrackStorageContainer, artPath, artFile);
-
                 // The art guid is a brand new guid to avoid conflicts.
                 artGuid = Guid.NewGuid();
+
+                // We need to store the art and create a new db record for it
+                string artPath = TrackManager.ArtDirectory + "/" + artGuid;
+                AzureStorageManager.StoreBlob(TrackStorageContainer, artPath, artFile);
+
+                // Create a new record for the art
                 DatabaseManager.CreateArtRecord(artGuid, artMime, hash);
             }
 

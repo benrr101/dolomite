@@ -187,6 +187,10 @@ namespace DolomiteWcfService
             {
                 WebUtilities.SetStatusCode(HttpStatusCode.NotFound);
             }
+            catch (FileNotFoundException)
+            {
+                WebUtilities.SetStatusCode(HttpStatusCode.NotFound);
+            }
             catch (Exception)
             {
                 WebUtilities.SetStatusCode(HttpStatusCode.InternalServerError);
@@ -346,7 +350,8 @@ namespace DolomiteWcfService
             }
             catch (UnauthorizedAccessException)
             {
-                string message = String.Format("The GUID supplied '{0}' refers to a track that is not owned by you.", trackGuid);
+                string message = String.Format("The GUID supplied '{0}' refers to a track that is not owned by you.",
+                    trackGuid);
                 return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Forbidden);
             }
             catch (MissingFieldException mfe)
@@ -364,6 +369,10 @@ namespace DolomiteWcfService
             {
                 string message = String.Format("The track with the specified GUID '{0}' does not exist", trackGuid);
                 return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.NotFound);
+            }
+            catch (DuplicateNameException e)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse(e.Message), HttpStatusCode.Conflict);
             }
             catch (Exception)
             {
