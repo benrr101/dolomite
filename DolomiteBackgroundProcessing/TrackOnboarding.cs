@@ -391,8 +391,8 @@ namespace DolomiteBackgroundProcessing
                 string artPath = TrackManager.ArtDirectory + "/" + trackGuid;
                 AzureStorageManager.StoreBlob(TrackStorageContainer, artPath, artFile);
 
-                // The art guid is the guid of the track
-                artGuid = trackGuid;
+                // The art guid is a brand new guid to avoid conflicts.
+                artGuid = Guid.NewGuid();
                 DatabaseManager.CreateArtRecord(artGuid, artMime, hash);
             }
 
