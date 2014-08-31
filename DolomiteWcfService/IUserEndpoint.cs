@@ -14,11 +14,15 @@ namespace DolomiteWcfService
         [WebInvoke(Method = "GET", UriTemplate = "/{username}")]
         Message GetUserStatistics(string username);
 
-        [WebInvoke(Method = "POST", UriTemplate = "/login")]
-        Message Login(Stream body);
+        //Message GetUserSettings(string username);
 
-        [WebInvoke(Method = "POST", UriTemplate = "/logout")]
-        Message Logout();
+        [WebInvoke(Method = "POST", UriTemplate = "/{username}/login")]
+        Message Login(string username, Stream body);
+
+        [WebInvoke(Method = "POST", UriTemplate = "/{username}/logout")]
+        Message Logout(string username);
+
+        //Message StoreUserSettings(string username, Stream body);
 
         [WebInvoke(Method = "OPTIONS", UriTemplate = "/*")]
         bool PreflyRequest();

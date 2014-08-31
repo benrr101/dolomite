@@ -12,10 +12,5 @@
         /// The password for the login attempt
         /// </summary>
         public string Password { get; set; }
-
-        /// <summary>
-        /// The username for the login attempt
-        /// </summary>
-        public string Username { get; set; }
     }
 }

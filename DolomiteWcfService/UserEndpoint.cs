@@ -120,9 +120,10 @@ namespace DolomiteWcfService
         /// responses. A UserLoginRequest object is required from the client.
         /// Upon validation, a new session is created.
         /// </summary>
+        /// <param name="username">The username that wishes to login</param>
         /// <param name="body">The body of the request. Should contain a UserLoginRequest object.</param>
         /// <returns>A success message with a session token or failure with a 401 status.</returns>
-        public Message Login(Stream body)
+        public Message Login(string username, Stream body)
         {
             try
             {
@@ -143,7 +144,7 @@ namespace DolomiteWcfService
 
                 // Attempt to login the user
                 string token = UserManager.ValidateLogin(request.ApiKey, WebUtilities.GetRemoteIpAddress(),
-                    request.Username,
+                    username,
                     request.Password);
 
                 // Send a successful token back via a login success response
@@ -189,8 +190,9 @@ namespace DolomiteWcfService
         /// error occurred. If the session is already invalid or does not exist,
         /// then nothing happens.
         /// </summary>
+        /// <param name="username">The username of the user wishing to logout. Not used.</param>
         /// <returns>A success or error message</returns>
-        public Message Logout()
+        public Message Logout(string username)
         {
             try
             {
