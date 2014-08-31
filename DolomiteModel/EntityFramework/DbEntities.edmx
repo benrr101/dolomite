@@ -67,8 +67,6 @@
           <Property Name="Track" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Quality" Type="int" Nullable="false" />
         </EntityType>
-        <!--Errors Found During Generation:
-warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a primary key defined. The key has been inferred and the definition was created as a read-only table/view.-->
         <EntityType Name="Metadata">
           <Key>
             <PropertyRef Name="Id" />
@@ -87,9 +85,9 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Property Name="TagName" Type="nvarchar" MaxLength="20" Nullable="false" />
           <Property Name="DisplayName" Type="nvarchar" MaxLength="20" Nullable="false" />
           <Property Name="Type" Type="nvarchar" MaxLength="20" Nullable="false" />
+          <Property Name="Searchable" Type="bit" Nullable="false" />
           <Property Name="FileSupported" Type="bit" Nullable="false" />
           <Property Name="TagLibArray" Type="bit" Nullable="false" />
-          <Property Name="Searchable" Type="bit" Nullable="false" />
         </EntityType>
         <EntityType Name="Playlists">
           <Key>
@@ -177,6 +175,15 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Property Name="PasswordHash" Type="nchar" MaxLength="64" Nullable="false" />
           <Property Name="PasswordReset" Type="bit" Nullable="false" />
           <Property Name="Email" Type="nvarchar" MaxLength="255" Nullable="false" />
+        </EntityType>
+        <EntityType Name="UserSettings">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="User" Type="int" Nullable="false" />
+          <Property Name="ApiKey" Type="int" Nullable="false" />
+          <Property Name="SettingsCollection" Type="nvarchar(max)" Nullable="false" />
         </EntityType>
         <Association Name="Album">
           <End Role="Albums" Type="Self.Albums" Multiplicity="0..1" />
@@ -408,6 +415,30 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_USERSETTINGS_APIKEY">
+          <End Role="ApiKeys" Type="Self.ApiKeys" Multiplicity="1" />
+          <End Role="UserSettings" Type="Self.UserSettings" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ApiKeys">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="UserSettings">
+              <PropertyRef Name="ApiKey" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_USERSETTINGS_USER">
+          <End Role="Users" Type="Self.Users" Multiplicity="1" />
+          <End Role="UserSettings" Type="Self.UserSettings" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Users">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="UserSettings">
+              <PropertyRef Name="User" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Function Name="DecrementPlaylistTrackOrder" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="playlist" Type="uniqueidentifier" Mode="In" />
           <Parameter Name="position" Type="int" Mode="In" />
@@ -453,6 +484,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <EntitySet Name="Tracks" EntityType="Self.Tracks" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="UserKeys" EntityType="Self.UserKeys" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Users" EntityType="Self.Users" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="UserSettings" EntityType="Self.UserSettings" Schema="dbo" store:Type="Tables" />
           <AssociationSet Name="Album" Association="Self.Album">
             <End Role="Albums" EntitySet="Albums" />
             <End Role="Tracks" EntitySet="Tracks" />
@@ -524,6 +556,14 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <AssociationSet Name="FK_TRACKS_OWNER" Association="Self.FK_TRACKS_OWNER">
             <End Role="Users" EntitySet="Users" />
             <End Role="Tracks" EntitySet="Tracks" />
+          </AssociationSet>
+          <AssociationSet Name="FK_USERSETTINGS_APIKEY" Association="Self.FK_USERSETTINGS_APIKEY">
+            <End Role="ApiKeys" EntitySet="ApiKeys" />
+            <End Role="UserSettings" EntitySet="UserSettings" />
+          </AssociationSet>
+          <AssociationSet Name="FK_USERSETTINGS_USER" Association="Self.FK_USERSETTINGS_USER">
+            <End Role="Users" EntitySet="Users" />
+            <End Role="UserSettings" EntitySet="UserSettings" />
           </AssociationSet>
         </EntityContainer>
       </Schema></edmx:StorageModels>
@@ -716,6 +756,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Property Name="PasswordReset" Type="Boolean" Nullable="false" />
           <Property Name="Email" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="Sessions" Relationship="DolomiteModel.EntityFramework.FK_SESSION_USER" FromRole="User" ToRole="Session" />
+          <NavigationProperty Name="UserSettings" Relationship="DolomiteModel.EntityFramework.FK_USERSETTINGS_USER" FromRole="User" ToRole="UserSetting" />
         </EntityType>
         <Association Name="Album1">
           <End Role="Albums" Type="Self.Album" Multiplicity="0..1" />
@@ -1018,8 +1059,17 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <FunctionImport Name="GetAndLockTopMetadataItem" ReturnType="Collection(Guid)" />
           <FunctionImport Name="GetAndLockTopArtItem" ReturnType="Collection(Guid)" />
           <FunctionImport Name="ReleaseAndCompleteArtChange">
-            <Parameter Name="workItem" Mode="In" Type="Guid" />
+          <Parameter Name="workItem" Mode="In" Type="Guid" />
           </FunctionImport>
+          <EntitySet Name="UserSettings" EntityType="DolomiteModel.EntityFramework.UserSetting" />
+          <AssociationSet Name="FK_USERSETTINGS_APIKEY" Association="DolomiteModel.EntityFramework.FK_USERSETTINGS_APIKEY">
+            <End Role="ApiKey" EntitySet="ApiKeys" />
+            <End Role="UserSetting" EntitySet="UserSettings" />
+          </AssociationSet>
+          <AssociationSet Name="FK_USERSETTINGS_USER" Association="DolomiteModel.EntityFramework.FK_USERSETTINGS_USER">
+            <End Role="User" EntitySet="Users" />
+            <End Role="UserSetting" EntitySet="UserSettings" />
+          </AssociationSet>
         </EntityContainer>
         <Association Name="FK_AUTOPLAYLISTS_SORTFIELD">
           <End Type="DolomiteModel.EntityFramework.MetadataField" Role="MetadataField" Multiplicity="0..1" />
@@ -1049,6 +1099,7 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <Property Name="Key" Type="String" Nullable="false" MaxLength="64" FixedLength="true" Unicode="true" />
           <Property Name="FriendlyName" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="Sessions" Relationship="DolomiteModel.EntityFramework.FK_SESSION_APIKEY" FromRole="ApiKey" ToRole="Session" />
+          <NavigationProperty Name="UserSettings" Relationship="DolomiteModel.EntityFramework.FK_USERSETTINGS_APIKEY" FromRole="ApiKey" ToRole="UserSetting" />
         </EntityType>
         <EntityType Name="Session">
           <Key>
@@ -1085,6 +1136,41 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
               <PropertyRef Name="Id" />
             </Principal>
             <Dependent Role="Session">
+              <PropertyRef Name="User" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="UserSetting">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="User" Type="Int32" Nullable="false" />
+          <Property Name="ApiKey" Type="Int32" Nullable="false" />
+          <Property Name="SettingsCollection" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="ApiKey1" Relationship="DolomiteModel.EntityFramework.FK_USERSETTINGS_APIKEY" FromRole="UserSetting" ToRole="ApiKey" />
+          <NavigationProperty Name="User1" Relationship="DolomiteModel.EntityFramework.FK_USERSETTINGS_USER" FromRole="UserSetting" ToRole="User" />
+        </EntityType>
+        <Association Name="FK_USERSETTINGS_APIKEY">
+          <End Type="DolomiteModel.EntityFramework.ApiKey" Role="ApiKey" Multiplicity="1" />
+          <End Type="DolomiteModel.EntityFramework.UserSetting" Role="UserSetting" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ApiKey">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="UserSetting">
+              <PropertyRef Name="ApiKey" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_USERSETTINGS_USER">
+          <End Type="DolomiteModel.EntityFramework.User" Role="User" Multiplicity="1" />
+          <End Type="DolomiteModel.EntityFramework.UserSetting" Role="UserSetting" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="User">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="UserSetting">
               <PropertyRef Name="User" />
             </Dependent>
           </ReferentialConstraint>
@@ -1293,6 +1379,16 @@ warning 6002: The table/view 'DolomiteDatabase.dbo.Devices' does not have a prim
           <FunctionImportMapping FunctionImportName="GetAndLockTopMetadataItem" FunctionName="DolomiteModel.EntityFramework.Store.GetAndLockTopMetadataItem" />
           <FunctionImportMapping FunctionImportName="GetAndLockTopArtItem" FunctionName="DolomiteModel.EntityFramework.Store.GetAndLockTopArtItem" />
           <FunctionImportMapping FunctionImportName="ReleaseAndCompleteArtChange" FunctionName="DolomiteModel.EntityFramework.Store.ReleaseAndCompleteArtChange" />
+          <EntitySetMapping Name="UserSettings">
+            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.UserSetting">
+              <MappingFragment StoreEntitySet="UserSettings">
+                <ScalarProperty Name="SettingsCollection" ColumnName="SettingsCollection" />
+                <ScalarProperty Name="ApiKey" ColumnName="ApiKey" />
+                <ScalarProperty Name="User" ColumnName="User" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

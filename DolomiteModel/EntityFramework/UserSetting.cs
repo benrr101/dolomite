@@ -12,19 +12,14 @@ namespace DolomiteModel.EntityFramework
     using System;
     using System.Collections.Generic;
     
-    public partial class ApiKey
+    public partial class UserSetting
     {
-        public ApiKey()
-        {
-            this.Sessions = new HashSet<Session>();
-            this.UserSettings = new HashSet<UserSetting>();
-        }
-    
         public int Id { get; set; }
-        public string Key { get; set; }
-        public string FriendlyName { get; set; }
+        public int User { get; set; }
+        public int ApiKey { get; set; }
+        public string SettingsCollection { get; set; }
     
-        public virtual ICollection<Session> Sessions { get; set; }
-        public virtual ICollection<UserSetting> UserSettings { get; set; }
+        public virtual ApiKey ApiKey1 { get; set; }
+        public virtual User User1 { get; set; }
     }
 }
