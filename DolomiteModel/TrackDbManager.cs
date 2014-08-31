@@ -379,7 +379,8 @@ namespace DolomiteModel
                     Id = trackId,
                     Metadata = metadata.ToDictionary(o => o.Name, o => o.Value),
                     Owner = track.User.Username,
-                    Qualities = qualities
+                    Qualities = qualities,
+                    Ready = track.HasBeenOnboarded
                 };
             }
         }

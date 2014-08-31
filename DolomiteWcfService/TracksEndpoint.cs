@@ -157,6 +157,8 @@ namespace DolomiteWcfService
 
                 // Retrieve the track and return the stream
                 Track track = TrackManager.GetTrack(Guid.Parse(guid), username);
+                if (!track.Ready)
+                    throw new TrackNotReadyException();
                 Track.Quality qualityObj = TrackManager.GetTrackStream(track, quality);
 
                 // Set special headers that tell the client to download the file
@@ -190,6 +192,11 @@ namespace DolomiteWcfService
             catch (FileNotFoundException)
             {
                 WebUtilities.SetStatusCode(HttpStatusCode.NotFound);
+            }
+            catch (TrackNotReadyException)
+            {
+                WebUtilities.SetStatusCode(HttpStatusCode.ServiceUnavailable);
+                WebUtilities.SetHeader(HttpResponseHeader.RetryAfter, "60");
             }
             catch (Exception)
             {
@@ -252,6 +259,8 @@ namespace DolomiteWcfService
 
                 // Retrieve the track without the stream
                 Track track = TrackManager.GetTrack(Guid.Parse(guid), username);
+                if (!track.Ready)
+                    throw new TrackNotReadyException();
                 return WebUtilities.GenerateResponse(track, HttpStatusCode.OK);
             }
             catch (InvalidSessionException)
@@ -273,6 +282,12 @@ namespace DolomiteWcfService
             {
                 string message = String.Format("The track with the specified GUID '{0}' does not exist", guid);
                 return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.NotFound);
+            }
+            catch (TrackNotReadyException)
+            {
+                const string message = "The track is not ready, yet. Please try again later.";
+                WebUtilities.SetHeader(HttpResponseHeader.RetryAfter, "60");
+                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.ServiceUnavailable);
             }
             catch (Exception)
             {

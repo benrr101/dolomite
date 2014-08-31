@@ -114,6 +114,11 @@ namespace DolomiteModel.PublicRepresentations
         [DataMember]
         public List<Quality> Qualities { get; set; }
 
+        /// <summary>
+        /// Whether or not the track is ready for public consumption
+        /// </summary>
+        public bool Ready { get; set; }
+
         #endregion
 
     }
