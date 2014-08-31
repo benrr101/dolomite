@@ -113,6 +113,9 @@
     <Compile Include="EntityFramework\UserKey.cs">
       <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
+    <Compile Include="EntityFramework\UserSetting.cs">
+      <DependentUpon>DbEntities.tt</DependentUpon>
+    </Compile>
     <Compile Include="PlaylistDbManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublicRepresentations\Art.cs" />
