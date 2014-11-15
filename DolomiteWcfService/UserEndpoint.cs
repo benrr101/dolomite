@@ -5,6 +5,7 @@ using System.Net;
 using System.ServiceModel.Channels;
 using DolomiteManagement;
 using DolomiteManagement.Exceptions;
+using DolomiteModel.PublicRepresentations;
 using DolomiteWcfService.Requests;
 using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
@@ -87,6 +88,43 @@ namespace DolomiteWcfService
             }
         }
 
+        /// <summary>
+        /// Retrieves the specified user's settings
+        /// </summary>
+        /// <param name="username">The username of the user to get the settings of</param>
+        /// <returns>The settings of the user on success, an error message on failure</returns>
+        public Message GetUserSettings(string username)
+        {
+            try
+            {
+                // Make sure we have a valid session
+                string apiKey;
+                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
+                string seshUsername = UserManager.GetUsernameFromSession(token, apiKey);
+                UserManager.ExtendIdleTimeout(token);
+
+                // Make sure the owners are correct
+                if (username != seshUsername)
+                    throw new InvalidSessionException("You may not request settings for this user.");
+
+                return WebUtilities.GenerateResponse(UserManager.GetUserSettings(username), HttpStatusCode.OK);
+            }
+            catch (InvalidSessionException)
+            {
+                return WebUtilities.GenerateUnauthorizedResponse();
+            }
+            catch (Exception)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
+            }
+        }
+
+        /// <summary>
+        /// Fetches the general statistics of the user
+        /// </summary>
+        /// <param name="username">The username of the user to fetch statistics for</param>
+        /// <returns>A success or failure message</returns>
         public Message GetUserStatistics(string username)
         {
             try
@@ -218,6 +256,45 @@ namespace DolomiteWcfService
             
             // Tell the client everything went "ok"
             return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
+        }
+
+        /// <summary>
+        /// Stores the settings of the user
+        /// </summary>
+        /// <param name="username">The username of the user who wanted to store the settings</param>
+        /// <param name="body">The settings the user wishes to store, Json serialized</param>
+        /// <returns>Success or failure message</returns>
+        public Message StoreUserSettings(string username, Stream body)
+        {
+            try
+            {
+                // Make sure the user is successfully logged in
+                string apiKey;
+                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
+                string seshUsername = UserManager.GetUsernameFromSession(token, apiKey);
+
+                // Deserialize the body of the request for the user details
+                string bodyStr = WebUtilities.GetUtf8String(body);
+                var settings = JsonConvert.DeserializeObject<UserSettings>(bodyStr);
+
+                // Make sure the owners are correct
+                if (username != seshUsername)
+                    throw new InvalidSessionException("You may not store settings for this user.");
+
+                // Store the settings into the database
+                UserManager.StoreSettings(username, settings);
+
+                return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
+            }
+            catch (InvalidSessionException)
+            {
+                return WebUtilities.GenerateUnauthorizedResponse();
+            }
+            catch (Exception)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
+                    HttpStatusCode.InternalServerError);
+            }
         }
 
         /// <summary>
