@@ -111,9 +111,81 @@ namespace DolomiteModel
             }
         }
 
+        /// <summary>
+        /// Stores a user's settings as a json serialized string in the database.
+        /// </summary>
+        /// <exception cref="ObjectNotFoundException">
+        /// Thrown when the user to store the settings of does not exist
+        /// </exception>
+        /// <param name="username">Username of the user to save the settings of</param>
+        /// <param name="settingsObj">The settings to save</param>
+        public void StoreUserSettings(string username, Pub.UserSettings settingsObj)
+        {
+            using (var context = new DbEntities())
+            {
+                // Fetch the user and see if they have a settings record yet
+                var user = context.Users.FirstOrDefault(u => u.Username == username);
+                if (user == null)
+                    throw new ObjectNotFoundException("A user with the given username could not be found");
+
+                if (user.UserSetting == null)
+                {
+                    // We're going to be inserting the settings into the db
+                    UserSetting settings = new UserSetting
+                    {
+                        User = user.Id,
+                        SettingsSerialized = settingsObj.ToString()
+                    };
+                    context.UserSettings.Add(settings);
+                }
+                else
+                {
+                    // We're going to be updating the settings in the db
+                    user.UserSetting.SettingsSerialized = settingsObj.ToString();
+                }
+
+                // Save those changes to the db
+                context.SaveChanges();
+            }
+        }
+
         #endregion
 
         #region Retrieval Methods
+
+        /// <summary>
+        /// Grabs a session object using the given token
+        /// </summary>
+        /// <exception cref="ObjectNotFoundException">
+        /// Thrown if the session does not exist.
+        /// </exception>
+        /// <param name="token">The session token</param>
+        /// <returns>A public representation of the session</returns>
+        public Pub.Session GetSession(string token)
+        {
+            using (var context = new DbEntities())
+            {
+                // Find the matching session
+                Pub.Session session = (from s in context.Sessions
+                                       where s.Token == token
+                                       select new Pub.Session
+                                       {
+                                           AbsoluteTimeout = s.AbsoluteTimeout,
+                                           ApiKey = s.ApiKey1.Key,
+                                           IdleTimeout = s.IdleTimeout,
+                                           InitialIpAddress = s.InitialIP,
+                                           InitializedTime = s.InitializedTime,
+                                           Token = s.Token,
+                                           Username = s.User1.Username
+                                       }).FirstOrDefault();
+
+                if (session == null)
+                    throw new ObjectNotFoundException("A session with the given session token cannot be found.");
+
+                // Fetch the user
+                return session;
+            }
+        }
 
         /// <summary>
         /// Retrieves a user from the database, based on the username provided
@@ -137,36 +209,20 @@ namespace DolomiteModel
         }
 
         /// <summary>
-        /// Grabs a session object using the given token
+        /// Retrieves a user's settings from the database
         /// </summary>
-        /// <exception cref="ObjectNotFoundException">
-        /// Thrown if the session does not exist.
-        /// </exception>
-        /// <param name="token">The session token</param>
-        /// <returns>A public representation of the session</returns>
-        public Pub.Session GetSession(string token)
+        /// <param name="username">The username of the user to look up the settings for</param>
+        /// <returns>
+        /// The serialized string of the user's settings if the user's settings exist,
+        /// null is returned otherwise.
+        /// </returns>
+        public Pub.UserSettings GetUserSettings(string username)
         {
             using (var context = new DbEntities())
             {
-                // Find the matching session
-                Pub.Session session = (from s in context.Sessions
-                    where s.Token == token
-                    select new Pub.Session
-                    {
-                        AbsoluteTimeout = s.AbsoluteTimeout,
-                        ApiKey = s.ApiKey1.Key,
-                        IdleTimeout = s.IdleTimeout,
-                        InitialIpAddress = s.InitialIP,
-                        InitializedTime = s.InitializedTime,
-                        Token = s.Token,
-                        Username = s.User1.Username
-                    }).FirstOrDefault();
-
-                if (session == null)
-                    throw new ObjectNotFoundException("A session with the given session token cannot be found.");
-
-                // Fetch the user
-                return session;
+                // Find the matching user's settings
+                var settings = context.UserSettings.FirstOrDefault(us => us.User1.Username == username);
+                return settings == null ? null : Pub.UserSettings.FromSerializedString(settings.SettingsSerialized);
             }
         }
 
@@ -290,6 +346,7 @@ namespace DolomiteModel
         /// <param name="session">The entity for the session to validate</param>
         /// <param name="apikey">The API key for the current request</param>
         /// <returns>True if the session is valid, false otherwise</returns>
+        // TODO: Was I supposed to be using this?
         private bool ValidateSession(Session session, string apikey)
         {
             // Are the timeouts in the future?
