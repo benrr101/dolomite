@@ -119,7 +119,6 @@
     <Build Include="StoredProcedures\ReleaseAndCompleteArtChange.sql" />
     <Build Include="Tables\UserSettings.sql" />
     <Build Include="Foreign Keys\FK_USERSETTINGS_USER.sql" />
-    <Build Include="Foreign Keys\FK_USERSETTINGS_APIKEY.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Script.PostDeployment1.sql" />

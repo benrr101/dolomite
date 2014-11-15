@@ -178,12 +178,10 @@
         </EntityType>
         <EntityType Name="UserSettings">
           <Key>
-            <PropertyRef Name="Id" />
+            <PropertyRef Name="User" />
           </Key>
-          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="User" Type="int" Nullable="false" />
-          <Property Name="ApiKey" Type="int" Nullable="false" />
-          <Property Name="SettingsCollection" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="SettingsSerialized" Type="nvarchar(max)" />
         </EntityType>
         <Association Name="Album">
           <End Role="Albums" Type="Self.Albums" Multiplicity="0..1" />
@@ -415,21 +413,9 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <Association Name="FK_USERSETTINGS_APIKEY">
-          <End Role="ApiKeys" Type="Self.ApiKeys" Multiplicity="1" />
-          <End Role="UserSettings" Type="Self.UserSettings" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="ApiKeys">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="UserSettings">
-              <PropertyRef Name="ApiKey" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <Association Name="FK_USERSETTINGS_USER">
           <End Role="Users" Type="Self.Users" Multiplicity="1" />
-          <End Role="UserSettings" Type="Self.UserSettings" Multiplicity="*" />
+          <End Role="UserSettings" Type="Self.UserSettings" Multiplicity="0..1" />
           <ReferentialConstraint>
             <Principal Role="Users">
               <PropertyRef Name="Id" />
@@ -556,10 +542,6 @@
           <AssociationSet Name="FK_TRACKS_OWNER" Association="Self.FK_TRACKS_OWNER">
             <End Role="Users" EntitySet="Users" />
             <End Role="Tracks" EntitySet="Tracks" />
-          </AssociationSet>
-          <AssociationSet Name="FK_USERSETTINGS_APIKEY" Association="Self.FK_USERSETTINGS_APIKEY">
-            <End Role="ApiKeys" EntitySet="ApiKeys" />
-            <End Role="UserSettings" EntitySet="UserSettings" />
           </AssociationSet>
           <AssociationSet Name="FK_USERSETTINGS_USER" Association="Self.FK_USERSETTINGS_USER">
             <End Role="Users" EntitySet="Users" />
@@ -756,7 +738,7 @@
           <Property Name="PasswordReset" Type="Boolean" Nullable="false" />
           <Property Name="Email" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="Sessions" Relationship="DolomiteModel.EntityFramework.FK_SESSION_USER" FromRole="User" ToRole="Session" />
-          <NavigationProperty Name="UserSettings" Relationship="DolomiteModel.EntityFramework.FK_USERSETTINGS_USER" FromRole="User" ToRole="UserSetting" />
+          <NavigationProperty Name="UserSetting" Relationship="DolomiteModel.EntityFramework.FK_USERSETTINGS_USER" FromRole="User" ToRole="UserSetting" />
         </EntityType>
         <Association Name="Album1">
           <End Role="Albums" Type="Self.Album" Multiplicity="0..1" />
@@ -1062,10 +1044,6 @@
           <Parameter Name="workItem" Mode="In" Type="Guid" />
           </FunctionImport>
           <EntitySet Name="UserSettings" EntityType="DolomiteModel.EntityFramework.UserSetting" />
-          <AssociationSet Name="FK_USERSETTINGS_APIKEY" Association="DolomiteModel.EntityFramework.FK_USERSETTINGS_APIKEY">
-            <End Role="ApiKey" EntitySet="ApiKeys" />
-            <End Role="UserSetting" EntitySet="UserSettings" />
-          </AssociationSet>
           <AssociationSet Name="FK_USERSETTINGS_USER" Association="DolomiteModel.EntityFramework.FK_USERSETTINGS_USER">
             <End Role="User" EntitySet="Users" />
             <End Role="UserSetting" EntitySet="UserSettings" />
@@ -1099,7 +1077,6 @@
           <Property Name="Key" Type="String" Nullable="false" MaxLength="64" FixedLength="true" Unicode="true" />
           <Property Name="FriendlyName" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="Sessions" Relationship="DolomiteModel.EntityFramework.FK_SESSION_APIKEY" FromRole="ApiKey" ToRole="Session" />
-          <NavigationProperty Name="UserSettings" Relationship="DolomiteModel.EntityFramework.FK_USERSETTINGS_APIKEY" FromRole="ApiKey" ToRole="UserSetting" />
         </EntityType>
         <EntityType Name="Session">
           <Key>
@@ -1142,30 +1119,15 @@
         </Association>
         <EntityType Name="UserSetting">
           <Key>
-            <PropertyRef Name="Id" />
+            <PropertyRef Name="User" />
           </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="User" Type="Int32" Nullable="false" />
-          <Property Name="ApiKey" Type="Int32" Nullable="false" />
-          <Property Name="SettingsCollection" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
-          <NavigationProperty Name="ApiKey1" Relationship="DolomiteModel.EntityFramework.FK_USERSETTINGS_APIKEY" FromRole="UserSetting" ToRole="ApiKey" />
+          <Property Name="SettingsSerialized" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="User1" Relationship="DolomiteModel.EntityFramework.FK_USERSETTINGS_USER" FromRole="UserSetting" ToRole="User" />
         </EntityType>
-        <Association Name="FK_USERSETTINGS_APIKEY">
-          <End Type="DolomiteModel.EntityFramework.ApiKey" Role="ApiKey" Multiplicity="1" />
-          <End Type="DolomiteModel.EntityFramework.UserSetting" Role="UserSetting" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="ApiKey">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="UserSetting">
-              <PropertyRef Name="ApiKey" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <Association Name="FK_USERSETTINGS_USER">
           <End Type="DolomiteModel.EntityFramework.User" Role="User" Multiplicity="1" />
-          <End Type="DolomiteModel.EntityFramework.UserSetting" Role="UserSetting" Multiplicity="*" />
+          <End Type="DolomiteModel.EntityFramework.UserSetting" Role="UserSetting" Multiplicity="0..1" />
           <ReferentialConstraint>
             <Principal Role="User">
               <PropertyRef Name="Id" />
@@ -1382,10 +1344,8 @@
           <EntitySetMapping Name="UserSettings">
             <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.UserSetting">
               <MappingFragment StoreEntitySet="UserSettings">
-                <ScalarProperty Name="SettingsCollection" ColumnName="SettingsCollection" />
-                <ScalarProperty Name="ApiKey" ColumnName="ApiKey" />
+                <ScalarProperty Name="SettingsSerialized" ColumnName="SettingsSerialized" />
                 <ScalarProperty Name="User" ColumnName="User" />
-                <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

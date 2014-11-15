@@ -14,12 +14,9 @@ namespace DolomiteModel.EntityFramework
     
     public partial class UserSetting
     {
-        public int Id { get; set; }
         public int User { get; set; }
-        public int ApiKey { get; set; }
-        public string SettingsCollection { get; set; }
+        public string SettingsSerialized { get; set; }
     
-        public virtual ApiKey ApiKey1 { get; set; }
         public virtual User User1 { get; set; }
     }
 }

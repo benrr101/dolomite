@@ -1,0 +1,3 @@
+﻿ALTER TABLE [dbo].[UserSettings]
+	ADD CONSTRAINT [UNQ_USERSETTINGS_USERCLIENT]
+	UNIQUE ([User],[ApiKey],[ClientKey])
