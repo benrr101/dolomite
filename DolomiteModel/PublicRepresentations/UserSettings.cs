@@ -11,8 +11,8 @@ namespace DolomiteModel.PublicRepresentations
 
         public enum ShuffleModes
         {
-            Random,     // True random selection of tracks.
-            Order       // Random ordering, ensuring all tracks are played once.
+            Order,      // Random ordering, ensuring all tracks are played once.
+            Random      // True random selection of tracks.
         }
 
         #endregion

@@ -290,6 +290,16 @@ namespace DolomiteWcfService
             {
                 return WebUtilities.GenerateUnauthorizedResponse();
             }
+            catch (JsonReaderException)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse("The JSON for the user's settings is invalid."),
+                    HttpStatusCode.BadRequest);
+            }
+            catch (JsonSerializationException)
+            {
+                return WebUtilities.GenerateResponse(new ErrorResponse("The JSON for the user's settings is invalid."),
+                    HttpStatusCode.BadRequest);
+            }
             catch (Exception)
             {
                 return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
