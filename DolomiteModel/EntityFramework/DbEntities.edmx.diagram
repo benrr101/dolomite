@@ -40,6 +40,8 @@
         <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Session" Width="1.5" PointX="0.625" PointY="11.5" />
         <AssociationConnector Association="DolomiteModel.EntityFramework.FK_SESSION_APIKEY" />
         <AssociationConnector Association="DolomiteModel.EntityFramework.FK_SESSION_USER" />
+        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.UserSetting" Width="1.5" PointX="4.75" PointY="10.25" />
+        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_USERSETTINGS_USER" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

@@ -214,6 +214,30 @@ namespace DolomiteManagement
 
         #endregion
 
+        #region Settings Methods
+
+        /// <summary>
+        /// Fetches the settings for a given user from the database
+        /// </summary>
+        /// <param name="username">The username of the user to lookup the settings for</param>
+        /// <returns>The settings for the given user</returns>
+        public UserSettings GetUserSettings(string username)
+        {
+            return DatabaseManager.GetUserSettings(username);
+        }
+
+        /// <summary>
+        /// Stores the settings for the given user into the database
+        /// </summary>
+        /// <param name="username">The user to store the settings of</param>
+        /// <param name="settings">The settings to store</param>
+        public void StoreSettings(string username, UserSettings settings)
+        {
+            DatabaseManager.StoreUserSettings(username, settings);
+        }
+
+        #endregion
+
         #region Private Methods
 
         /// <summary>
