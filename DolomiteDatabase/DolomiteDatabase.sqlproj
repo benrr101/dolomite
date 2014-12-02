@@ -119,6 +119,12 @@
     <Build Include="StoredProcedures\ReleaseAndCompleteArtChange.sql" />
     <Build Include="Tables\UserSettings.sql" />
     <Build Include="Foreign Keys\FK_USERSETTINGS_USER.sql" />
+    <Build Include="Indexes\UNQ_ART_HASH.sql" />
+    <Build Include="Indexes\UNQ_ART_GUIDID.sql" />
+    <Build Include="Indexes\UNQ_APIKEYS_APIKEY.sql" />
+    <Build Include="Indexes\UNQ_AUTOPLAYLISTS_GUIDID.sql" />
+    <Build Include="Indexes\UNQ_PLAYLIST_GUIDID.sql" />
+    <Build Include="Indexes\UNQ_TRACKS_GUIDID.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Script.PostDeployment1.sql" />
