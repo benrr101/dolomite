@@ -1,9 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ServiceDefinition name="DolomiteService" xmlns="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition" schemaVersion="2013-10.2.2">
+<ServiceDefinition name="DolomiteService" xmlns="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition" schemaVersion="2014-06.2.4">
   <WorkerRole name="DolomiteWcfService" vmsize="ExtraSmall">
     <Runtime executionContext="elevated" /> <!-- DO NOT REMOVE, cert store will be inaccessible to the role otherwise, See http://stackoverflow.com/a/14468164 for more details-->
     <Imports>
-      <Import moduleName="Diagnostics" />
     </Imports>
     <Endpoints>
       <InputEndpoint name="DolomiteRest" protocol="https" port="443" localPort="8080" certificate="LocalSSLCert" />
@@ -23,7 +22,6 @@
   </WorkerRole>
   <WorkerRole name="DolomiteBackgroundProcessing" vmsize="ExtraSmall">
     <Imports>
-      <Import moduleName="Diagnostics" />
     </Imports>
     <ConfigurationSettings>
       <Setting name="TrackStorageContainer" />

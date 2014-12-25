@@ -1,9 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<ServiceConfiguration serviceName="DolomiteService" xmlns="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceConfiguration" osFamily="3" osVersion="*" schemaVersion="2013-10.2.2">
+<ServiceConfiguration serviceName="DolomiteService" xmlns="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceConfiguration" osFamily="3" osVersion="*" schemaVersion="2014-06.2.4">
   <Role name="DolomiteWcfService">
     <Instances count="1" />
     <ConfigurationSettings>
-      <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="UseDevelopmentStorage=true" />
       <Setting name="StorageConnectionString" value="UseDevelopmentStorage=true" />
       <Setting name="TrackStorageContainer" value="trackstorage" />
       <Setting name="UserKeysEnabled" value="True" />
@@ -17,7 +16,6 @@
   <Role name="DolomiteBackgroundProcessing">
     <Instances count="1" />
     <ConfigurationSettings>
-      <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="UseDevelopmentStorage=true" />
       <Setting name="TrackStorageContainer" value="trackstorage" />
       <Setting name="StorageConnectionString" value="UseDevelopmentStorage=true" />
     </ConfigurationSettings>
