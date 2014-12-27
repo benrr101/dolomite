@@ -1,6 +1,6 @@
 ﻿CREATE TABLE [dbo].[Qualities]
 (
-	[Id]		INT NOT NULL PRIMARY KEY IDENTITY(1,1), 
+	[Id]		INT NOT NULL PRIMARY KEY, 
     [Name]		NVARCHAR(20) NOT NULL, 
     [Codec]		NVARCHAR(50) NULL, 
     [Bitrate]	INT NULL, 

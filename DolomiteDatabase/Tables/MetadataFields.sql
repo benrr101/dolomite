@@ -1,6 +1,6 @@
 ﻿CREATE TABLE [dbo].[MetadataFields]
 (
-	[Id]			INT NOT NULL PRIMARY KEY IDENTITY(1,1),
+	[Id]			INT NOT NULL PRIMARY KEY,
 	[TagName]		NVARCHAR(20) NOT NULL,
 	[DisplayName]	NVARCHAR(20) NOT NULL, 
     [Type]			NVARCHAR(20) NOT NULL,

@@ -62,6 +62,7 @@
     <Folder Include="Foreign Keys" />
     <Folder Include="Scripts" />
     <Folder Include="StoredProcedures" />
+    <Folder Include="Metadata" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="Tables\Tracks.sql" />
@@ -125,6 +126,7 @@
     <Build Include="Indexes\UNQ_AUTOPLAYLISTS_GUIDID.sql" />
     <Build Include="Indexes\UNQ_PLAYLIST_GUIDID.sql" />
     <Build Include="Indexes\UNQ_TRACKS_GUIDID.sql" />
+    <None Include="Metadata\MetadataFields.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Script.PostDeployment1.sql" />
@@ -134,5 +136,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="DolomiteDatabaseRecreate.publish.xml" />
+    <None Include="Metadata\Qualities.sql" />
+    <None Include="Metadata\Rules.sql" />
   </ItemGroup>
 </Project>
