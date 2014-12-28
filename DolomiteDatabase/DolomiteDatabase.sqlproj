@@ -127,6 +127,9 @@
     <Build Include="Indexes\UNQ_PLAYLIST_GUIDID.sql" />
     <Build Include="Indexes\UNQ_TRACKS_GUIDID.sql" />
     <None Include="Metadata\MetadataFields.sql" />
+    <Build Include="StoredProcedures\DeleteTrack.sql" />
+    <Build Include="StoredProcedures\DeleteAutoplaylist.sql" />
+    <Build Include="StoredProcedures\DeletePlaylist.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Script.PostDeployment1.sql" />
