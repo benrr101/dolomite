@@ -1,6 +1,6 @@
 ﻿CREATE PROCEDURE [dbo].[GetAndLockTopMetadataItem]
 AS
-	DECLARE @workItem UNIQUEIDENTIFIER;
+	DECLARE @workItem BIGINT;
 
 	-- Grab the foremost work item
 	SELECT @workItem = (SELECT TOP 1 T.Id

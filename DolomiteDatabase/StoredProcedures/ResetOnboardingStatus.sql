@@ -1,5 +1,5 @@
 ﻿CREATE PROCEDURE [dbo].[ResetOnboardingStatus]
-	@guid UNIQUEIDENTIFIER
+	@trackId BIGINT
 AS
 
 	SET XACT_ABORT ON
@@ -8,15 +8,15 @@ AS
 	-- Remove the onboarded flag, and lock it at the same time
 	UPDATE Tracks
 		SET HasBeenOnboarded = ((0)), Locked = ((1))
-		WHERE Id = @guid;
+		WHERE Id = @trackId;
 
 	-- Remove all quality records
 	DELETE FROM AvailableQualities
-		WHERE Track = @guid;
+		WHERE Track = @trackId;
 
 	-- Remove all metadata records
 	DELETE FROM Metadata
-		WHERE Track = @guid;
+		WHERE Track = @trackId;
 
 	-- Undo the lock
 	UPDATE Tracks

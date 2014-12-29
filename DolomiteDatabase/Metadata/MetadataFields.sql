@@ -39,3 +39,5 @@ WHEN NOT MATCHED BY TARGET THEN
 	VALUES ([Id], [TagName], [DisplayName], [Type], [Searchable], [FileSupported], [TagLibArray])
 WHEN NOT MATCHED BY SOURCE THEN
 	DELETE;
+
+GO

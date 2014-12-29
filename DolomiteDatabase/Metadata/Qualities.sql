@@ -10,14 +10,16 @@ USING (
 ON [source].[Id] = [target].[Id]
 WHEN MATCHED THEN
 	UPDATE SET 
-		[source].[Name] = [target].[Name],
-		[source].[Codec] = [target].[Codec],
-		[source].[Bitrate] = [target].[Bitrate],
-		[source].[Extension] = [target].[Extension],
-		[source].[Directory] = [target].[Directory],
-		[source].[Mimetype] = [target].[Mimetype]
+		[target].[Name] = [source].[Name],
+		[target].[Codec] = [source].[Codec],
+		[target].[Bitrate] = [source].[Bitrate],
+		[target].[Extension] = [source].[Extension],
+		[target].[Directory] = [source].[Directory],
+		[target].[Mimetype] = [source].[Mimetype]
 WHEN NOT MATCHED BY TARGET THEN
 	INSERT (Id, Name, Codec, Bitrate, Extension, Directory, Mimetype) 
 	VALUES (Id, Name, Codec, Bitrate, Extension, Directory, Mimetype)
 WHEN NOT MATCHED BY SOURCE THEN
 	DELETE;
+
+GO

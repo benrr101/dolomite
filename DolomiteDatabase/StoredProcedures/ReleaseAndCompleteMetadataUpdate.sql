@@ -1,5 +1,5 @@
 ﻿CREATE PROCEDURE [dbo].[ReleaseAndCompleteMetadataUpdate]
-	@workItem UNIQUEIDENTIFIER
+	@workItem BIGINT
 AS
 	UPDATE Metadata
 		SET WriteOut = ((0))

@@ -1,5 +1,5 @@
 ﻿CREATE PROCEDURE [dbo].[DecrementPlaylistTrackOrder]
-	@playlist UNIQUEIDENTIFIER,
+	@playlist BIGINT,
 	@position INT
 AS
 	UPDATE [PlaylistTracks] 
