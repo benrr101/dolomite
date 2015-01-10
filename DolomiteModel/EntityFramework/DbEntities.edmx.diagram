@@ -4,44 +4,44 @@
   <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
-      <Diagram DiagramId="fec77083ff0642cbb5fd35b18ef3d13f" Name="Diagram1">
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Album" Width="1.5" PointX="11.25" PointY="10" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Art" Width="1.5" PointX="9" PointY="10" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Artist" Width="1.5" PointX="11.25" PointY="12.625" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.AutoplaylistRule" Width="1.5" PointX="3" PointY="4.5" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Autoplaylist" Width="1.5" PointX="0.875" PointY="2.375" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.AvailableQuality" Width="1.5" PointX="11" PointY="4.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Metadata" Width="1.5" PointX="5.125" PointY="1.5" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.MetadataField" Width="1.5" PointX="3" PointY="1.125" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Playlist" Width="1.5" PointX="4.75" PointY="7.375" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.PlaylistTrack" Width="1.5" PointX="7" PointY="7.375" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Quality" Width="1.5" PointX="12.875" PointY="4.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Rule" Width="1.5" PointX="5.125" PointY="4.125" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Track" Width="1.5" PointX="9" PointY="4.75" IsExpanded="true" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.User" Width="1.5" PointX="0.75" PointY="7.25" IsExpanded="true" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.Album1" ManuallyRouted="false" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_ALBUMS_ARTIST" ManuallyRouted="false" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_TRACKS_ART" ManuallyRouted="false" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTRULES_METADATA" ManuallyRouted="false" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTRULES_PLAYLIST" ManuallyRouted="false" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTRULES_RULE" ManuallyRouted="false" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTS_OWNER" ManuallyRouted="false" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_AVAILABLEQUALITIES_QUALITY" ManuallyRouted="false" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_AVAILABLEQUALITIES_TRACK" ManuallyRouted="false" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_METADATA_FIELD" ManuallyRouted="false" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_METADATA_TRACK" ManuallyRouted="false" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_PLAYLISTS_OWNER" ManuallyRouted="false" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_PLAYLISTTRACKS_PLAYLISTS" ManuallyRouted="false" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_PLAYLISTTRACKS_TRACKS" ManuallyRouted="false" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_TRACKS_OWNER" ManuallyRouted="false" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTS_SORTFIELD" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.UserKey" Width="1.5" PointX="10.625" PointY="1.375" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.ApiKey" Width="1.5" PointX="2.75" PointY="12.75" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.Session" Width="1.5" PointX="0.625" PointY="11.5" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_SESSION_APIKEY" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_SESSION_USER" />
-        <EntityTypeShape EntityType="DolomiteModel.EntityFramework.UserSetting" Width="1.5" PointX="4.75" PointY="10.25" />
-        <AssociationConnector Association="DolomiteModel.EntityFramework.FK_USERSETTINGS_USER" />
+      <Diagram DiagramId="70ad95e7e6b64e0a8e36b166aae35fc0" Name="Diagram1" ZoomLevel="74">
+        <EntityTypeShape EntityType="EntityFramework.Album" Width="1.5" PointX="13.875" PointY="5.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.ApiKey" Width="1.5" PointX="1.875" PointY="12.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Art" Width="1.5" PointX="11.375" PointY="3.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Artist" Width="1.5" PointX="15.875" PointY="5.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.AutoplaylistRule" Width="1.5" PointX="6.875" PointY="15" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Autoplaylist" Width="1.5" PointX="6.875" PointY="11.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.AvailableQuality" Width="1.5" PointX="13.875" PointY="9.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Metadata" Width="1.5" PointX="11.375" PointY="11.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.MetadataField" Width="1.5" PointX="9.125" PointY="11.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Playlist" Width="1.5" PointX="6.875" PointY="8.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.PlaylistTrack" Width="1.5" PointX="9" PointY="8.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Quality" Width="1.5" PointX="15.875" PointY="9.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Rule" Width="1.5" PointX="4.625" PointY="15" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Session" Width="1.5" PointX="1.875" PointY="8.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.Track" Width="1.5" PointX="11.375" PointY="6" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.UserKey" Width="1.5" PointX="4" PointY="5.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.User" Width="1.5" PointX="4" PointY="8" IsExpanded="true" />
+        <EntityTypeShape EntityType="EntityFramework.UserSetting" Width="1.5" PointX="3.75" PointY="12.375" IsExpanded="true" />
+        <AssociationConnector Association="EntityFramework.Album1" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_ALBUMS_ARTIST" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_SESSION_APIKEY" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_TRACKS_ART" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_AUTOPLAYLISTRULES_METADATA" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_AUTOPLAYLISTRULES_PLAYLIST" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_AUTOPLAYLISTRULES_RULE" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_AUTOPLAYLISTS_OWNER" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_AUTOPLAYLISTS_SORTFIELD" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_AVAILABLEQUALITIES_QUALITY" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_AVAILABLEQUALITIES_TRACK" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_METADATA_FIELD" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_METADATA_TRACK" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_PLAYLISTS_OWNER" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_PLAYLISTTRACKS_PLAYLISTS" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_PLAYLISTTRACKS_TRACKS" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_SESSION_USER" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_TRACKS_OWNER" ManuallyRouted="false" />
+        <AssociationConnector Association="EntityFramework.FK_USERSETTINGS_USER" ManuallyRouted="false" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>
