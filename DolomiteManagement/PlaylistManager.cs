@@ -231,7 +231,7 @@ namespace DolomiteManagement
             }
 
             // Add the track to the playlist
-            PlaylistDbManager.AddTrackToPlaylist(playlistGuid, trackGuid, position);
+            PlaylistDbManager.AddTrackToPlaylist(playlist, track, position);
         }
 
         /// <summary>

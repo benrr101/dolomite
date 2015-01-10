@@ -305,6 +305,7 @@ namespace DolomiteModel
                 Pub.Playlist pubPlaylist = new Pub.Playlist
                 {
                     Id = playlist.GuidId,
+                    InternalId = playlist.Id,
                     Name = playlist.Name,
                     Owner = playlist.User.Username,
                     Tracks = playlist.PlaylistTracks.OrderBy(spt => spt.Order).Select(spt => spt.Track1.GuidId).ToList(),
@@ -322,26 +323,26 @@ namespace DolomiteModel
         /// Adds the track to the playlist. If necessary the order of the
         /// tracks will be updated.
         /// </summary>
-        /// <param name="playlistGuid">The guid of the playlist to add the track to</param>
-        /// <param name="trackGuid">The track to add to the playlist</param>
+        /// <param name="playlist">The playlist to add the track to</param>
+        /// <param name="track">The track to add to the playlist</param>
         /// <param name="position">
         /// The order of the track in the list. If not provided, then the position
         /// will be added to end of the playlist.
         /// </param>
-        public void AddTrackToPlaylist(Guid playlistGuid, Guid trackGuid, int? position = null)
+        public void AddTrackToPlaylist(Pub.Playlist playlist, Pub.Track track, int? position = null)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Determine what the position should be
                 if (position.HasValue)
                 {
                     // Increment all the existing playlist orders
-                    context.IncrementPlaylistTrackOrder(playlistGuid, position);
+                    context.IncrementPlaylistTrackOrder(playlist.InternalId, position);
                 }
                 else
                 {
                     // Grab the maximum of the tracks in the playlist
-                    int? maxPos = context.PlaylistTracks.Where(pt => pt.Playlist == playlistGuid).Max(pt => pt.Order);
+                    int? maxPos = context.PlaylistTracks.Where(pt => pt.Playlist == playlist.InternalId).Max(pt => pt.Order);
                     position = maxPos.HasValue ? maxPos + 1 : 1;
                 }
 
@@ -349,8 +350,8 @@ namespace DolomiteModel
                 PlaylistTrack playlistTrack = new PlaylistTrack
                 {
                     Order = position.Value,
-                    Playlist = playlistGuid,
-                    Track = trackGuid
+                    Playlist = playlist.InternalId,
+                    Track = track.InternalId
                 };
                 context.PlaylistTracks.Add(playlistTrack);
                 context.SaveChanges();
