@@ -175,13 +175,13 @@ namespace DolomiteModel
         /// <returns>A public-ready list of auto playlists w/o rules</returns>
         public List<Pub.Playlist> GetAllAutoPlaylists(string owner)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 return (from p in context.Autoplaylists
                         where p.User.Username == owner
                         select new Pub.Playlist
                         {
-                            Id = p.Id,
+                            Id = p.GuidId,
                             Name = p.Name,
                             Owner = p.User.Username,
                             Type = Pub.Playlist.PlaylistType.Auto
@@ -197,13 +197,13 @@ namespace DolomiteModel
         /// <returns>The list of static playlists without tracks</returns>
         public List<Pub.Playlist> GetAllStaticPlaylists(string owner)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 return (from p in context.Playlists
                         where p.User.Username == owner
                         select new Pub.Playlist
                         {
-                            Id = p.Id,
+                            Id = p.GuidId,
                             Name = p.Name,
                             Owner = p.User.Username,
                             Type = Pub.Playlist.PlaylistType.Static
@@ -295,19 +295,19 @@ namespace DolomiteModel
         /// <returns>A public-ready static playlist object</returns>
         public Pub.Playlist GetStaticPlaylist(Guid playlistGuid)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Try to retrieve the playlist as a standard playlist
-                Playlist playlist = context.Playlists.FirstOrDefault(p => p.Id == playlistGuid);
+                Playlist playlist = context.Playlists.FirstOrDefault(p => p.GuidId == playlistGuid);
                 if (playlist == null)
                     throw new ObjectNotFoundException(String.Format("A playlist with id {0} could not be found", playlistGuid));
 
                 Pub.Playlist pubPlaylist = new Pub.Playlist
                 {
-                    Id = playlist.Id,
+                    Id = playlist.GuidId,
                     Name = playlist.Name,
                     Owner = playlist.User.Username,
-                    Tracks = playlist.PlaylistTracks.OrderBy(spt => spt.Order).Select(spt => spt.Track).ToList(),
+                    Tracks = playlist.PlaylistTracks.OrderBy(spt => spt.Order).Select(spt => spt.Track1.GuidId).ToList(),
                     Type = Pub.Playlist.PlaylistType.Static
                 };
                 return pubPlaylist;
