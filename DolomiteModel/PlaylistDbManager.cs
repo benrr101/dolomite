@@ -25,7 +25,7 @@ namespace DolomiteModel
                 // Peform the cache lookup if necessary
                 if (_allowedMetadataRules == null)
                 {
-                    using (var context = new DbEntities())
+                    using (var context = new Entities())
                     {
                         _allowedMetadataRules = (from r in context.Rules
                             group r by r.Type
@@ -72,9 +72,10 @@ namespace DolomiteModel
         /// <returns>The new guid id for the playlist</returns>
         public Guid CreateAutoPlaylist(Pub.AutoPlaylist input, string owner)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Generate a new playlist guid
+                // TODO: Remove, let the user provide the guid
                 Guid guid = Guid.NewGuid();
 
                 // Create the playlist and add to db
@@ -90,7 +91,7 @@ namespace DolomiteModel
 
                 Autoplaylist playlist = new Autoplaylist
                 {
-                    Id = guid,
+                    GuidId = guid,
                     Limit = input.Limit.Limit,
                     MatchAll = input.MatchAll,
                     Owner = context.Users.First(u => u.Username == owner).Id,
@@ -129,15 +130,16 @@ namespace DolomiteModel
         /// <returns>The new guid id for the playlist</returns>
         public Guid CreateStandardPlaylist(string name, string owner)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Generate the guid of the playlist
+                // TODO: Remove, let the user put the guid
                 Guid guid = Guid.NewGuid();
 
                 // Create a new playlist and send it to the db
                 Playlist playlist = new Playlist
                 {
-                    Id = guid,
+                    GuidId = guid,
                     Name = name,
                     User = context.Users.First(u => u.Username == owner)
                 };
@@ -428,15 +430,15 @@ namespace DolomiteModel
         /// Deletes a track from a static playlist. Also decrements the order 
         /// of the tracks in the playist to keep the indices correct.
         /// </summary>
-        /// <param name="playlistGuid">GUID of the playlist to remove the track from</param>
+        /// <param name="playlist">The playlist to remove the track from</param>
         /// <param name="trackId">ID of the track to remove from the playlist</param>
-        public void DeleteTrackFromPlaylist(Guid playlistGuid, int trackId)
+        public void DeleteTrackFromPlaylist(Pub.Playlist playlist, int trackId)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Find the playlist<->track object
-                var playlistTrack =
-                    context.PlaylistTracks.FirstOrDefault(t => t.Playlist == playlistGuid && t.Order == trackId);
+                var playlistTrack = context.PlaylistTracks.FirstOrDefault(
+                    t => t.Playlist == playlist.InternalId && t.Order == trackId);
                 if (playlistTrack == null)
                     throw new ObjectNotFoundException("Failed to find track in playlist.");
 
@@ -447,7 +449,7 @@ namespace DolomiteModel
                 context.PlaylistTracks.Remove(playlistTrack);
                 context.SaveChanges();
 
-                context.DecrementPlaylistTrackOrder(playlistGuid, order);
+                context.DecrementPlaylistTrackOrder(playlist.InternalId, order);
             }
         }
 
@@ -464,10 +466,10 @@ namespace DolomiteModel
             if (playlistGuid == Guid.Empty)
                 return;
 
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Try to delete the playlist from the autoplaylists
-                Autoplaylist autoplaylist = context.Autoplaylists.FirstOrDefault(ap => ap.Id == playlistGuid);
+                Autoplaylist autoplaylist = context.Autoplaylists.FirstOrDefault(ap => ap.GuidId == playlistGuid);
                 if (autoplaylist == null)
                     throw new ObjectNotFoundException("Autoplaylist with the given GUID not found.");
 
@@ -485,10 +487,10 @@ namespace DolomiteModel
             if (playlistGuid == Guid.Empty)
                 return;
 
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Try to delete the static playlist from the playlists
-                Playlist playlist = context.Playlists.FirstOrDefault(p => p.Id == playlistGuid);
+                Playlist playlist = context.Playlists.FirstOrDefault(p => p.GuidId == playlistGuid);
                 if (playlist == null)
                     throw new ObjectNotFoundException("Static playlist with the given GUID not found.");
                     
@@ -511,7 +513,7 @@ namespace DolomiteModel
         /// <returns>True if the rule is valid. False otherwise.</returns>
         private bool IsValidRule(Pub.AutoPlaylistRule rule)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Try to fetch the field that the rule uses
                 MetadataField field = context.MetadataFields.FirstOrDefault(f => f.TagName == rule.Field);
