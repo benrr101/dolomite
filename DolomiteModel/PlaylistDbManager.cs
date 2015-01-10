@@ -227,49 +227,58 @@ namespace DolomiteModel
         /// <returns>A public-ready auto playlist object.</returns>
         public Pub.AutoPlaylist GetAutoPlaylist(Guid guid, bool fetchTracks = true)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Try to retrieve the playlist as an auto playlist
-                Autoplaylist autoPlaylist = context.Autoplaylists.FirstOrDefault(ap => ap.Id == guid);
+                Autoplaylist autoPlaylist = context.Autoplaylists.FirstOrDefault(ap => ap.GuidId == guid);
                 if (autoPlaylist == null)
                     throw new ObjectNotFoundException(String.Format("A playlist with id {0} could not be found", guid));
-                
-                // Do we need to fetch the tracks?
+
+                // Only build the list of rules and the list of rules if we need to
+                // TODO: Create a new method that just determines if an autoplaylist exists using Any()
+                Pub.AutoPlaylistLimiter limiter = null;
+                List<Pub.AutoPlaylistRule> rules = null;
+                IQueryable<Metadata> ownerMetadata = null;
+                if (fetchTracks)
+                {
 
                     // Optionally build the limiter
-                    Pub.AutoPlaylistLimiter limiter = null;
                     if (autoPlaylist.Limit.HasValue)
                     {
                         limiter = new Pub.AutoPlaylistLimiter
                         {
                             Limit = autoPlaylist.Limit.Value,
                             SortDescending = autoPlaylist.SortDesc,
-                            SortField =
-                                autoPlaylist.SortField.HasValue ? autoPlaylist.SortFieldMetadataField.TagName : null
+                            SortField = autoPlaylist.SortField.HasValue
+                                ? autoPlaylist.SortField1.TagName
+                                : null
                         };
                     }
 
                     // Build the list of rules
-                    List<Pub.AutoPlaylistRule> rules =
-                        autoPlaylist.AutoplaylistRules.Select(
-                            r => new Pub.AutoPlaylistRule
-                            {
-                                Id = r.Id,
-                                Comparison = r.Rule1.Name,
-                                Field = r.MetadataField1.TagName,
-                                Value = r.Value
-                            }).ToList();
+                    rules = (from rule in context.AutoplaylistRules
+                        select new Pub.AutoPlaylistRule
+                        {
+                            Id = rule.Id,
+                            Comparison = rule.Rule1.Name,
+                            Field = rule.MetadataField1.TagName,
+                            Value = rule.Value
+                        }).ToList();
+
+                    // Build the list of metadata for the user's tracks
+                    ownerMetadata = context.Metadatas.Where(m => m.Track1.Owner == autoPlaylist.Owner);
+                }
 
                 // Put it all together
                 Pub.AutoPlaylist pubAutoPlaylist = new Pub.AutoPlaylist
                 {
-                    Id = autoPlaylist.Id,
-                    Limit = limiter,
+                    Id = autoPlaylist.GuidId,
+                    Limit = fetchTracks ? limiter : null,
                     MatchAll = autoPlaylist.MatchAll,
                     Name = autoPlaylist.Name,
                     Owner = autoPlaylist.User.Username,
                     Rules = rules,
-                    Tracks = fetchTracks ? TrackRuleProvider.GetAutoplaylistTracks(context, autoPlaylist) : null,
+                    Tracks = fetchTracks ? TrackRuleProvider.GetAutoplaylistTracks(ownerMetadata, autoPlaylist) : null,
                     Type = Pub.Playlist.PlaylistType.Auto
                 };
                 return pubAutoPlaylist;

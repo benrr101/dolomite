@@ -14,26 +14,26 @@ namespace DolomiteModel
         /// Retrieves a list of track guids that match the rules set forth in
         /// the autoplaylist. Utilizes combination of LINQ queries.
         /// </summary>
-        /// <param name="entities">Instance of the database to perform the actions</param>
+        /// <param name="metadatas">A collection of metadatas to compare</param>
         /// <param name="playlist">The playlist to find the tracks for</param>
         /// <returns>A list of guids for tracks that match the list of rules</returns>
-        public static List<Guid> GetAutoplaylistTracks(DbEntities entities, Autoplaylist playlist)
+        public static List<Guid> GetAutoplaylistTracks(IQueryable<Metadata> metadatas, Autoplaylist playlist)
         {
             // Iterate over the rules in the list
-            List<IEnumerable<Guid>> trackProviders = new List<IEnumerable<Guid>>();
+            List<IQueryable<Track>> trackProviders = new List<IQueryable<Track>>();
             foreach (AutoplaylistRule rule in playlist.AutoplaylistRules)
             {
                 // Build a query for the rule
                 switch (rule.MetadataField1.Type)
                 {
                     case "string":
-                        trackProviders.Add(GetStringTrackProvider(entities, rule));
+                        trackProviders.Add(GetStringTrackProvider(metadatas, rule));
                         break;
                     case "numeric":
-                        trackProviders.Add(GetNumericTrackProvider(entities, rule));
+                        trackProviders.Add(GetNumericTrackProvider(metadatas, rule));
                         break;
                     case "date":
-                        trackProviders.Add(GetDateTrackProvider(entities, rule));
+                        trackProviders.Add(GetDateTrackProvider(metadatas, rule));
                         break;
                     default:
                         var message = String.Format("Metadata type '{0}' for field {1} is not supported. " +
@@ -45,24 +45,25 @@ namespace DolomiteModel
             }
 
             // Concatenate together
-            // If null, return all the tracks.
             var tracksProvider = ConcatenateProviders(trackProviders, playlist.MatchAll);
-            IEnumerable<Guid> tracks = tracksProvider ?? entities.Tracks.Select(t => t.Id);
+
+            // Apply the limiter if necessary
+            IQueryable<Track> tracks = playlist.Limit.HasValue
+                ? ApplyLimiter(tracksProvider, playlist.Limit.Value, playlist.SortDesc, playlist.SortField1)
+                : tracksProvider;
 
             // If the playlist is limited, then sort
-            return playlist.Limit.HasValue
-                ? ApplyLimiter(entities, tracks, playlist.Limit.Value, playlist.SortDesc, playlist.SortFieldMetadataField).ToList()
-                : tracks.ToList();
+            return tracks.Select(t => t.GuidId).ToList();
         }
 
         /// <summary>
         /// Performs the query building for rules that use a string field as
         /// as their comparison field.
         /// </summary>
-        /// <param name="entities">A reference to the database entities.</param>
+        /// <param name="metadatas">A collection of metadatas to compare</param>
         /// <param name="rule">The rule to perform the comparison to</param>
-        /// <returns>An enumerable list of GUIDs for tracks that match the rule.</returns>
-        private static IEnumerable<Guid> GetStringTrackProvider(DbEntities entities, AutoplaylistRule rule)
+        /// <returns>An queryable list of GUIDs for tracks that match the rule.</returns>
+        private static IQueryable<Track> GetStringTrackProvider(IQueryable<Metadata> metadatas, AutoplaylistRule rule)
         {
             // Sanity check
             if (rule.Rule1.Type != "string")
@@ -73,7 +74,7 @@ namespace DolomiteModel
             }
 
             // Basis of the query requires the fields to match
-            IQueryable<Metadata> query = entities.Metadatas.Where(m => m.Field == rule.MetadataField);
+            IQueryable<Metadata> query = metadatas.Where(m => m.Field == rule.MetadataField);
 
             // Build the query
             switch (rule.Rule1.Name)
@@ -103,17 +104,17 @@ namespace DolomiteModel
                     break;
             }
 
-            return query.Select(m => m.Track);
+            return query.Select(m => m.Track1);
         }
 
         /// <summary>
         /// Performs the query building for rules that use a numeric field as
         /// as their comparison field. Utilizes a cast to decimal, regardless of int vs. decimal.
         /// </summary>
-        /// <param name="entities">A reference to the database entities.</param>
+        /// <param name="metadatas">A collection of metadatas to compare</param>
         /// <param name="rule">The rule to perform the comparison to</param>
-        /// <returns>An enumerable list of GUIDs for tracks that match the rule.</returns>
-        private static IEnumerable<Guid> GetNumericTrackProvider(DbEntities entities, AutoplaylistRule rule)
+        /// <returns>An queryable list of GUIDs for tracks that match the rule.</returns>
+        private static IQueryable<Track> GetNumericTrackProvider(IQueryable<Metadata> metadatas , AutoplaylistRule rule)
         {
             // Sanity check
             if (rule.Rule1.Type != "numeric")
@@ -124,7 +125,7 @@ namespace DolomiteModel
             }
 
             // Basis of the query requires the fields to match
-            IQueryable<Metadata> query = entities.Metadatas.Where(m => m.Field == rule.MetadataField);
+            IQueryable<Metadata> query = metadatas.Where(m => m.Field == rule.MetadataField);
 
             // Attempt to cast the rule's value to a decimal
             decimal ruleDec;
@@ -161,7 +162,7 @@ namespace DolomiteModel
                     query = query.Where(m => ConversionUtilities.ConvertToDecimal(m.Value) != ruleDec);
                     break;
             }
-            return query.Select(m => m.Track);
+            return query.Select(m => m.Track1);
         }
 
         /// <summary>
@@ -169,10 +170,10 @@ namespace DolomiteModel
         /// as their comparison field. Uses a cast to int since dates are stored
         /// as unix epoch times.
         /// </summary>
-        /// <param name="entities">A reference to the database entities.</param>
+        /// <param name="metadatas">A collection of metadatas to compare</param>
         /// <param name="rule">The rule to perform the comparison to</param>
-        /// <returns>An enumerable list of GUIDs for tracks that match the rule.</returns>
-        private static IEnumerable<Guid> GetDateTrackProvider(DbEntities entities, AutoplaylistRule rule)
+        /// <returns>An queryable list of GUIDs for tracks that match the rule.</returns>
+        private static IQueryable<Track> GetDateTrackProvider(IQueryable<Metadata> metadatas, AutoplaylistRule rule)
         {
             // Sanity check
             if (rule.Rule1.Type != "date")
@@ -183,7 +184,7 @@ namespace DolomiteModel
             }
 
             // Base of the query requires the fields to match
-            IQueryable<Metadata> query = entities.Metadatas.Where(m => m.Field == rule.MetadataField);
+            IQueryable<Metadata> query = metadatas.Where(m => m.Field == rule.MetadataField);
 
             // Dates are stored as UNIX timestamps, so cast to int
             // This is subject to the 2038 problem
@@ -225,7 +226,7 @@ namespace DolomiteModel
                     query = query.Where(m => ConversionUtilities.ConvertToInt32(m.Value) < lastNDays);
                     break;
             }
-            return query.Select(m => m.Track);
+            return query.Select(m => m.Track1);
         } 
 
         /// <summary>
@@ -237,7 +238,7 @@ namespace DolomiteModel
         /// <param name="providers">The list of queries that generate matching tracks</param>
         /// <param name="matchAll">Whether to intersect the matches or union them</param>
         /// <returns>An enumerable list of unique guids of matching tracks</returns>
-        private static IEnumerable<Guid> ConcatenateProviders(List<IEnumerable<Guid>> providers, bool matchAll)
+        private static IQueryable<Track> ConcatenateProviders(List<IQueryable<Track>> providers, bool matchAll)
         {
             var iterator = providers.GetEnumerator();
             if (!iterator.MoveNext() || iterator.Current == null)
@@ -245,13 +246,12 @@ namespace DolomiteModel
                 return null;
             }
 
-            IEnumerable<Guid> concatenatedProviders = iterator.Current;
+            var concatenatedProviders = iterator.Current;
             while (iterator.MoveNext() && iterator.Current != null)
             {
                 concatenatedProviders = matchAll
                     ? concatenatedProviders.Intersect(iterator.Current)
                     : concatenatedProviders.Union(iterator.Current);
-
             }
 
             return concatenatedProviders;
@@ -259,18 +259,20 @@ namespace DolomiteModel
 
         /// <summary>
         /// Applies the rules of a limiter for a auto playlist. Will randomize
-        /// the playlist if the sort field is null. Will execute a LINQ query to
+        /// the playlist if the sort field is null. Will generate a LINQ query to
         /// determine the sorting of the tracks based on the metadata field
-        /// specified. If there are any tracks that don't have the metadata field,
-        /// they are placed at the back of the playlist. In any case, the maximum
-        /// number of tracks in the playlist will be eqal to the limit.
+        /// specified. In any case, the maximum number of tracks in the playlist
+        /// will be equal to the limit.
         /// </summary>
         /// <remarks>
-        /// The case of left-behind tracks is somewhat faulty and non-ideal.
+        /// For right now, only tracks that contain the metadata field used for
+        /// sorting are returned. This is because the logic for appending tracks
+        /// that don't have the sorting metadata field is clunky and generally
+        /// requires enumerating the IQueryable, hence it is poor performance.
+        /// TODO: Decide if we need to add this logic back in.
         /// </remarks>
-        /// <param name="entities">An instance of the database</param>
         /// <param name="providers">The linq query that provide the tracks</param>
-        /// <param name="limit">The number of tracks to limit toe</param>
+        /// <param name="limit">The number of tracks to limit to</param>
         /// <param name="sortDesc">
         /// Whether or not to sort the playlist in descending order. Should be
         /// null if sorting randomly. Must not be null if sorting by a field.
@@ -279,9 +281,9 @@ namespace DolomiteModel
         /// The metadata field to sort by. If null, the playlist will be 
         /// randomly sorted.
         /// </param>
-        /// <returns>A LINQ query of sorted track guids.</returns>
-        private static IEnumerable<Guid> ApplyLimiter(DbEntities entities, IEnumerable<Guid> providers,
-            int limit, bool? sortDesc, MetadataField sortField)
+        /// <returns>A LINQ query of sorted tracks</returns>
+        private static IQueryable<Track> ApplyLimiter(IQueryable<Track> providers, int limit, bool? sortDesc,
+            MetadataField sortField)
         {
             // Should it be randomized?
             if (sortField == null)
@@ -294,34 +296,19 @@ namespace DolomiteModel
             if (!sortDesc.HasValue)
             {
                 throw new InvalidFilterCriteriaException(
-                    "The sort descending field cannot be null if there is a non-random limiter is applied.");
+                    "The sort descending field cannot be null if there is a non-random limiter applied.");
             }
 
             // Do not randomize it. Sort it based on the selected field
-            var sorted = entities.Metadatas.Where(
-                md => providers.Contains(md.Track) && md.MetadataField.Id == sortField.Id);
-            
-            // If we're doing this in desc, then sort descendingly
-            sorted = sortDesc.Value ? sorted.OrderByDescending(md => md.Value) : sorted.OrderBy(md => md.Value);
-            
-            // Apply the limit and select just the guid
-            var sortedGuids = sorted.Take(limit).Select(md => md.Track);
+            //IQueryable<Track> sorted = providers.Where(t => t.Metadatas.Any(md => md.Field == sortField.Id));
+            //var sorted = entities.Metadatas.Where(
+            //    md => providers.Contains(md.Track) && md.MetadataField.Id == sortField.Id);
+            var sortingMetadata = providers.SelectMany(p => p.Metadatas).Where(m => m.Field == sortField.Id);
 
-            
-
-
-            // Do we have tracks that don't have the sorting metadata
-            var leftBehind = providers.Except(sortedGuids);
-            if (sortedGuids.Count() < limit && leftBehind.Any())
-            {
-                // Add the left over elements until we reach the limit
-                //TODO: Replace this with a foreach with a kick-out condition whence the limit has been reached.
-                var sortedList = sortedGuids.ToList();
-                sortedList.AddRange(leftBehind);
-                return sortedList.Take(limit);
-            }
-
-            return sortedGuids;
-        } 
+            // Order by ascending or descending and corresponding tracks
+            return sortDesc.Value
+                ? sortingMetadata.OrderByDescending(m => m.Value).Select(m => m.Track1)
+                : sortingMetadata.OrderBy(m => m.Value).Select(m => m.Track1);
+        }
     }
 }
