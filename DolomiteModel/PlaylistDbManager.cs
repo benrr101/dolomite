@@ -273,6 +273,7 @@ namespace DolomiteModel
                 Pub.AutoPlaylist pubAutoPlaylist = new Pub.AutoPlaylist
                 {
                     Id = autoPlaylist.GuidId,
+                    InternalId = autoPlaylist.Id,
                     Limit = fetchTracks ? limiter : null,
                     MatchAll = autoPlaylist.MatchAll,
                     Name = autoPlaylist.Name,
@@ -374,10 +375,10 @@ namespace DolomiteModel
                 throw new InvalidExpressionException(message);
             }
 
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Add the rule to the playlist
-                Autoplaylist playlist = context.Autoplaylists.FirstOrDefault(p => p.Id == playlistGuid);
+                Autoplaylist playlist = context.Autoplaylists.FirstOrDefault(p => p.GuidId == playlistGuid);
                 if (playlist == null)
                 {
                     string message =
@@ -388,7 +389,7 @@ namespace DolomiteModel
 
                 AutoplaylistRule newRule = new AutoplaylistRule
                 {
-                    Autoplaylist = playlistGuid,
+                    Autoplaylist = playlist.Id,
                     MetadataField = context.MetadataFields.First(m => m.TagName == rule.Field).Id,
                     Rule = context.Rules.First(r => r.Name == rule.Comparison).Id,
                     Value = rule.Value
@@ -404,15 +405,15 @@ namespace DolomiteModel
         /// being unique across all playlists, we make sure the playlist matches
         /// to help with avoiding cross-playlist deletions.
         /// </summary>
-        /// <param name="playlistGuid">The guid of the autoplaylist</param>
+        /// <param name="playlist">The autoplaylist to remove the rule from</param>
         /// <param name="ruleId">The id of the rule to delete</param>
-        public void DeleteRuleFromAutoplaylist(Guid playlistGuid, int ruleId)
+        public void DeleteRuleFromAutoplaylist(Pub.AutoPlaylist playlist, int ruleId)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Find the rule in the playlist
                 var rule = context.AutoplaylistRules.FirstOrDefault(
-                    r => r.Autoplaylist == playlistGuid && r.Id == ruleId);
+                    r => r.Autoplaylist == playlist.InternalId && r.Id == ruleId);
 
                 if(rule == null)
                     throw new ObjectNotFoundException("Failed to find a playlist with the given id " +

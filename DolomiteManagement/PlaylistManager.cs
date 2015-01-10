@@ -253,7 +253,7 @@ namespace DolomiteManagement
             }
 
             // Pass the call to the database
-            PlaylistDbManager.DeleteRuleFromAutoplaylist(playlistGuid, ruleId);
+            PlaylistDbManager.DeleteRuleFromAutoplaylist(playlist, ruleId);
         }
 
         /// <summary>
