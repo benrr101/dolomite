@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Entity.Core;
 using System.Linq;
 using DolomiteModel.EntityFramework;
@@ -36,17 +35,17 @@ namespace DolomiteModel
         /// <summary>
         /// Store a new record that links a track to the quality
         /// </summary>
-        /// <param name="trackId">The GUID of the track</param>
+        /// <param name="track">The track to add the quality to</param>
         /// <param name="quality">The object representing the quality</param>
-        public void AddAvailableQualityRecord(Guid trackId, Pub.Quality quality)
+        public void AddAvailableQualityRecord(Pub.Track track, Pub.Quality quality)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Insert a new AvailableQuality record that ties the track to the quality
                 AvailableQuality aq = new AvailableQuality
                 {
                     Quality = quality.Id,
-                    Track = trackId
+                    Track = track.InternalId
                 };
                 context.AvailableQualities.Add(aq);
                 context.SaveChanges();
@@ -57,15 +56,15 @@ namespace DolomiteModel
         /// Creates an available audio quality record to the given track for
         /// the original audio quality.
         /// </summary>
-        /// <param name="trackId">The GUID of the track to add the record to</param>
-        public void AddAvailableOriginalQualityRecord(Guid trackId)
+        /// <param name="track">The track to add the record to</param>
+        public void AddAvailableOriginalQualityRecord(Pub.Track track)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Fetch the original quality record
                 Quality original = context.Qualities.First(q => q.Name.Equals("original", StringComparison.OrdinalIgnoreCase));
                 Pub.Quality pubOriginal = new Pub.Quality {Id = original.Id};
-                AddAvailableQualityRecord(trackId, pubOriginal);
+                AddAvailableQualityRecord(track, pubOriginal);
             }
         }
 
@@ -75,19 +74,21 @@ namespace DolomiteModel
         /// <param name="guid">GUID for the art item (the ID)</param>
         /// <param name="mimetype">Mimetype of the art file</param>
         /// <param name="hash">Hash of the file</param>
-        public void CreateArtRecord(Guid guid, string mimetype, string hash)
+        public long CreateArtRecord(Guid guid, string mimetype, string hash)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Create a new art object
                 Art artObj = new Art
                 {
-                    Id = guid,
+                    GuidId = guid,
                     Hash = hash,
                     Mimetype = mimetype
                 };
                 context.Arts.Add(artObj);
                 context.SaveChanges();
+
+                return artObj.Id;
             }
         }
 
@@ -97,14 +98,14 @@ namespace DolomiteModel
         /// <param name="owner">The username for the owner of the track</param>
         /// <param name="guid">The guid of the track</param>
         /// <param name="hash">The hash of the track</param>
-        public void CreateInitialTrackRecord(string owner, Guid guid, string hash)
+        public long CreateInitialTrackRecord(string owner, Guid guid, string hash)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Create the new track record
                 var track = new Track
                 {
-                    Id = guid,
+                    GuidId = guid,
                     Hash = hash,
                     TrackInTempStorage = true,
                     HasBeenOnboarded = false,
@@ -113,18 +114,20 @@ namespace DolomiteModel
                 };
                 context.Tracks.Add(track);
                 context.SaveChanges();
+
+                return track.Id;
             }
         }
 
         /// <summary>
         /// Stores the metadata for the given track
         /// </summary>
-        /// <param name="trackId">GUID of the track</param>
+        /// <param name="track">The track to store the metadata of</param>
         /// <param name="metadatas">Dictionary of Metadata Tag Name => Value</param>
         /// <param name="writeOut">Whether or not the metadata change should be written to the file</param>
-        public void StoreTrackMetadata(Guid trackId, IDictionary<string, string> metadatas, bool writeOut)
+        public void StoreTrackMetadata(Pub.Track track, IDictionary<string, string> metadatas, bool writeOut)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Iterate over the metadatas and store new objects for each
                 // Skip values that are null (ie, they should be deleted)
@@ -138,7 +141,7 @@ namespace DolomiteModel
                     Metadata md = new Metadata
                     {
                         Field = field.Id,
-                        Track = trackId,
+                        Track = track.InternalId,
                         Value = metadata.Value,
                         WriteOut = writeOut
                     };
@@ -161,22 +164,22 @@ namespace DolomiteModel
         /// <returns></returns>
         public List<Pub.Track> GetAllTracksByOwner(string username)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Fetch ORM version of the track from the database
-                // <remarks>Unfortunately, there isn't a better way to do this</remarks>
-                var ormTracks = (from track in context.Tracks
-                                 where track.HasBeenOnboarded && track.User.Username == username
-                                 select track).ToList();
+                // <remarks>Unfortunately, there isn't a better way to do this.
+                // This is because the .ToDictionary method isn't supported in LINQ-to-EF
+                // </remarks>
+                // TODO: Find a better way to do this using anonymous object types
+                var ormTracks = context.Tracks.Where(t => t.HasBeenOnboarded && t.User.Username == username).ToList();
 
                 // Parse them into the model version of the track
-                return (from t in ormTracks
-                    select new Pub.Track
-                    {
-                        Id = t.Id,
-                        Metadata =
-                            t.Metadatas.AsEnumerable().ToDictionary(o => o.MetadataField.TagName, o => o.Value)
-                    }).ToList();
+                return ormTracks.Select(t => new Pub.Track()
+                {
+                    Id = t.GuidId,
+                    InternalId = t.Id,
+                    Metadata = t.Metadatas.ToDictionary(o => o.MetadataField.TagName, o => o.Value)
+                }).ToList();
             }
         }
 
@@ -186,7 +189,7 @@ namespace DolomiteModel
         /// <returns>A list of qualitites</returns>
         public List<Pub.Quality> GetAllQualities()
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Grab all the qualities from the db
                 return (from q in context.Qualities
@@ -209,7 +212,7 @@ namespace DolomiteModel
         /// <returns>Dictionary of metadata field names to metadata ids</returns>
         public Dictionary<string, int> GetAllowedMetadataFields()
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Grab all the metadata fields
                 return (from field in context.MetadataFields
@@ -224,12 +227,12 @@ namespace DolomiteModel
         /// <returns>An art object</returns>
         public Pub.Art GetArtByGuid(Guid artId)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 Art art = GetArtModelByGuid(artId, context);
                 return new Pub.Art
                 {
-                    Id = art.Id,
+                    Id = art.GuidId,
                     Mimetype = art.Mimetype
                 };
             }
@@ -240,9 +243,9 @@ namespace DolomiteModel
         /// art writing work item.
         /// </summary>
         /// <returns>The guid of the track to process, or null if none exists</returns>
-        public Guid? GetArtWorkItem()
+        public long? GetArtWorkItem()
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Call the stored proc and get a work item
                 return context.GetAndLockTopArtItem().FirstOrDefault();
@@ -254,9 +257,9 @@ namespace DolomiteModel
         /// </summary>
         /// <param name="hash">The hash of the art</param>
         /// <returns>A GUID if found, empty GUID otherwise</returns>
-        public Guid GetArtIdByHash(string hash)
+        public long GetArtIdByHash(string hash)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 return (from art in context.Arts
                         where art.Hash == hash
@@ -275,7 +278,7 @@ namespace DolomiteModel
         /// </returns>
         public Pub.MetadataChange[] GetMetadataToWriteOut(Guid trackGuid)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // We want to make sure that we only fetch the metadata that /can/
                 // be written to a file. If there isn't anything, we'll just return an
@@ -300,9 +303,9 @@ namespace DolomiteModel
         /// metadata writing work item.
         /// </summary>
         /// <returns>The guid of the track to process, or null if none exists</returns>
-        public Guid? GetMetadataWorkItem()
+        public long? GetMetadataWorkItem()
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Call the stored proc and get a work item
                 return context.GetAndLockTopMetadataItem().FirstOrDefault();
@@ -314,9 +317,9 @@ namespace DolomiteModel
         /// onboarding work item.
         /// </summary>
         /// <returns>The guid of the track to process, or null if none exists</returns>
-        public Guid? GetOnboardingWorkItem()
+        public long? GetOnboardingWorkItem()
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Call the stored procedure and hopefully it'll give us a work item
                 return context.GetAndLockTopOnboardingItem().FirstOrDefault();
@@ -332,21 +335,21 @@ namespace DolomiteModel
         /// <returns>A public-ready object representation of the track</returns>
         public Pub.Track GetTrackByGuid(Guid trackId)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Search for the track
-                Track track = context.Tracks.FirstOrDefault(t => t.Id == trackId);
+                Track track = context.Tracks.FirstOrDefault(t => t.GuidId == trackId);
                 if (track == null)
                     throw new ObjectNotFoundException(String.Format("Failed to find track with id {0}", trackId));
 
                 // Build the track with the necessary information
                 var metadata = (from m in context.Metadatas
-                                where m.Track == trackId
+                                where m.Track == track.Id
                                 select new { Name = m.MetadataField.TagName, m.Value });
 
-                var dbQualities = context.AvailableQualities.Where(q => q.Track == trackId && q.Quality1.Bitrate != null).ToList();
+                var dbQualities = context.AvailableQualities.Where(q => q.Track == track.Id && q.Quality1.Bitrate != null).ToList();
                 var qualities = (from q in dbQualities
-                                 where q.Track == trackId
+                                 where q.Track == track.Id
                                  select new Pub.Track.Quality
                                  {
                                      BitrateKbps = q.Quality1.Bitrate.Value,
@@ -376,7 +379,7 @@ namespace DolomiteModel
                 {
                     ArtChange = track.ArtChange,
                     ArtHref = artHref,
-                    ArtId = track.Art,
+                    ArtId = track.Art == null ? default(Guid?) : track.Art1.GuidId,
                     Id = trackId,
                     Metadata = metadata.ToDictionary(o => o.Name, o => o.Value),
                     Owner = track.User.Username,
@@ -394,12 +397,12 @@ namespace DolomiteModel
         /// <returns>A public track object with the id set. Null if a matching track can't be found</returns>
         public Pub.Track GetTrackByHash(string hash, string owner)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Search for the track
                 return (from track in context.Tracks
                     where track.Hash == hash && track.User.Username == owner
-                    select new Pub.Track {Id = track.Id}).FirstOrDefault();
+                    select new Pub.Track {InternalId = track.Id, Id = track.GuidId}).FirstOrDefault();
             }
         }
 
@@ -416,7 +419,7 @@ namespace DolomiteModel
         /// <returns>A list of guids that match the search criteria</returns>
         public List<Guid> SearchTracks(string owner, Dictionary<string, string> searchCriteria)
         {
-            using(var context = new DbEntities()) 
+            using(var context = new Entities()) 
             {
                 // Build a result set -- using hashset prevents defaults to work
                 HashSet<Guid> hashSet = new HashSet<Guid>();
@@ -433,7 +436,7 @@ namespace DolomiteModel
                             where md.Value.Contains(criterion.Value)
                             && md.Track1.User.Username == owner
                             && md.MetadataField.Searchable
-                            select md.Track;
+                            select md.Track1.GuidId;
                     }
                     else
                     {
@@ -443,7 +446,7 @@ namespace DolomiteModel
                                   && md.MetadataField.TagName == criterion.Key
                                   && md.Track1.User.Username == owner
                                   && md.MetadataField.Searchable
-                            select md.Track;
+                            select md.Track1.GuidId;
                     }
                     hashSet.UnionWith(trackSearch);
                 }
@@ -464,20 +467,29 @@ namespace DolomiteModel
         /// <param name="newHash">The new hash of the track</param>
         public void MarkTrackAsNotOnboarderd(Guid trackGuid, string newHash)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
-                // Check to see if the track is locked
-                if (context.Tracks.FirstOrDefault(t => t.Id == trackGuid && t.Locked) != null)
+                // Fetch the track that is to be marked as not onboarded
+                Track track = context.Tracks.FirstOrDefault(t => t.GuidId == trackGuid);
+
+                // Verify that the track exists
+                if (track == null)
+                {
+                    string message = String.Format("Track {0} does not exist.", trackGuid);
+                    throw new ObjectNotFoundException(message);
+                }
+
+                // Verify that the track is currently not locked
+                if (track.Locked)
                 {
                     string message = String.Format("Track {0} is locked and cannot be modified at this time.", trackGuid);
                     throw new AccessViolationException(message);
                 }
 
                 // Reset the onboarding status
-                context.ResetOnboardingStatus(trackGuid);
+                context.ResetOnboardingStatus(track.Id);
 
                 // Store the new track hash
-                Track track = context.Tracks.First(t => t.Id == trackGuid);
                 track.Hash = newHash;
                 context.SaveChanges();
             }
@@ -488,9 +500,9 @@ namespace DolomiteModel
         /// process via a stored procedure
         /// </summary>
         /// <param name="workItem">The work item to release</param>
-        public void ReleaseAndCompleteArtItem(Guid workItem)
+        public void ReleaseAndCompleteArtItem(long workItem)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Call the stored procedure to complete the track onboarding
                 context.ReleaseAndCompleteArtChange(workItem);
@@ -502,9 +514,9 @@ namespace DolomiteModel
         /// process via a stored procedure
         /// </summary>
         /// <param name="workItem">The work item to release</param>
-        public void ReleaseAndCompleteOnboardingItem(Guid workItem)
+        public void ReleaseAndCompleteOnboardingItem(long workItem)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Call the stored procedure to complete the track onboarding
                 context.ReleaseAndCompleteOnboardingItem(workItem);
@@ -517,9 +529,9 @@ namespace DolomiteModel
         /// written out to file.
         /// </summary>
         /// <param name="workItem">The track to release</param>
-        public void ReleaseAndCompleteMetadataItem(Guid workItem)
+        public void ReleaseAndCompleteMetadataItem(long workItem)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 context.ReleaseAndCompleteMetadataUpdate(workItem);
             }
@@ -535,7 +547,7 @@ namespace DolomiteModel
         /// <param name="mimetype">The mimetype of the original file</param>
         public void SetAudioQualityInfo(Guid trackId, int bitrate, int samplingFrequency, string mimetype, string extension)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Fetch the existing record for the track
                 Track track = GetTrackModelByGuid(trackId, context);
@@ -556,11 +568,11 @@ namespace DolomiteModel
         /// <param name="fileChange">Whether or not the art change should be processed to the file</param>
         public void SetTrackArt(Guid trackGuid, Guid? artGuid, bool fileChange)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Search out the track, store art
                 Track track = GetTrackModelByGuid(trackGuid, context);
-                track.Art = artGuid;
+                track.Art = artGuid != null ? context.Arts.FirstOrDefault(a => a.GuidId == artGuid).Id : (long?) null;
                 track.ArtChange = fileChange;
                 context.SaveChanges();
             }
@@ -579,10 +591,10 @@ namespace DolomiteModel
         /// <returns>False if the art is not in use and can be safely deleted. True otherwise.</returns>
         public bool DeleteArtByUsage(Guid trackGuid)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Grab the track
-                var track = context.Tracks.First(t => t.Id == trackGuid);
+                var track = context.Tracks.First(t => t.GuidId == trackGuid);
                 if (!track.Art.HasValue)
                     return false;
 
@@ -593,7 +605,7 @@ namespace DolomiteModel
                 if (!inUse)
                 {
                     // Reset the existing track to null first to avoid FK contstraints
-                    Guid trackArt = track.Art.Value;
+                    long trackArt = track.Art.Value;
                     track.Art = null;
                     context.SaveChanges();
 
@@ -612,7 +624,7 @@ namespace DolomiteModel
         /// <param name="trackGuid">The guid of the track to delete</param>
         public void DeleteTrack(Guid trackGuid)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Fetch the track
                 Track track = GetTrackModelByGuid(trackGuid, context);
@@ -630,19 +642,15 @@ namespace DolomiteModel
         /// <param name="trackGuid">The guid of the track to remove blank metadata for.</param>
         public void DeleteEmptyMetadata(Guid trackGuid)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Find all the metadata for the track that is empty
                 var emptyTags = from v in context.Metadatas
-                    where v.Track == trackGuid && v.Value == ""
+                    where v.Track1.GuidId == trackGuid && v.Value == ""
                     select v;
 
                 // Now go through and delete them
-                foreach (var tag in emptyTags)
-                {
-                    context.Metadatas.Remove(tag);
-                }
-
+                context.Metadatas.RemoveRange(emptyTags);
                 context.SaveChanges();
             }
         }
@@ -655,11 +663,11 @@ namespace DolomiteModel
         /// <param name="metadataField">The metadatafield to delete</param>
         public void DeleteMetadata(Guid trackGuid, string metadataField)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Search for the metadata record for the track with the field
                 var field = (from v in context.Metadatas
-                             where v.Track == trackGuid && v.MetadataField.TagName == metadataField
+                             where v.Track1.GuidId == trackGuid && v.MetadataField.TagName == metadataField
                              select v).FirstOrDefault();
 
                 // If it doesn't exist, we succeeeded in deleting it, right?
@@ -685,10 +693,10 @@ namespace DolomiteModel
         /// <param name="trackId">The guid of the track to fetch</param>
         /// <param name="context">The entity context for reference to</param>
         /// <returns>The internal representation of the track in the database</returns>
-        private static Track GetTrackModelByGuid(Guid trackId, DbEntities context)
+        private static Track GetTrackModelByGuid(Guid trackId, Entities context)
         {
             // Search for the track
-            var track = context.Tracks.FirstOrDefault(t => t.Id == trackId);
+            var track = context.Tracks.FirstOrDefault(t => t.GuidId == trackId);
             if (track == null)
                 throw new ObjectNotFoundException(String.Format("Track with guid {0} could not be found", trackId));
 
@@ -702,10 +710,10 @@ namespace DolomiteModel
         /// <param name="context">The entity context for reference to</param>
         /// <exception cref="ObjectNotFoundException">Thrown if the art object with the given GUID does not exist.</exception>
         /// <returns>A art object with the given guid</returns>
-        private static Art GetArtModelByGuid(Guid artGuid, DbEntities context)
+        private static Art GetArtModelByGuid(Guid artGuid, Entities context)
         {
             // Search for the art record
-            Art art = context.Arts.FirstOrDefault(a => a.Id == artGuid);
+            Art art = context.Arts.FirstOrDefault(a => a.GuidId == artGuid);
             if (art == null)
                 throw new ObjectNotFoundException(
                     String.Format("Track art with the given guid {0} could not be found.", artGuid));

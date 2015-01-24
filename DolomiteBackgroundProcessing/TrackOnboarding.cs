@@ -385,7 +385,7 @@ namespace DolomiteBackgroundProcessing
             // Calculate the hash of the album art
             string hash = LocalStorageManager.CalculateHash(artFile, null);
             var artGuid = DatabaseManager.GetArtIdByHash(hash);
-            if (artGuid == Guid.Empty)
+            if (artGuid == default(long))
             {
                 // The art guid is a brand new guid to avoid conflicts.
                 artGuid = Guid.NewGuid();

@@ -307,8 +307,8 @@ namespace DolomiteModel
 
             // Order by ascending or descending and corresponding tracks
             return sortDesc.Value
-                ? sortingMetadata.OrderByDescending(m => m.Value).Select(m => m.Track1)
-                : sortingMetadata.OrderBy(m => m.Value).Select(m => m.Track1);
+                ? sortingMetadata.OrderByDescending(m => m.Value).Select(m => m.Track1).Take(limit)
+                : sortingMetadata.OrderBy(m => m.Value).Select(m => m.Track1).Take(limit);
         }
     }
 }
