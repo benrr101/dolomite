@@ -236,7 +236,7 @@ namespace DolomiteManagement
             }
 
             // Store the new values
-            DatabaseManager.StoreTrackMetadata(guid, metadata, true);
+            DatabaseManager.StoreTrackMetadata(track, metadata, true);
         }
 
         /// <summary>
@@ -276,8 +276,9 @@ namespace DolomiteManagement
 
             // Calculate the hash
             string hash = LocalStorageManager.CalculateHash(stream, null);
-            var artGuid = DatabaseManager.GetArtIdByHash(hash);
-            if (artGuid == Guid.Empty)
+            var artId = DatabaseManager.GetArtIdByHash(hash);
+            Guid? artGuid = null;
+            if (artId == default(long))
             {
                 // Create a new guid for the art (not sure if the track's guid
                 // would suffice or cause conflicts)
@@ -286,7 +287,7 @@ namespace DolomiteManagement
                 // We need to store the art and create a new db record for it
                 string artPath = ArtDirectory + "/" + artGuid;
                 AzureStorageManager.StoreBlob(TrackStorageContainer, artPath, stream);
-                DatabaseManager.CreateArtRecord(artGuid, mimetype, hash);
+                DatabaseManager.CreateArtRecord(artGuid.Value, mimetype, hash);
             }
 
             // Store the art record to the track

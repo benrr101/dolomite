@@ -381,6 +381,7 @@ namespace DolomiteModel
                     ArtHref = artHref,
                     ArtId = track.Art == null ? default(Guid?) : track.Art1.GuidId,
                     Id = trackId,
+                    InternalId = track.Id,
                     Metadata = metadata.ToDictionary(o => o.Name, o => o.Value),
                     Owner = track.User.Username,
                     Qualities = qualities,
