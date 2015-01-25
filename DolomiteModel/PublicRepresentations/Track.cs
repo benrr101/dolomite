@@ -122,7 +122,7 @@ namespace DolomiteModel.PublicRepresentations
         /// <summary>
         /// The internal ID of the track -- the database primary key
         /// </summary>
-        internal long InternalId { get; set; }
+        public long InternalId { get; set; }
 
         #endregion
 

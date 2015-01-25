@@ -274,7 +274,7 @@ namespace DolomiteManagement
                 throw new UnauthorizedAccessException(message);
             }
 
-            PlaylistDbManager.DeleteTrackFromPlaylist(playlistGuid, trackId);
+            PlaylistDbManager.DeleteTrackFromPlaylist(playlist, trackId);
         }
 
         #endregion

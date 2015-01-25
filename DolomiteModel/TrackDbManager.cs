@@ -407,6 +407,63 @@ namespace DolomiteModel
             }
         }
 
+        public Pub.Track GetTrackByInternalId(long trackId)
+        {
+            using (var context = new Entities())
+            {
+                // Search for the track
+                Track track = context.Tracks.FirstOrDefault(t => t.Id == trackId);
+                if (track == null)
+                    throw new ObjectNotFoundException(String.Format("Failed to find track with id {0}", trackId));
+
+                // Build the track with the necessary information
+                var metadata = (from m in context.Metadatas
+                                where m.Track == track.Id
+                                select new { Name = m.MetadataField.TagName, m.Value });
+
+                var dbQualities = context.AvailableQualities.Where(q => q.Track == track.Id && q.Quality1.Bitrate != null).ToList();
+                var qualities = (from q in dbQualities
+                                 where q.Track == track.Id
+                                 select new Pub.Track.Quality
+                                 {
+                                     BitrateKbps = q.Quality1.Bitrate.Value,
+                                     Directory = q.Quality1.Directory,
+                                     Extension = q.Quality1.Extension,
+                                     Href = String.Format("tracks/{0}/{1}", q.Quality1.Directory, trackId),
+                                     Mimetype = q.Quality1.Mimetype,
+                                     Name = q.Quality1.Name
+                                 }).ToList();
+
+                // Add the original quality
+                var originalQuality = new Pub.Track.Quality
+                {
+                    BitrateKbps = track.OriginalBitrate.Value,
+                    Directory = "original",
+                    Extension = track.OriginalExtension,
+                    Href = String.Format("tracks/original/{0}", trackId),
+                    Mimetype = track.OriginalMimetype,
+                    Name = "Original"
+                };
+                qualities.Add(originalQuality);
+
+                // Build the art path
+                string artHref = track.Art.HasValue ? String.Format("tracks/art/{0}", track.Art.Value) : null;
+
+                return new Pub.Track
+                {
+                    ArtChange = track.ArtChange,
+                    ArtHref = artHref,
+                    ArtId = track.Art == null ? default(Guid?) : track.Art1.GuidId,
+                    Id = track.GuidId,
+                    InternalId = track.Id,
+                    Metadata = metadata.ToDictionary(o => o.Name, o => o.Value),
+                    Owner = track.User.Username,
+                    Qualities = qualities,
+                    Ready = track.HasBeenOnboarded
+                };
+            }
+        }
+
         /// <summary>
         /// Searches the track database using the search criteria for matching
         /// tracks. Using "all" allows searching all fields that have searching
@@ -546,12 +603,12 @@ namespace DolomiteModel
         /// <param name="samplingFrequency">The sampling frequency of the original audio</param>
         /// <param name="extension">The extension of the file</param>
         /// <param name="mimetype">The mimetype of the original file</param>
-        public void SetAudioQualityInfo(Guid trackId, int bitrate, int samplingFrequency, string mimetype, string extension)
+        public void SetAudioQualityInfo(long trackId, int bitrate, int samplingFrequency, string mimetype, string extension)
         {
             using (var context = new Entities())
             {
                 // Fetch the existing record for the track
-                Track track = GetTrackModelByGuid(trackId, context);
+                Track track = GetTrackModelByInternalId(trackId, context);
                 track.OriginalBitrate = bitrate;
                 track.OriginalSampling = samplingFrequency;
                 track.OriginalMimetype = mimetype;
@@ -567,12 +624,12 @@ namespace DolomiteModel
         /// <param name="trackGuid">The GUID of the track</param>
         /// <param name="artGuid">The GUID of the art record. Can be null.</param>
         /// <param name="fileChange">Whether or not the art change should be processed to the file</param>
-        public void SetTrackArt(Guid trackGuid, Guid? artGuid, bool fileChange)
+        public void SetTrackArt(long trackId, Guid? artGuid, bool fileChange)
         {
             using (var context = new Entities())
             {
                 // Search out the track, store art
-                Track track = GetTrackModelByGuid(trackGuid, context);
+                Track track = GetTrackModelByInternalId(trackId, context);
                 track.Art = artGuid != null ? context.Arts.FirstOrDefault(a => a.GuidId == artGuid).Id : (long?) null;
                 track.ArtChange = fileChange;
                 context.SaveChanges();
@@ -629,6 +686,19 @@ namespace DolomiteModel
             {
                 // Fetch the track
                 Track track = GetTrackModelByGuid(trackGuid, context);
+
+                // Delete it
+                context.Tracks.Remove(track);
+                context.SaveChanges();
+            }
+        }
+
+        public void DeleteTrack(long trackId)
+        {
+            using (var context = new Entities())
+            {
+                // Fetch the track
+                Track track = GetTrackModelByInternalId(trackId, context);
 
                 // Delete it
                 context.Tracks.Remove(track);
@@ -698,6 +768,16 @@ namespace DolomiteModel
         {
             // Search for the track
             var track = context.Tracks.FirstOrDefault(t => t.GuidId == trackId);
+            if (track == null)
+                throw new ObjectNotFoundException(String.Format("Track with guid {0} could not be found", trackId));
+
+            return track;
+        }
+
+        private static Track GetTrackModelByInternalId(long trackId, Entities context)
+        {
+            // Search for the track
+            var track = context.Tracks.FirstOrDefault(t => t.Id == trackId);
             if (track == null)
                 throw new ObjectNotFoundException(String.Format("Track with guid {0} could not be found", trackId));
 

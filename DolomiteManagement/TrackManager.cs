@@ -265,7 +265,7 @@ namespace DolomiteManagement
             // Was there even an art file attached?
             if (stream.Length == 0)
             {
-                DatabaseManager.SetTrackArt(guid, null, true);
+                DatabaseManager.SetTrackArt(track.InternalId, null, true);
                 return;
             }
 
@@ -291,7 +291,7 @@ namespace DolomiteManagement
             }
 
             // Store the art record to the track
-            DatabaseManager.SetTrackArt(guid, artGuid, true);
+            DatabaseManager.SetTrackArt(track.InternalId, artGuid, true);
         }
 
         /// <summary>
