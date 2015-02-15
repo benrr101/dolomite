@@ -62,7 +62,7 @@ namespace DolomiteBackgroundProcessing
                     try
                     {
                         // Step 1: Get the track from the db and the metadata to write to the file
-                        Track track = TrackDatabaseManager.GetTrackByInternalId(workItemId.Value);
+                        Track track = TrackDatabaseManager.GetTrack(workItemId.Value);
                         var metadata = TrackDatabaseManager.GetMetadataToWriteOut(track.Id);
 
                         // Step 2: Store the track's original stream to local storage
@@ -93,7 +93,7 @@ namespace DolomiteBackgroundProcessing
                         LocalStorageManager.DeleteFile(localTrackPath);
 
                         // Step 6: Purge empty tags from the database. There's no reason to keep them.
-                        TrackDatabaseManager.DeleteEmptyMetadata(track.Id);
+                        TrackDatabaseManager.DeleteEmptyMetadata(track.InternalId);
                     }
                     catch (Exception e)
                     {
@@ -114,7 +114,7 @@ namespace DolomiteBackgroundProcessing
                     try
                     {
                         // Get the track, process it, release it to the wild
-                        Track track = TrackDatabaseManager.GetTrackByInternalId(artWorkItem.Value);
+                        Track track = TrackDatabaseManager.GetTrack(artWorkItem.Value);
                         ProcessArtChange(track, true);
 
                         TrackDatabaseManager.ReleaseAndCompleteArtItem(artWorkItem.Value);

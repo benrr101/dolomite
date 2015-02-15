@@ -137,16 +137,15 @@ namespace DolomiteWcfService
                 if (quality == TrackManager.ArtDirectory)
                 {
                     // Fetch the art with the given GUID
-                    string artMime;
-                    Stream artStream = TrackManager.GetTrackArt(Guid.Parse(guid), out artMime);
+                    Art artObj = TrackManager.GetTrackArt(Guid.Parse(guid));
 
                     // Set the headers
                     string contentDisp = String.Format("attachment; filename=\"{0}\";", guid);
                     WebUtilities.SetStatusCode(HttpStatusCode.OK);
                     WebUtilities.SetHeader("Content-Disposition", contentDisp);
-                    WebUtilities.SetHeader(HttpResponseHeader.ContentType, artMime);
+                    WebUtilities.SetHeader(HttpResponseHeader.ContentType, artObj.Mimetype);
 
-                    return artStream;
+                    return artObj.ArtStream;
                 }
 
                 // We're not retrieving art, so the user must be authenticated
@@ -159,7 +158,7 @@ namespace DolomiteWcfService
                 Track track = TrackManager.GetTrack(Guid.Parse(guid), username);
                 if (!track.Ready)
                     throw new TrackNotReadyException();
-                Track.Quality qualityObj = TrackManager.GetTrackStream(track, quality);
+                Track.Quality qualityObj = TrackManager.GetTrackStream(track.Id, quality, username);
 
                 // Set special headers that tell the client to download the file
                 // and what filename to give it

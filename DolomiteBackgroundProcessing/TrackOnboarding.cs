@@ -138,11 +138,11 @@ namespace DolomiteBackgroundProcessing
         /// Utilize FFmpeg process launching to create all the necessary qualities
         /// of the track file
         /// </summary>
-        /// <param name="trackGuid">The guid of the track to create a quality of</param>
+        /// <param name="trackId">The ID of the track to create a quality of</param>
         private void CreateQualities(long trackId)
         {
             // Grab the track that will be manipulated
-            var track = DatabaseManager.GetTrackByInternalId(trackId);
+            var track = DatabaseManager.GetTrack(trackId);
 
             // Fetch all supported qualities
             var qualitites = DatabaseManager.GetAllQualities();
@@ -385,11 +385,10 @@ namespace DolomiteBackgroundProcessing
             // Calculate the hash of the album art
             string hash = LocalStorageManager.CalculateHash(artFile, null);
             var artId = DatabaseManager.GetArtIdByHash(hash);
-            Guid? artGuid = null;
             if (artId == default(long))
             {
                 // The art guid is a brand new guid to avoid conflicts.
-                artGuid = Guid.NewGuid();
+                Guid? artGuid = Guid.NewGuid();
 
                 // We need to store the art and create a new db record for it
                 string artPath = TrackManager.ArtDirectory + "/" + artId;
@@ -400,7 +399,7 @@ namespace DolomiteBackgroundProcessing
             }
 
             // Store the art record to the track
-            DatabaseManager.SetTrackArt(trackGuid, artGuid, false);
+            DatabaseManager.SetTrackArt(trackGuid, artId, false);
         }
 
         /// <summary>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Entity.Core;
 using System.Linq;
+using System.Linq.Expressions;
 using DolomiteModel.EntityFramework;
 using Pub = DolomiteModel.PublicRepresentations;
 
@@ -159,10 +160,13 @@ namespace DolomiteModel
         #region Retrieval Methods
 
         /// <summary>
-        /// Fetches all tracks in the database. This auto-converts all the fields
+        /// Fetches all tracks in the database. The objects returned are not fully fleshed out,
+        /// they only contain IDs and metadata.
         /// </summary>
-        /// <returns></returns>
-        public List<Pub.Track> GetAllTracksByOwner(string username)
+        /// <param name="owner">The username of the owner to get all tracks for</param>
+        /// <returns>Public-ready track objects with IDs and metadata populated</returns>
+        /// TODO: Return whether or not the track is ready?
+        public List<Pub.Track> GetAllTracksByOwner(string owner)
         {
             using (var context = new Entities())
             {
@@ -171,7 +175,8 @@ namespace DolomiteModel
                 // This is because the .ToDictionary method isn't supported in LINQ-to-EF
                 // </remarks>
                 // TODO: Find a better way to do this using anonymous object types
-                var ormTracks = context.Tracks.Where(t => t.HasBeenOnboarded && t.User.Username == username).ToList();
+                var ormTracks = context.Tracks.AsNoTracking()
+                    .Where(t => t.HasBeenOnboarded && t.User.Username == owner).ToList();
 
                 // Parse them into the model version of the track
                 return ormTracks.Select(t => new Pub.Track()
@@ -192,16 +197,17 @@ namespace DolomiteModel
             using (var context = new Entities())
             {
                 // Grab all the qualities from the db
-                return (from q in context.Qualities
-                    where q.Bitrate != null && q.Codec != null
-                    select new Pub.Quality
+                return context.Qualities.AsNoTracking()
+                    .Where(q => q.Bitrate != null && q.Codec != null)
+                    .Select(q => new Pub.Quality
                     {
                         Id = q.Id,
                         Bitrate = q.Bitrate.Value,
                         Codec = q.Codec,
                         Directory = q.Directory,
                         Extension = q.Extension
-                    }).ToList();
+                    })
+                    .ToList();
             }
         }
 
@@ -215,34 +221,63 @@ namespace DolomiteModel
             using (var context = new Entities())
             {
                 // Grab all the metadata fields
-                return (from field in context.MetadataFields
-                        select new { field.TagName, field.Id }).ToDictionary(o => o.TagName, o => o.Id);
+                return context.MetadataFields.Select(f => new {f.TagName, f.Id}).ToDictionary(o => o.TagName, o => o.Id);
+            }
+        }
+
+        /// <summary>
+        /// Grab the art object based on the art object's ID
+        /// </summary>
+        /// <exception cref="ObjectNotFoundException">When the art object does not exist</exception>
+        /// <param name="artId">The ID of the art object</param>
+        /// <returns>A public-ready art object</returns>
+        public Pub.Art GetArt(long artId)
+        {
+            using (var context = new Entities())
+            {
+                Pub.Art art = GetArtModel(artId, context, true).Select(a => new Pub.Art
+                {
+                    Id = a.GuidId,
+                    InternalId = a.Id,
+                    Mimetype = a.Mimetype
+                }).FirstOrDefault();
+
+                if (art == null)
+                    throw new ObjectNotFoundException(String.Format("Art with GUID {0} does not exist.", artId));
+
+                return art;
             }
         }
 
         /// <summary>
         /// Grab the art object based on the art object's guid
         /// </summary>
+        /// <exception cref="ObjectNotFoundException">When the art object does not exist</exception>
         /// <param name="artId">The guid of the art object</param>
-        /// <returns>An art object</returns>
-        public Pub.Art GetArtByGuid(Guid artId)
+        /// <returns>A public-ready art object</returns>
+        public Pub.Art GetArt(Guid artId)
         {
             using (var context = new Entities())
             {
-                Art art = GetArtModelByGuid(artId, context);
-                return new Pub.Art
+                Pub.Art art = GetArtModel(artId, context, true).Select(a => new Pub.Art
                 {
-                    Id = art.GuidId,
-                    Mimetype = art.Mimetype
-                };
+                    Id = a.GuidId,
+                    InternalId = a.Id,
+                    Mimetype = a.Mimetype
+                }).FirstOrDefault();
+
+                if (art == null)
+                    throw new ObjectNotFoundException(String.Format("Art with GUID {0} does not exist.", artId));
+
+                return art;
             }
         }
 
         /// <summary>
-        /// Use the stored procedure on the database to grab and lock an
-        /// art writing work item.
+        /// Use the stored procedure on the database to grab and lock an art writing work item.
         /// </summary>
         /// <returns>The guid of the track to process, or null if none exists</returns>
+        /// TODO: Return a Track object (or just wait until the dataflow/message queue thing is ready)
         public long? GetArtWorkItem()
         {
             using (var context = new Entities())
@@ -253,10 +288,11 @@ namespace DolomiteModel
         }
 
         /// <summary>
-        /// Fetches the GUID for an art object with the given hash
+        /// Fetches the ID for an art object with the given hash
         /// </summary>
         /// <param name="hash">The hash of the art</param>
-        /// <returns>A GUID if found, empty GUID otherwise</returns>
+        /// <returns>An internal id of art if found, default(long) if not found</returns>
+        /// TODO: Return art object
         public long GetArtIdByHash(string hash)
         {
             using (var context = new Entities())
@@ -276,6 +312,7 @@ namespace DolomiteModel
         /// A dictionary of tagname => new value. Or an empty dictionary if there
         /// isn't any eligible metadata to write out.
         /// </returns>
+        /// TODO: use the message queue stuff when ready
         public Pub.MetadataChange[] GetMetadataToWriteOut(Guid trackGuid)
         {
             using (var context = new Entities())
@@ -302,7 +339,8 @@ namespace DolomiteModel
         /// Use the stored procedure on the database to grab and lock an
         /// metadata writing work item.
         /// </summary>
-        /// <returns>The guid of the track to process, or null if none exists</returns>
+        /// <returns>The internal id of the track to process, or null if none exists</returns>
+        /// TODO: Use the message queue
         public long? GetMetadataWorkItem()
         {
             using (var context = new Entities())
@@ -317,6 +355,7 @@ namespace DolomiteModel
         /// onboarding work item.
         /// </summary>
         /// <returns>The guid of the track to process, or null if none exists</returns>
+        /// TODO: use message queues when ready
         public long? GetOnboardingWorkItem()
         {
             using (var context = new Entities())
@@ -331,62 +370,55 @@ namespace DolomiteModel
         /// it in a public-friendly object.
         /// </summary>
         /// <exception cref="ObjectNotFoundException">When a track with the given guid does not exist.</exception>
-        /// <param name="trackId">The Guid of the track to look up</param>
+        /// <param name="trackGuid">The Guid of the track to look up</param>
+        /// <param name="owner">The purported owner of the track</param>
         /// <returns>A public-ready object representation of the track</returns>
-        public Pub.Track GetTrackByGuid(Guid trackId)
+        public Pub.Track GetTrack(Guid trackGuid, string owner)
         {
             using (var context = new Entities())
             {
-                // Search for the track
-                Track track = context.Tracks.FirstOrDefault(t => t.GuidId == trackId);
+                // Find the track
+                Track track = GetTrackModel(trackGuid, owner, context, true).FirstOrDefault();
+                if (track == null)
+                    throw new ObjectNotFoundException(String.Format("Failed to find track with GUID {0}", trackGuid));
+
+                return new Pub.Track(track, context);
+            }
+        }
+
+        /// <summary>
+        /// Fetches the track with the given guid from the database and returns
+        /// it in a public-friendly object.
+        /// </summary>
+        /// <exception cref="ObjectNotFoundException">When a track with the given guid does not exist.</exception>
+        /// <param name="trackId">The internal ID of the track to look up</param>
+        /// <returns>A public-ready object representation of the track</returns>
+        public Pub.Track GetTrack(long trackId)
+        {
+            using (var context = new Entities())
+            {
+                // Find the track
+                Track track = GetTrackModel(trackId, context, true).FirstOrDefault();
                 if (track == null)
                     throw new ObjectNotFoundException(String.Format("Failed to find track with id {0}", trackId));
 
-                // Build the track with the necessary information
-                var metadata = (from m in context.Metadatas
-                                where m.Track == track.Id
-                                select new { Name = m.MetadataField.TagName, m.Value });
+                return new Pub.Track(track, context);
+            }
+        }
 
-                var dbQualities = context.AvailableQualities.Where(q => q.Track == track.Id && q.Quality1.Bitrate != null).ToList();
-                var qualities = (from q in dbQualities
-                                 where q.Track == track.Id
-                                 select new Pub.Track.Quality
-                                 {
-                                     BitrateKbps = q.Quality1.Bitrate.Value,
-                                     Directory = q.Quality1.Directory,
-                                     Extension = q.Quality1.Extension,
-                                     Href = String.Format("tracks/{0}/{1}", q.Quality1.Directory, trackId),
-                                     Mimetype = q.Quality1.Mimetype,
-                                     Name = q.Quality1.Name
-                                 }).ToList();
-
-                // Add the original quality
-                var originalQuality = new Pub.Track.Quality
-                {
-                    BitrateKbps = track.OriginalBitrate.Value,
-                    Directory = "original",
-                    Extension = track.OriginalExtension,
-                    Href = String.Format("tracks/original/{0}", trackId),
-                    Mimetype = track.OriginalMimetype,
-                    Name = "Original"
-                };
-                qualities.Add(originalQuality);
-
-                // Build the art path
-                string artHref = track.Art.HasValue ? String.Format("tracks/art/{0}", track.Art.Value) : null;
-
-                return new Pub.Track
-                {
-                    ArtChange = track.ArtChange,
-                    ArtHref = artHref,
-                    ArtId = track.Art == null ? default(Guid?) : track.Art1.GuidId,
-                    Id = trackId,
-                    InternalId = track.Id,
-                    Metadata = metadata.ToDictionary(o => o.Name, o => o.Value),
-                    Owner = track.User.Username,
-                    Qualities = qualities,
-                    Ready = track.HasBeenOnboarded
-                };
+        /// <summary>
+        /// Fetches a minimalistic track object based on the hash of the track
+        /// </summary>
+        /// <param name="hash">The hash of the track to find</param>
+        /// <param name="owner">The owner of the track to search for</param>
+        /// <returns>A public track object with the id set. Null if a matching track can't be found</returns>
+        public Pub.Track GetTrack(string hash, string owner)
+        {
+            using (var context = new Entities())
+            {
+                return GetTrackModel(hash, owner, context, true)
+                    .Select(t => new Pub.Track {InternalId = t.Id, Id = t.GuidId})
+                    .FirstOrDefault();
             }
         }
 
@@ -407,60 +439,16 @@ namespace DolomiteModel
             }
         }
 
-        public Pub.Track GetTrackByInternalId(long trackId)
+        /// <summary>
+        /// Determines if any tracks are using the art given by the ID
+        /// </summary>
+        /// <param name="artId">The ID of the art file to look up</param>
+        /// <returns>True if the art is still in use by a track, false otherwise.</returns>
+        public bool IsArtInUse(long artId)
         {
             using (var context = new Entities())
             {
-                // Search for the track
-                Track track = context.Tracks.FirstOrDefault(t => t.Id == trackId);
-                if (track == null)
-                    throw new ObjectNotFoundException(String.Format("Failed to find track with id {0}", trackId));
-
-                // Build the track with the necessary information
-                var metadata = (from m in context.Metadatas
-                                where m.Track == track.Id
-                                select new { Name = m.MetadataField.TagName, m.Value });
-
-                var dbQualities = context.AvailableQualities.Where(q => q.Track == track.Id && q.Quality1.Bitrate != null).ToList();
-                var qualities = (from q in dbQualities
-                                 where q.Track == track.Id
-                                 select new Pub.Track.Quality
-                                 {
-                                     BitrateKbps = q.Quality1.Bitrate.Value,
-                                     Directory = q.Quality1.Directory,
-                                     Extension = q.Quality1.Extension,
-                                     Href = String.Format("tracks/{0}/{1}", q.Quality1.Directory, trackId),
-                                     Mimetype = q.Quality1.Mimetype,
-                                     Name = q.Quality1.Name
-                                 }).ToList();
-
-                // Add the original quality
-                var originalQuality = new Pub.Track.Quality
-                {
-                    BitrateKbps = track.OriginalBitrate.Value,
-                    Directory = "original",
-                    Extension = track.OriginalExtension,
-                    Href = String.Format("tracks/original/{0}", trackId),
-                    Mimetype = track.OriginalMimetype,
-                    Name = "Original"
-                };
-                qualities.Add(originalQuality);
-
-                // Build the art path
-                string artHref = track.Art.HasValue ? String.Format("tracks/art/{0}", track.Art.Value) : null;
-
-                return new Pub.Track
-                {
-                    ArtChange = track.ArtChange,
-                    ArtHref = artHref,
-                    ArtId = track.Art == null ? default(Guid?) : track.Art1.GuidId,
-                    Id = track.GuidId,
-                    InternalId = track.Id,
-                    Metadata = metadata.ToDictionary(o => o.Name, o => o.Value),
-                    Owner = track.User.Username,
-                    Qualities = qualities,
-                    Ready = track.HasBeenOnboarded
-                };
+                return context.Tracks.Any(t => t.Art == artId);
             }
         }
 
@@ -523,19 +511,17 @@ namespace DolomiteModel
         /// </summary>
         /// <param name="trackGuid">Guid of the track to update</param>
         /// <param name="newHash">The new hash of the track</param>
-        public void MarkTrackAsNotOnboarderd(Guid trackGuid, string newHash)
+        /// <param name="owner">The owner of the track</param>
+        public void MarkTrackAsNotOnboarderd(Guid trackGuid, string newHash, string owner)
         {
             using (var context = new Entities())
             {
                 // Fetch the track that is to be marked as not onboarded
-                Track track = context.Tracks.FirstOrDefault(t => t.GuidId == trackGuid);
+                Track track = GetTrackModel(trackGuid, owner, context, false).FirstOrDefault();
 
                 // Verify that the track exists
                 if (track == null)
-                {
-                    string message = String.Format("Track {0} does not exist.", trackGuid);
-                    throw new ObjectNotFoundException(message);
-                }
+                    throw new ObjectNotFoundException(String.Format("Track {0} does not exist.", trackGuid));
 
                 // Verify that the track is currently not locked
                 if (track.Locked)
@@ -608,7 +594,10 @@ namespace DolomiteModel
             using (var context = new Entities())
             {
                 // Fetch the existing record for the track
-                Track track = GetTrackModelByInternalId(trackId, context);
+                Track track = GetTrackModel(trackId, context, false).FirstOrDefault();
+                if (track == null)
+                    throw new ObjectNotFoundException(String.Format("Track {0} does not exist.", trackId));
+
                 track.OriginalBitrate = bitrate;
                 track.OriginalSampling = samplingFrequency;
                 track.OriginalMimetype = mimetype;
@@ -621,16 +610,19 @@ namespace DolomiteModel
         /// Sets the art record for the given track to the given artGuid. It is
         /// permissible to set it to null.
         /// </summary>
-        /// <param name="trackGuid">The GUID of the track</param>
-        /// <param name="artGuid">The GUID of the art record. Can be null.</param>
+        /// <param name="trackId">The ID of the track</param>
+        /// <param name="artId">The ID of the art record. Can be null.</param>
         /// <param name="fileChange">Whether or not the art change should be processed to the file</param>
-        public void SetTrackArt(long trackId, Guid? artGuid, bool fileChange)
+        public void SetTrackArt(long trackId, long? artId, bool fileChange)
         {
             using (var context = new Entities())
             {
-                // Search out the track, store art
-                Track track = GetTrackModelByInternalId(trackId, context);
-                track.Art = artGuid != null ? context.Arts.FirstOrDefault(a => a.GuidId == artGuid).Id : (long?) null;
+                // Search out the track
+                Track track = GetTrackModel(trackId, context, false).FirstOrDefault();
+                if (track == null)
+                    throw new ObjectNotFoundException(String.Format("Track {0} does not exist.", trackId));
+
+                track.Art = artId;
                 track.ArtChange = fileChange;
                 context.SaveChanges();
             }
@@ -641,51 +633,41 @@ namespace DolomiteModel
         #region Deletion Methods
 
         /// <summary>
-        /// Determines if the art that the given track uses is still in use. If
-        /// it is not, the track's art is reset to null, and the art record is
-        /// deleted. Whether the deletion occurred or not is returned.
+        /// Deletes a given art from the database
         /// </summary>
-        /// <param name="trackGuid">The guid for the track with art to check if in use.</param>
-        /// <returns>False if the art is not in use and can be safely deleted. True otherwise.</returns>
-        public bool DeleteArtByUsage(Guid trackGuid)
+        /// <param name="artId">ID of the art to delete</param>
+        /// TODO: Move this to a sproc to avoid possible race conditions between getting and removing the art
+        public void DeleteArt(long artId)
         {
             using (var context = new Entities())
             {
-                // Grab the track
-                var track = context.Tracks.First(t => t.GuidId == trackGuid);
-                if (!track.Art.HasValue)
-                    return false;
+                // Find the art
+                Art art = GetArtModel(artId, context, false).FirstOrDefault();
+                if (art == null)
+                    throw new ObjectNotFoundException(String.Format("Art {0} does not exist.", artId));
 
-                // Search for uses of it's image
-                bool inUse = context.Tracks.Any(t => t.Art == track.Art && t.Id != track.Id);
-
-                // Delete the art from the database if its not in use any more
-                if (!inUse)
-                {
-                    // Reset the existing track to null first to avoid FK contstraints
-                    long trackArt = track.Art.Value;
-                    track.Art = null;
-                    context.SaveChanges();
-
-                    // Delete the art
-                    context.Arts.Remove(context.Arts.First(a => a.Id == trackArt));
-                    context.SaveChanges();
-                }
-
-                return inUse;
+                // Delete it
+                context.Arts.Remove(art);
+                context.SaveChanges();
             }
         }
 
         /// <summary>
         /// Deletes the track with the given guid from the database.
         /// </summary>
+        /// <exception cref="ObjectNotFoundException">
+        /// Thrown when the track does not exist or does not belong to the owner
+        /// </exception>
         /// <param name="trackGuid">The guid of the track to delete</param>
-        public void DeleteTrack(Guid trackGuid)
+        /// <param name="owner">The username of the owner of the track to delete</param>
+        public void DeleteTrack(Guid trackGuid, string owner)
         {
             using (var context = new Entities())
             {
                 // Fetch the track
-                Track track = GetTrackModelByGuid(trackGuid, context);
+                Track track = GetTrackModel(trackGuid, owner, context, false).FirstOrDefault();
+                if(track == null)
+                    throw new ObjectNotFoundException(String.Format("Track {0} does not exist.", trackGuid));
 
                 // Delete it
                 context.Tracks.Remove(track);
@@ -693,12 +675,19 @@ namespace DolomiteModel
             }
         }
 
+        /// <summary>
+        /// Deletes the track with the given id from the database.
+        /// </summary>
+        /// <exception cref="ObjectNotFoundException">Thrown when the track does not exist</exception>
+        /// <param name="trackId">The guid of the track to delete</param>
         public void DeleteTrack(long trackId)
         {
             using (var context = new Entities())
             {
                 // Fetch the track
-                Track track = GetTrackModelByInternalId(trackId, context);
+                Track track = GetTrackModel(trackId, context, false).FirstOrDefault();
+                if (track == null)
+                    throw new ObjectNotFoundException(String.Format("Track {0} does not exist.", trackId));
 
                 // Delete it
                 context.Tracks.Remove(track);
@@ -710,15 +699,14 @@ namespace DolomiteModel
         /// Deletes all metadata records for the given track that are empty.
         /// Used by the MetadataWriting background process to keep the db tidy.
         /// </summary>
-        /// <param name="trackGuid">The guid of the track to remove blank metadata for.</param>
-        public void DeleteEmptyMetadata(Guid trackGuid)
+        /// <param name="trackId">The ID of the track to remove blank metadata for.</param>
+        public void DeleteEmptyMetadata(long trackId)
         {
             using (var context = new Entities())
             {
                 // Find all the metadata for the track that is empty
-                var emptyTags = from v in context.Metadatas
-                    where v.Track1.GuidId == trackGuid && v.Value == ""
-                    select v;
+                var emptyTags = context.Metadatas.Where(
+                    m => m.Track == trackId && (m.Value == null || m.Value.Trim() == String.Empty));
 
                 // Now go through and delete them
                 context.Metadatas.RemoveRange(emptyTags);
@@ -737,9 +725,8 @@ namespace DolomiteModel
             using (var context = new Entities())
             {
                 // Search for the metadata record for the track with the field
-                var field = (from v in context.Metadatas
-                             where v.Track1.GuidId == trackGuid && v.MetadataField.TagName == metadataField
-                             select v).FirstOrDefault();
+                var field = context.Metadatas.FirstOrDefault(
+                    m => m.Track1.GuidId == trackGuid && m.MetadataField.TagName == metadataField);
 
                 // If it doesn't exist, we succeeeded in deleting it, right?
                 if (field == null)
@@ -757,50 +744,105 @@ namespace DolomiteModel
 
         #region Private Methods
 
+        #region Track Lookup Methods
+
         /// <summary>
-        /// Fetches the internal representation of the track for further database management.
+        /// Builds a query to get a specific track based on owner and guid
         /// </summary>
-        /// <exception cref="ObjectNotFoundException">Thrown if the a track with the given GUID does not exist</exception>
-        /// <param name="trackId">The guid of the track to fetch</param>
-        /// <param name="context">The entity context for reference to</param>
-        /// <returns>The internal representation of the track in the database</returns>
-        private static Track GetTrackModelByGuid(Guid trackId, Entities context)
+        /// <param name="trackGuid">GUID for looking up the track</param>
+        /// <param name="owner">Owner of the track</param>
+        /// <param name="context">Database context</param>
+        /// <param name="readOnly">Whether or not the retrieval is ready only</param>
+        /// <returns>Query for looking up the desired track</returns>
+        private static IQueryable<Track> GetTrackModel(Guid trackGuid, string owner, Entities context, bool readOnly)
         {
-            // Search for the track
-            var track = context.Tracks.FirstOrDefault(t => t.GuidId == trackId);
-            if (track == null)
-                throw new ObjectNotFoundException(String.Format("Track with guid {0} could not be found", trackId));
-
-            return track;
-        }
-
-        private static Track GetTrackModelByInternalId(long trackId, Entities context)
-        {
-            // Search for the track
-            var track = context.Tracks.FirstOrDefault(t => t.Id == trackId);
-            if (track == null)
-                throw new ObjectNotFoundException(String.Format("Track with guid {0} could not be found", trackId));
-
-            return track;
+            return GetTrackModelGeneric(context, readOnly, t => t.GuidId == trackGuid && t.User.Username == owner);
         }
 
         /// <summary>
-        /// Retrieves the art object from the database
+        /// Builds a query to get a specific track based on owner and guid
         /// </summary>
-        /// <param name="artGuid">GUID of the art object to retrieve</param>
-        /// <param name="context">The entity context for reference to</param>
-        /// <exception cref="ObjectNotFoundException">Thrown if the art object with the given GUID does not exist.</exception>
-        /// <returns>A art object with the given guid</returns>
-        private static Art GetArtModelByGuid(Guid artGuid, Entities context)
+        /// <param name="trackId">Internal ID for looking up the track</param>
+        /// <param name="owner">Owner of the track</param>
+        /// <param name="context">Database context</param>
+        /// <param name="readOnly">Whether or not the retrieval is ready only</param>
+        /// <returns>Query for looking up the desired track</returns>
+        private static IQueryable<Track> GetTrackModel(long trackId, string owner, Entities context, bool readOnly)
         {
-            // Search for the art record
-            Art art = context.Arts.FirstOrDefault(a => a.GuidId == artGuid);
-            if (art == null)
-                throw new ObjectNotFoundException(
-                    String.Format("Track art with the given guid {0} could not be found.", artGuid));
-
-            return art;
+            return GetTrackModelGeneric(context, readOnly, t => t.Id == trackId && t.User.Username == owner);
         }
+
+        /// <summary>
+        /// Builds a query to get a specific track based on id
+        /// </summary>
+        /// <param name="trackId">Internal ID for looking up the track</param>
+        /// <param name="context">Database context</param>
+        /// <param name="readOnly">Whether or not the retrieval is ready only</param>
+        /// <returns>Query for looking up the desired track</returns>
+        private static IQueryable<Track> GetTrackModel(long trackId, Entities context, bool readOnly)
+        {
+            return GetTrackModelGeneric(context, readOnly, t => t.Id == trackId);
+        }
+
+        /// <summary>
+        /// Builds a query to get a specific track based on hash
+        /// </summary>
+        /// <param name="hash">Hash of the track to look for</param>
+        /// <param name="owner">The owner of the track</param>
+        /// <param name="context">Database context</param>
+        /// <param name="readOnly">Whether or not the retrieval is ready only</param>
+        /// <returns>Query for looking up the desired track</returns>
+        private static IQueryable<Track> GetTrackModel(string hash, string owner, Entities context, bool readOnly)
+        {
+            return GetTrackModelGeneric(context, readOnly, t => t.Hash == hash && t.User.Username == owner);
+        }
+
+        /// <summary>
+        /// Super-internal method for looking up a track. Should only be used by other private methods
+        /// </summary>
+        /// <param name="context">Database context</param>
+        /// <param name="readOnly">Whether the lookup should have tracking data or not</param>
+        /// <param name="predicate">Lambda for determining if a track matches</param>
+        /// <returns>Query that will be used to lookup the track</returns>
+        private static IQueryable<Track> GetTrackModelGeneric(Entities context, bool readOnly, Expression<Func<Track, bool>> predicate)
+        {
+            var tracks = readOnly ? context.Tracks.AsNoTracking() : context.Tracks;
+            return tracks.Where(predicate);
+        }
+
+        #endregion
+
+        #region Art Lookup Methods
+
+        private IQueryable<Art> GetArtModel(Guid artGuid, Entities context, bool readOnly)
+        {
+            return GetArtModelGeneric(context, readOnly, a => a.GuidId == artGuid);
+        }
+
+        private IQueryable<Art> GetArtModel(long artId, Entities context, bool readOnly)
+        {
+            return GetArtModelGeneric(context, readOnly, a => a.Id == artId);
+        }
+
+        private IQueryable<Art> GetArtModel(string hash, Entities context, bool readOnly)
+        {
+            return GetArtModelGeneric(context, readOnly, a => a.Hash == hash);
+        }
+
+        /// <summary>
+        /// Super-internal method for looking up an art. Should only be used by other private methods
+        /// </summary>
+        /// <param name="context">Database context</param>
+        /// <param name="readOnly">Whether the lookup should have tracking data or not</param>
+        /// <param name="predicate">Lambda for determining if an art matches</param>
+        /// <returns>Query that will be used to lookup the art</returns>
+        private static IQueryable<Art> GetArtModelGeneric(Entities context, bool readOnly, Expression<Func<Art, bool>> predicate)
+        {
+            var farts = readOnly ? context.Arts.AsNoTracking() : context.Arts;
+            return farts.Where(predicate);
+        }
+
+        #endregion
 
         #endregion
 

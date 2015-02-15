@@ -210,15 +210,7 @@ namespace DolomiteManagement
         public void AddTrackToPlaylist(Guid playlistGuid, Guid trackGuid, string owner, int? position = null)
         {
             // Check to see if the track and playlist exists, verify the owners of both
-            Track track = TrackDbManager.GetTrackByGuid(trackGuid);
-            if (track.Owner != owner)
-            {
-                string message = String.Format(
-                    "The track {0} cannot be added to playlist {1} " +
-                    "because the track is not owned by the session owner.",
-                    trackGuid, playlistGuid);
-                throw new UnauthorizedAccessException(message);
-            }
+            Track track = TrackDbManager.GetTrack(trackGuid, owner);
 
             Playlist playlist = PlaylistDbManager.GetStaticPlaylist(playlistGuid);
             if (playlist.Owner != owner)
