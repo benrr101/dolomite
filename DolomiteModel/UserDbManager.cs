@@ -52,6 +52,7 @@ namespace DolomiteModel
                     AbsoluteTimeout = absExpire,
                     ApiKey = context.ApiKeys.First(a => a.ApiKey1 == apiKey).Id,
                     IdleTimeout = idleExpire,
+                    InitializedTime = DateTime.UtcNow,
                     Token = token,
                     InitialIP = ipAddress,
                     User = context.Users.First(u => u.Username == user.Username).Id,

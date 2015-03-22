@@ -106,6 +106,7 @@ namespace DolomiteModel
                 // Create the new track record
                 var track = new Track
                 {
+                    DateAdded = DateTime.UtcNow,
                     GuidId = guid,
                     Hash = hash,
                     TrackInTempStorage = true,

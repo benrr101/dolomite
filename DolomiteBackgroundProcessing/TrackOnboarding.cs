@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Diagnostics;
 using System.Globalization;
 using DolomiteManagement;
@@ -73,37 +74,39 @@ namespace DolomiteBackgroundProcessing
                 if (workItemId.HasValue)
                 {
                     // We have work to do!
+                    Track track = DatabaseManager.GetTrack(workItemId.Value);
                     Trace.TraceInformation("Work item {0} picked up by {1}", workItemId.Value, GetHashCode());
+
                     
                     // Step 1: Grab the track from Azure
                     try
                     {
-                        CopyFileToLocalStorage(LocalStorageManager.GetPath(workItemId.Value.ToString()), workItemId.Value);
+                        CopyFileToLocalStorage(LocalStorageManager.GetPath(track.Id.ToString()), track.Id);
                     }
                     catch (Exception)
                     {
                         Trace.TraceError("{1} failed to retrieve uploaded track {0} from Azure. Removing record...", workItemId, GetHashCode());
-                        CancelOnboarding(workItemId.Value);
+                        CancelOnboarding(track);
                         continue;
                     }
 
                     // Step 2: Grab the metadata for the track
                     try
                     {
-                        StoreMetadata(workItemId.Value);
+                        StoreMetadata(track);
                     }
                     catch (UnsupportedFormatException)
                     {
                         // Failed to determine type. We don't want this file.
                         Trace.TraceError("{1} failed to determine the type of track {0}. Removing record...", workItemId, GetHashCode());
-                        CancelOnboarding(workItemId.Value);
+                        CancelOnboarding(track);
                         continue;
                     }
                     catch (CorruptFileException)
                     {
                         // File is corrupt for whatever reason. We don't want this file.
                         Trace.TraceError("{1} found corrupt file for track {0}. Removing record...", workItemId, GetHashCode());
-                        CancelOnboarding(workItemId.Value);
+                        CancelOnboarding(track);
                         continue;
                     }
 
@@ -115,7 +118,7 @@ namespace DolomiteBackgroundProcessing
                     catch (Exception)
                     {
                         Trace.TraceError("{1} failed to create qualities for this track {0}. Removing record...", workItemId, GetHashCode());
-                        CancelOnboarding(workItemId.Value);
+                        CancelOnboarding(track);
                         continue;
                     }
 
@@ -263,10 +266,10 @@ namespace DolomiteBackgroundProcessing
         /// </summary>
         /// <param name="tempPath">Path for the file in local storage</param>
         /// <param name="trackGuid">The guid of the track to pull from azure</param>
-        private void CopyFileToLocalStorage(string tempPath, long trackId)
+        private void CopyFileToLocalStorage(string tempPath, Guid trackGuid)
         {
             // Get the stream from Azure
-            string azurePath = OnboardingDirectory + '/' + trackId;
+            string azurePath = OnboardingDirectory + '/' + trackGuid;
             IO.Stream origStream = AzureStorageManager.GetBlob(TrackStorageContainer, azurePath);
 
             // Copy the stream to local storage
@@ -305,24 +308,24 @@ namespace DolomiteBackgroundProcessing
         /// Strips the metadata from the track and stores it to the database
         /// Also retrieves the mimetype in the process.
         /// </summary>
-        /// <param name="trackGuid">The guid of the track to store metadata of</param>
-        private void StoreMetadata(long trackId)
+        /// <param name="track">The track to store metadata of</param>
+        private void StoreMetadata(Track track)
         {
-            Trace.TraceInformation("{0} is retrieving metadata from {1}", GetHashCode(), trackId);
+            Trace.TraceInformation("{0} is retrieving metadata from {1}", GetHashCode(), track.Id);
 
             // Generate the mimetype of the track
             // Why? b/c tag lib isn't smart enough to figure it out for me,
             // except for determining it based on extension -- which is silly.
-            IO.FileStream localFile = LocalStorageManager.RetrieveReadableFile(trackId.ToString());
+            IO.FileStream localFile = LocalStorageManager.RetrieveReadableFile(track.Id.ToString());
             string mimetype = MimetypeDetector.GetAudioMimetype(localFile);
             if (mimetype == null)
             {
                 localFile.Close();
-                throw new UnsupportedFormatException(String.Format("The mimetype of {0} could not be determined from the file header.", trackId));
+                throw new UnsupportedFormatException(String.Format("The mimetype of {0} could not be determined from the file header.", track.Id));
             }
 
             // Retrieve the file from temporary storage
-            File file = File.Create(LocalStorageManager.GetPath(trackId.ToString()), mimetype, ReadStyle.Average);
+            File file = File.Create(LocalStorageManager.GetPath(track.Id.ToString()), mimetype, ReadStyle.Average);
             
             Dictionary<string, string> metadata = new Dictionary<string, string>();
             
@@ -354,16 +357,16 @@ namespace DolomiteBackgroundProcessing
             metadata.Add("OriginalFormat", extension);
 
             // Send the metadata to the database
-            DatabaseManager.StoreTrackMetadata(new Track { InternalId = trackId }, metadata, false);
+            DatabaseManager.StoreTrackMetadata(track, metadata, false);
 
             // Store the audio metadata to the database
-            DatabaseManager.SetAudioQualityInfo(trackId, file.Properties.AudioBitrate,
+            DatabaseManager.SetAudioQualityInfo(track.InternalId, file.Properties.AudioBitrate,
                 file.Properties.AudioSampleRate, file.MimeType, extension);
 
             // Rip out the album art (or whatever is the first art in the file)
             if (file.Tag.Pictures.Length > 0)
             {
-                StoreAlbumArt(trackId, file.Tag.Pictures[0]);
+                StoreAlbumArt(track.InternalId, file.Tag.Pictures[0]);
             }
         }
 
@@ -391,11 +394,11 @@ namespace DolomiteBackgroundProcessing
                 Guid? artGuid = Guid.NewGuid();
 
                 // We need to store the art and create a new db record for it
-                string artPath = TrackManager.ArtDirectory + "/" + artId;
+                string artPath = TrackManager.ArtDirectory + "/" + artGuid;
                 AzureStorageManager.StoreBlob(TrackStorageContainer, artPath, artFile);
 
                 // Create a new record for the art
-                DatabaseManager.CreateArtRecord(artGuid.Value, artMime, hash);
+                artId = DatabaseManager.CreateArtRecord(artGuid.Value, artMime, hash);
             }
 
             // Store the art record to the track
@@ -406,30 +409,30 @@ namespace DolomiteBackgroundProcessing
         /// Cancels the onboarding process by deleting all created files and
         /// removing the record of the track.
         /// </summary>
-        /// <param name="workItemId">The GUID of the onboarding work item</param>
-        private void CancelOnboarding(long workItemId)
+        /// <param name="workItem">The track that was being onboarded</param>
+        private void CancelOnboarding(Track workItem)
         {
             // Delete the original file from the local storage
-            DeleteFileWithWait(workItemId.ToString());
-            AzureStorageManager.DeleteBlob(TrackStorageContainer, String.Format("original/{0}", workItemId));
+            DeleteFileWithWait(workItem.Id.ToString());
+            AzureStorageManager.DeleteBlob(TrackStorageContainer, String.Format("original/{0}", workItem.Id));
 
             // Delete the original file from azure
-            AzureStorageManager.DeleteBlob(TrackStorageContainer, OnboardingDirectory + '/' + workItemId);
+            AzureStorageManager.DeleteBlob(TrackStorageContainer, OnboardingDirectory + '/' + workItem.Id);
 
             // Iterate over the qualities and delete them from local storage and azure
             foreach (Quality quality in DatabaseManager.GetAllQualities())
             {
                 // Delete the local storage instance
-                string fileName = String.Format("{0}.{1}.{2}", workItemId, quality.Bitrate, quality.Extension);
+                string fileName = String.Format("{0}.{1}.{2}", workItem.Id, quality.Bitrate, quality.Extension);
                 DeleteFileWithWait(fileName);
 
                 // Delete the file from Azure
-                string azurePath = String.Format("{0}/{1}", quality.Directory, workItemId);
+                string azurePath = String.Format("{0}/{1}", quality.Directory, workItem.Id);
                 AzureStorageManager.DeleteBlob(TrackStorageContainer, azurePath);
             }
 
             // Delete the track from the database
-            DatabaseManager.DeleteTrack(workItemId);
+            DatabaseManager.DeleteTrack(workItem.InternalId);
         }
             
         /// <summary>

@@ -10,7 +10,7 @@
       <Setting name="AbsoluteTimeout" value="06:00:00" />
     </ConfigurationSettings>
     <Certificates>
-      <Certificate name="LocalSSLCert" thumbprint="9688A35DE15C0C15AA604C5C119F78A191749247" thumbprintAlgorithm="sha1" />
+      <Certificate name="LocalSSLCert" thumbprint="4CC9FE35B292C0378793F28D42010BAC42CA53C0" thumbprintAlgorithm="sha1" />
     </Certificates>
   </Role>
   <Role name="DolomiteBackgroundProcessing">

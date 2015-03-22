@@ -1,7 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <ServiceDefinition name="DolomiteService" xmlns="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition" schemaVersion="2014-06.2.4">
   <WorkerRole name="DolomiteWcfService" vmsize="ExtraSmall">
-    <Runtime executionContext="elevated" /> <!-- DO NOT REMOVE, cert store will be inaccessible to the role otherwise, See http://stackoverflow.com/a/14468164 for more details-->
+    <Runtime executionContext="elevated" />
+    <!-- DO NOT REMOVE, cert store will be inaccessible to the role otherwise, See http://stackoverflow.com/a/14468164 for more details-->
     <Imports>
     </Imports>
     <Endpoints>
