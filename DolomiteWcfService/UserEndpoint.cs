@@ -99,10 +99,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string seshUsername = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string seshUsername = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Make sure the owners are correct
                 if (username != seshUsername)
@@ -131,10 +130,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string seshUsername = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string seshUsername = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Make sure the owners are correct
                 if (username != seshUsername)
@@ -169,9 +167,8 @@ namespace DolomiteWcfService
                 // If there was a cookie sent with a prior session token, invalidate it
                 try
                 {
-                    string apiKey;
-                    string sessionToken = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                    UserManager.InvalidateSession(sessionToken);
+                    UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                    UserManager.InvalidateSession(sesh.Token);
                 }
                 catch (InvalidSessionException) // Ideally, this should always happen
                 {
@@ -236,11 +233,10 @@ namespace DolomiteWcfService
             try
             {
                 // Read the session token from the headers
-                string ignore;
-                string token = WebUtilities.GetDolomiteSessionToken(out ignore);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
 
                 // Invalidate the session
-                UserManager.InvalidateSession(token);
+                UserManager.InvalidateSession(sesh.Token);
             }
             catch (InvalidSessionException)
             {
@@ -270,9 +266,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure the user is successfully logged in
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string seshUsername = UserManager.GetUsernameFromSession(token, apiKey);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string seshUsername = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Deserialize the body of the request for the user details
                 string bodyStr = WebUtilities.GetUtf8String(body);

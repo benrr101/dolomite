@@ -8,6 +8,7 @@ using System.ServiceModel.Channels;
 using DolomiteManagement;
 using DolomiteManagement.Exceptions;
 using DolomiteModel.PublicRepresentations;
+using DolomiteWcfService.Requests;
 using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
 using AntsCode.Util;
@@ -59,10 +60,9 @@ namespace DolomiteWcfService
             try
             {
                 // Step 0: Make sure the session is valid
-                string api;
-                string token = WebUtilities.GetDolomiteSessionToken(out api);
-                string username = UserManager.GetUsernameFromSession(token, api);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Step 1: Check to make sure the guid is valid
                 Guid trackGuid;
@@ -172,10 +172,9 @@ namespace DolomiteWcfService
                 }
 
                 // We're not retrieving art, so the user must be authenticated
-                string apiKey;
-                string sessionToken = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(sessionToken, apiKey);
-                UserManager.ExtendIdleTimeout(sessionToken);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Retrieve the track and return the stream
                 Track track = TrackManager.GetTrack(Guid.Parse(guid), username);
@@ -238,10 +237,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // See if there are search query parameters included
                 Dictionary<string, string> queryParams = WebUtilities.GetQueryParameters();
@@ -274,10 +272,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Retrieve the track without the stream
                 Track track = TrackManager.GetTrack(Guid.Parse(guid), username);
@@ -345,10 +342,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Translate the body and guid
                 Guid trackGuid = Guid.Parse(guid);
@@ -412,10 +408,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Translate the body and guid
                 Guid trackGuid = Guid.Parse(guid);
@@ -478,10 +473,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Translate the body and guid
                 Guid trackGuid = Guid.Parse(guid);
@@ -571,10 +565,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Parse the guid into a Guid and attempt to delete
                 TrackManager.DeleteTrack(Guid.Parse(guid), username);

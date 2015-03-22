@@ -9,6 +9,7 @@ using System.ServiceModel.Channels;
 using DolomiteManagement;
 using DolomiteManagement.Exceptions;
 using DolomiteModel.PublicRepresentations;
+using DolomiteWcfService.Requests;
 using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
 
@@ -42,10 +43,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure the session is valid
-                string api;
-                string token = WebUtilities.GetDolomiteSessionToken(out api);
-                string username = UserManager.GetUsernameFromSession(token, api);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Process the object we're send
                 string bodyStr = WebUtilities.GetUtf8String(body);
@@ -109,10 +109,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 List<Playlist> playlists = PlaylistManager.GetAllStaticPlaylists(username);
                 return WebUtilities.GenerateResponse(playlists, HttpStatusCode.OK);
@@ -139,10 +138,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Parse the guid into a Guid and attempt to delete
                 Playlist playlist = PlaylistManager.GetStaticPlaylist(Guid.Parse(guid), username);
@@ -189,10 +187,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Read the body of the request and convert it to the guid of the track to add
                 //TODO: Add support for batch adding tracks
@@ -259,10 +256,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Parse the guid
                 Guid playlistGuid;
@@ -311,10 +307,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Parse the guid into a Guid and attempt to delete
                 PlaylistManager.DeleteStaticPlaylist(Guid.Parse(guid), username);
