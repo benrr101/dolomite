@@ -349,7 +349,7 @@ namespace DolomiteBackgroundProcessing
             // Grab some extra data from the file
             metadata.Add("Duration", Math.Round(file.Properties.Duration.TotalSeconds).ToString(CultureInfo.CurrentCulture));
             metadata.Add("DateAdded",
-                Math.Round((DateTime.Now - new DateTime(1970, 1, 1).ToLocalTime()).TotalSeconds)
+                Math.Round((DateTime.UtcNow - new DateTime(1970, 1, 1).ToLocalTime()).TotalSeconds)
                     .ToString(CultureInfo.CurrentCulture));
             metadata.Add("PlayCount", "0");
             metadata.Add("OriginalBitrate", file.Properties.AudioBitrate.ToString(CultureInfo.CurrentCulture));
