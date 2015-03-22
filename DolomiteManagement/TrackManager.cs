@@ -317,16 +317,15 @@ namespace DolomiteManagement
         /// </summary>
         /// <param name="stream">Stream of the uploaded track</param>
         /// <param name="owner">The username of the owner of the track</param>
-        /// <param name="guid">Output variable for the guid of the track</param>
+        /// <param name="guid">The guid of the track as provided by the user</param>
         /// <param name="hash">Output variable for the hash of the track</param>
         /// <returns>The guid for identifying the track</returns>
-        public void UploadTrack(Stream stream, string owner, out Guid guid, out string hash)
+        public void UploadTrack(Stream stream, string owner, Guid guid, out string hash)
         {
             // Step 0: Calculate hash to determine if the track is a duplicate
             hash = LocalStorageManager.CalculateHash(stream, owner);
 
             // Step 1: Upload the track to temporary storage in azure, asynchronously
-            guid = Guid.NewGuid();
             string azurePath = OnboardingDirectory + '/' + guid;
             UploadAsynchronousState state = new NewTrackAsynchronousState
             {

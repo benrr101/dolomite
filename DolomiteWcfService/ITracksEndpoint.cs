@@ -11,8 +11,8 @@ namespace DolomiteWcfService
         #region Create Operations
 
         [OperationContract]
-        [WebInvoke(Method = "POST", UriTemplate = "/")]
-        Message UploadTrack(Stream file);
+        [WebInvoke(Method = "PUT", UriTemplate = "/{guid}")]
+        Message UploadTrack(Stream file, string guid);
 
         #endregion
 
@@ -33,10 +33,6 @@ namespace DolomiteWcfService
         #endregion
 
         #region Update Operations
-
-        [OperationContract]
-        [WebInvoke(Method = "PUT", UriTemplate = "/{guid}")]
-        Message ReplaceTrack(Stream file, string guid);
 
         [OperationContract]
         [WebInvoke(Method = "POST", UriTemplate = "/{guid}")]
