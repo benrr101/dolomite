@@ -76,6 +76,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Asynchronous\AzureAsynchronousState.cs" />
+    <Compile Include="Asynchronous\NewTrackAsynchronousState.cs" />
+    <Compile Include="Asynchronous\ReplaceAsynchronousState.cs" />
     <Compile Include="Asynchronous\UploadAsynchronousState.cs" />
     <Compile Include="AzureStorageManager.cs" />
     <Compile Include="Exceptions\DuplicateTrackException.cs" />

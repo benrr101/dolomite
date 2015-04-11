@@ -10,6 +10,7 @@ using System.ServiceModel.Web;
 using System.Text;
 using System.Text.RegularExpressions;
 using DolomiteManagement.Exceptions;
+using DolomiteWcfService.Requests;
 using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
 
@@ -98,7 +99,7 @@ namespace DolomiteWcfService
         /// </summary>
         /// <exception cref="InvalidSessionException">Thrown if the authorization header is formatted incorrectly or is missing.</exception>
         /// <returns>The session token from the authorization header</returns>
-        public static string GetDolomiteSessionToken(out string apiKey)
+        public static UserSession GetDolomiteSessionToken()
         {
             // Fetch the header
             string authHeader = GetHeader(HttpRequestHeader.Cookie);
@@ -112,8 +113,11 @@ namespace DolomiteWcfService
 
             var groups = regex.Match(authHeader).Groups;
 
-            apiKey = groups[2].Value;
-            return groups[1].Value;
+            return new UserSession
+            {
+                ApiKey = groups[2].Value,
+                Token = groups[1].Value
+            };
         }
 
         public static string GetContentType()

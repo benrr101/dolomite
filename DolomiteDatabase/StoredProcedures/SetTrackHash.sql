@@ -1,5 +1,5 @@
 ﻿CREATE PROCEDURE [dbo].[SetTrackHash]
-	@trackId	uniqueidentifier,
+	@trackId	BIGINT,
 	@hash		text
 AS
 	UPDATE Tracks 

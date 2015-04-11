@@ -62,6 +62,7 @@
     <Folder Include="Foreign Keys" />
     <Folder Include="Scripts" />
     <Folder Include="StoredProcedures" />
+    <Folder Include="Metadata" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="Tables\Tracks.sql" />
@@ -119,6 +120,16 @@
     <Build Include="StoredProcedures\ReleaseAndCompleteArtChange.sql" />
     <Build Include="Tables\UserSettings.sql" />
     <Build Include="Foreign Keys\FK_USERSETTINGS_USER.sql" />
+    <Build Include="Indexes\UNQ_ART_HASH.sql" />
+    <Build Include="Indexes\UNQ_ART_GUIDID.sql" />
+    <Build Include="Indexes\UNQ_APIKEYS_APIKEY.sql" />
+    <Build Include="Indexes\UNQ_AUTOPLAYLISTS_GUIDID.sql" />
+    <Build Include="Indexes\UNQ_PLAYLIST_GUIDID.sql" />
+    <Build Include="Indexes\UNQ_TRACKS_GUIDID.sql" />
+    <None Include="Metadata\MetadataFields.sql" />
+    <Build Include="StoredProcedures\DeleteTrack.sql" />
+    <Build Include="StoredProcedures\DeleteAutoplaylist.sql" />
+    <Build Include="StoredProcedures\DeletePlaylist.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Script.PostDeployment1.sql" />
@@ -128,5 +139,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="DolomiteDatabaseRecreate.publish.xml" />
+    <None Include="Metadata\Qualities.sql" />
+    <None Include="Metadata\Rules.sql" />
   </ItemGroup>
 </Project>

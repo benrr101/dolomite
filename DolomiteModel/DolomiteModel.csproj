@@ -141,11 +141,11 @@
     <Compile Include="UserDbManager.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.Config" />
     <EntityDeploy Include="EntityFramework\DbEntities.edmx">
       <Generator>EntityModelCodeGenerator</Generator>
       <LastGenOutput>DbEntities.Designer.cs</LastGenOutput>
     </EntityDeploy>
-    <None Include="App.Config" />
     <None Include="EntityFramework\DbEntities.Context.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <DependentUpon>DbEntities.edmx</DependentUpon>

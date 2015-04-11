@@ -1,4 +1,4 @@
-﻿// T4 code generation is enabled for model 'F:\Users2\Ben\Documents\Visual Studio 2012\Projects\dolomite\DolomiteService\DolomiteModel\EntityFramework\DbEntities.edmx'. 
+﻿// T4 code generation is enabled for model 'D:\Ben\Documents\Visual Studio 2012\Projects\dolomite\DolomiteService\DolomiteModel\EntityFramework\DbEntities.edmx'. 
 // To enable legacy code generation, change the value of the 'Code Generation Strategy' designer
 // property to 'Legacy ObjectContext'. This property is available in the Properties Window when the model
 // is open in the designer.

@@ -44,14 +44,15 @@ namespace DolomiteModel
         /// <param name="absExpire">The time to timeout the session regardless of actions taken</param>
         public void CreateSession(Pub.User user, string apiKey, string token, string ipAddress, DateTime idleExpire, DateTime absExpire)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Create a new Session object
                 Session session = new Session
                 {
                     AbsoluteTimeout = absExpire,
-                    ApiKey = context.ApiKeys.First(a => a.Key == apiKey).Id,
+                    ApiKey = context.ApiKeys.First(a => a.ApiKey1 == apiKey).Id,
                     IdleTimeout = idleExpire,
+                    InitializedTime = DateTime.UtcNow,
                     Token = token,
                     InitialIP = ipAddress,
                     User = context.Users.First(u => u.Username == user.Username).Id,
@@ -77,7 +78,7 @@ namespace DolomiteModel
         /// <param name="email">The user's email. Must not be duplicate.</param>
         public void CreateUser(string username, string passwordHash, string email)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Create the new user object
                 User user = new User
@@ -122,7 +123,7 @@ namespace DolomiteModel
         /// <param name="settingsObj">The settings to save</param>
         public void StoreUserSettings(string username, Pub.UserSettings settingsObj)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Fetch the user and see if they have a settings record yet
                 var user = context.Users.FirstOrDefault(u => u.Username == username);
@@ -164,7 +165,7 @@ namespace DolomiteModel
         /// <returns>A public representation of the session</returns>
         public Pub.Session GetSession(string token)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Find the matching session
                 Pub.Session session = (from s in context.Sessions
@@ -172,7 +173,7 @@ namespace DolomiteModel
                                        select new Pub.Session
                                        {
                                            AbsoluteTimeout = s.AbsoluteTimeout,
-                                           ApiKey = s.ApiKey1.Key,
+                                           ApiKey = s.ApiKey1.ApiKey1,
                                            IdleTimeout = s.IdleTimeout,
                                            InitialIpAddress = s.InitialIP,
                                            InitializedTime = s.InitializedTime,
@@ -195,7 +196,7 @@ namespace DolomiteModel
         /// <returns>A user object if the user exists, null if the user doesn't exist</returns>
         public Pub.User GetUserByUsername(string username)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Find the matching user
                 return (from u in context.Users
@@ -219,7 +220,7 @@ namespace DolomiteModel
         /// </returns>
         public Pub.UserSettings GetUserSettings(string username)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Find the matching user's settings
                 var settings = context.UserSettings.FirstOrDefault(us => us.User1.Username == username);
@@ -235,10 +236,10 @@ namespace DolomiteModel
         /// <returns>True if the key exists, false otherwise</returns>
         public bool ValidateApiKey(string key)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Find the matching API key
-                var apiKey = context.ApiKeys.FirstOrDefault(k => k.Key == key);
+                var apiKey = context.ApiKeys.FirstOrDefault(k => k.ApiKey1 == key);
 
                 // Key must exist
                 return apiKey != null;
@@ -255,7 +256,7 @@ namespace DolomiteModel
         /// <returns>True if the key is valid, false otherwise</returns>
         public bool ValidateUserKey(Guid key, string email)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Find the matching user key
                 var userKey = context.UserKeys.FirstOrDefault(k => k.Id == key);
@@ -279,7 +280,7 @@ namespace DolomiteModel
         /// <param name="newTimeout">The new time to set the absolute timeout to</param>
         public void SetSessionAbsoluteTimeout(string sessionToken, DateTime newTimeout)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Fetch the session
                 Session session = context.Sessions.FirstOrDefault(s => s.Token == sessionToken);
@@ -299,7 +300,7 @@ namespace DolomiteModel
         /// <param name="newTimeout">The new time to set the idle timeout to</param>
         public void SetSessionIdleTimeout(string sessionToken, DateTime newTimeout)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Fetch the session
                 Session session = context.Sessions.FirstOrDefault(s => s.Token == sessionToken);
@@ -322,7 +323,7 @@ namespace DolomiteModel
         /// <param name="value">The value to set the claim status to.</param>
         public void SetUserKeyClaimStatus(Guid key, bool value)
         {
-            using (var context = new DbEntities())
+            using (var context = new Entities())
             {
                 // Fetch the user key
                 var userKey = context.UserKeys.FirstOrDefault(k => k.Id == key);
@@ -355,7 +356,7 @@ namespace DolomiteModel
                 return false;
 
             // Is the API key the same?
-            if (session.ApiKey1.Key != apikey)
+            if (session.ApiKey1.ApiKey1 != apikey)
                 return false;
 
             // We're good to go!

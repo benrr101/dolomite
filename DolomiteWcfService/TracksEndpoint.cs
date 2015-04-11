@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Entity.Core;
 using System.IO;
 using System.Net;
 using System.ServiceModel.Channels;
 using DolomiteManagement;
 using DolomiteManagement.Exceptions;
 using DolomiteModel.PublicRepresentations;
+using DolomiteWcfService.Requests;
 using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
 using AntsCode.Util;
@@ -43,24 +45,33 @@ namespace DolomiteWcfService
         #region Create Operations
 
         /// <summary>
-        /// Uploads a track from the RESTful API to Azure blob storage. This
-        /// also pulls out the track's metadata and loads the info into the db.
-        /// Lastly, this kicks off a thread to run the converters to create the
-        /// different bitrates of the track.
+        /// Takes in a stream for a file upload, if the track exists, we assume we can replace it.
+        /// If the track doesn't exist, we assume it's a new upload.
         /// </summary>
+        /// <remarks>
+        /// If a track with the given guid exists and is owned by a different user, then the track
+        /// will fail to upload at a later step in the process.
+        /// </remarks>
         /// <param name="file">Stream of the file that is uploaded</param>
+        /// <param name="guid">The GUID for identifying the track. Provided by the client.</param>
         /// <returns>The GUID of the track that was uploaded</returns>
-        public Message UploadTrack(Stream file)
+        public Message UploadTrack(Stream file, string guid)
         {
             try
             {
                 // Step 0: Make sure the session is valid
-                string api;
-                string token = WebUtilities.GetDolomiteSessionToken(out api);
-                string username = UserManager.GetUsernameFromSession(token, api);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
-                // Step 1: Read the request body
+                // Step 1: Check to make sure the guid is valid
+                Guid trackGuid;
+                if (!Guid.TryParse(guid, out trackGuid) && trackGuid != Guid.Empty)
+                {
+                    throw new ArgumentException("A valid GUID must be provided as the ID for the track");
+                }
+
+                // Step 2: Read the request body
                 MemoryStream memoryStream;
                 if (WebUtilities.GetContentType() == null)
                     throw new MissingFieldException("The content type header is missing from the request.");
@@ -85,33 +96,45 @@ namespace DolomiteWcfService
                     memoryStream = new MemoryStream(file.ToByteArray());
                 }
 
-                // Upload the track
-                Guid guid;
+                // Step 3: Does the track exist?
                 string hash;
-                TrackManager.UploadTrack(memoryStream, username, out guid, out hash);
-                return WebUtilities.GenerateResponse(new UploadSuccessResponse(guid, hash), HttpStatusCode.Created);
+                HttpStatusCode returnCode;
+                try
+                {
+                    // Case 1: Track exists, we're replaceing. Will throw exception if track does not exist
+                    TrackManager.ReplaceTrack(memoryStream, trackGuid, username, out hash);
+                    returnCode = HttpStatusCode.OK;
+                }
+                catch (ObjectNotFoundException)
+                {
+                    // Case 2: Track does not exist, we're uploading a new one
+                    TrackManager.UploadTrack(memoryStream, username, trackGuid, out hash);
+                    returnCode = HttpStatusCode.Created;
+                }
+                return WebUtilities.GenerateResponse(new UploadSuccessResponse(trackGuid, hash), returnCode);
             }
             catch (InvalidSessionException)
             {
-                file.Close();
                 return WebUtilities.GenerateUnauthorizedResponse();
             }
             catch (MissingFieldException mfe)
             {
-                file.Close();
                 ErrorResponse eResponse = new ErrorResponse(mfe.Message);
+                return WebUtilities.GenerateResponse(eResponse, HttpStatusCode.BadRequest);
+            }
+            catch (ArgumentException ae)
+            {
+                ErrorResponse eResponse = new ErrorResponse(ae.Message);
                 return WebUtilities.GenerateResponse(eResponse, HttpStatusCode.BadRequest);
             }
             catch (DuplicateNameException)
             {
-                file.Close();
                 ErrorResponse eResponse = new ErrorResponse("The request could not be completed. A track with the same hash already exists." +
                                                             " Duplicate tracks are not permitted");
                 return WebUtilities.GenerateResponse(eResponse, HttpStatusCode.Conflict);
             }
             catch (Exception)
             {
-                file.Close();
                 return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
                     HttpStatusCode.InternalServerError);
             }
@@ -137,29 +160,27 @@ namespace DolomiteWcfService
                 if (quality == TrackManager.ArtDirectory)
                 {
                     // Fetch the art with the given GUID
-                    string artMime;
-                    Stream artStream = TrackManager.GetTrackArt(Guid.Parse(guid), out artMime);
+                    Art artObj = TrackManager.GetTrackArt(Guid.Parse(guid));
 
                     // Set the headers
                     string contentDisp = String.Format("attachment; filename=\"{0}\";", guid);
                     WebUtilities.SetStatusCode(HttpStatusCode.OK);
                     WebUtilities.SetHeader("Content-Disposition", contentDisp);
-                    WebUtilities.SetHeader(HttpResponseHeader.ContentType, artMime);
+                    WebUtilities.SetHeader(HttpResponseHeader.ContentType, artObj.Mimetype);
 
-                    return artStream;
+                    return artObj.ArtStream;
                 }
 
                 // We're not retrieving art, so the user must be authenticated
-                string apiKey;
-                string sessionToken = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(sessionToken, apiKey);
-                UserManager.ExtendIdleTimeout(sessionToken);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Retrieve the track and return the stream
                 Track track = TrackManager.GetTrack(Guid.Parse(guid), username);
                 if (!track.Ready)
                     throw new TrackNotReadyException();
-                Track.Quality qualityObj = TrackManager.GetTrackStream(track, quality);
+                Track.Quality qualityObj = TrackManager.GetTrackStream(track.Id, quality, username);
 
                 // Set special headers that tell the client to download the file
                 // and what filename to give it
@@ -216,10 +237,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // See if there are search query parameters included
                 Dictionary<string, string> queryParams = WebUtilities.GetQueryParameters();
@@ -252,10 +272,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Retrieve the track without the stream
                 Track track = TrackManager.GetTrack(Guid.Parse(guid), username);
@@ -313,90 +332,6 @@ namespace DolomiteWcfService
         #region Update Operations
 
         /// <summary>
-        /// Attempts to replace the track with the given guid with a new stream
-        /// </summary>
-        /// <param name="file">The file stream that is to be replaced</param>
-        /// <param name="trackGuid">The guid of the track to replace</param>
-        /// <returns>A message representing the success or failure</returns>
-        public Message ReplaceTrack(Stream file, string trackGuid)
-        {
-            try
-            {
-                // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
-
-                if (WebUtilities.GetContentType() == null)
-                    throw new MissingFieldException("The content type header is missing from the request.");
-                MemoryStream memoryStream;
-                if (WebUtilities.GetContentType().StartsWith("multipart/form-data"))
-                {
-                    // Attempt to replace the track with the new file
-                    MultipartParser parser = new MultipartParser(file);
-                    if (parser.Success)
-                    {
-                        // Upload the track
-                        memoryStream = new MemoryStream(parser.FileContents);
-                    }
-                    else
-                    {
-                        // Failure of one kind or another
-                        return WebUtilities.GenerateResponse(new ErrorResponse("Failed to process request."),
-                            HttpStatusCode.BadRequest);
-                    }
-                }
-                else
-                {
-                    // There's no need to process out anything else. The body is the file.
-                    memoryStream = new MemoryStream(file.ToByteArray());
-                }
-
-                // Replace the file
-                string hash;
-                Guid guid = Guid.Parse(trackGuid);
-                TrackManager.ReplaceTrack(memoryStream, guid, username, out hash);
-                return WebUtilities.GenerateResponse(new UploadSuccessResponse(guid, hash), HttpStatusCode.OK);
-            }
-            catch (InvalidSessionException)
-            {
-                return WebUtilities.GenerateUnauthorizedResponse();
-            }
-            catch (UnauthorizedAccessException)
-            {
-                string message = String.Format("The GUID supplied '{0}' refers to a track that is not owned by you.",
-                    trackGuid);
-                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Forbidden);
-            }
-            catch (MissingFieldException mfe)
-            {
-                ErrorResponse eResponse = new ErrorResponse(mfe.Message);
-                return WebUtilities.GenerateResponse(eResponse, HttpStatusCode.BadRequest);
-            }
-            catch (FormatException)
-            {
-                // The guid was probably incorrect
-                string message = String.Format("The GUID supplied '{0}' is an invalid GUID.", trackGuid);
-                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.BadRequest);
-            }
-            catch (ObjectNotFoundException)
-            {
-                string message = String.Format("The track with the specified GUID '{0}' does not exist", trackGuid);
-                return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.NotFound);
-            }
-            catch (DuplicateNameException e)
-            {
-                return WebUtilities.GenerateResponse(new ErrorResponse(e.Message), HttpStatusCode.Conflict);
-            }
-            catch (Exception)
-            {
-                return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),
-                    HttpStatusCode.InternalServerError);
-            }
-        }
-
-        /// <summary>
         /// Replaces one or more metadata records for a given track
         /// </summary>
         /// <param name="body">The JSON passed to in as part of the POST request</param>
@@ -407,10 +342,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Translate the body and guid
                 Guid trackGuid = Guid.Parse(guid);
@@ -474,10 +408,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Translate the body and guid
                 Guid trackGuid = Guid.Parse(guid);
@@ -540,10 +473,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Translate the body and guid
                 Guid trackGuid = Guid.Parse(guid);
@@ -633,10 +565,9 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                string apiKey;
-                string token = WebUtilities.GetDolomiteSessionToken(out apiKey);
-                string username = UserManager.GetUsernameFromSession(token, apiKey);
-                UserManager.ExtendIdleTimeout(token);
+                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                UserManager.ExtendIdleTimeout(sesh.Token);
 
                 // Parse the guid into a Guid and attempt to delete
                 TrackManager.DeleteTrack(Guid.Parse(guid), username);

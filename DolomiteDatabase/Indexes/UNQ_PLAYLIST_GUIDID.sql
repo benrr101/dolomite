@@ -1,0 +1,3 @@
+﻿ALTER TABLE [dbo].[Playlists]
+	ADD CONSTRAINT [UNQ_PLAYLIST_GUIDID]
+	UNIQUE (GuidId)

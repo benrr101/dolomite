@@ -4,7 +4,7 @@
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-    <Schema Namespace="DolomiteModel.EntityFramework.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2008" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+      <Schema Namespace="EntityFramework.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="Albums">
           <Key>
             <PropertyRef Name="Id" />
@@ -26,7 +26,8 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Id" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="GuidId" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Mimetype" Type="nvarchar" MaxLength="30" Nullable="false" />
           <Property Name="Hash" Type="nchar" MaxLength="40" Nullable="false" />
         </EntityType>
@@ -41,8 +42,8 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="Autoplaylist" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Id" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Autoplaylist" Type="bigint" Nullable="false" />
           <Property Name="Rule" Type="int" Nullable="false" />
           <Property Name="MetadataField" Type="int" Nullable="false" />
           <Property Name="Value" Type="nvarchar" MaxLength="100" Nullable="false" />
@@ -51,7 +52,8 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Id" Type="bigint" Nullable="false" />
+          <Property Name="GuidId" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Owner" Type="int" Nullable="false" />
           <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
           <Property Name="MatchAll" Type="bit" Nullable="false" />
@@ -63,16 +65,16 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="Track" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Id" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Track" Type="bigint" Nullable="false" />
           <Property Name="Quality" Type="int" Nullable="false" />
         </EntityType>
         <EntityType Name="Metadata">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="Track" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Id" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Track" Type="bigint" Nullable="false" />
           <Property Name="Field" Type="int" Nullable="false" />
           <Property Name="Value" Type="nvarchar(max)" Nullable="false" />
           <Property Name="WriteOut" Type="bit" Nullable="false" />
@@ -81,7 +83,7 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Id" Type="int" Nullable="false" />
           <Property Name="TagName" Type="nvarchar" MaxLength="20" Nullable="false" />
           <Property Name="DisplayName" Type="nvarchar" MaxLength="20" Nullable="false" />
           <Property Name="Type" Type="nvarchar" MaxLength="20" Nullable="false" />
@@ -93,7 +95,8 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Id" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="GuidId" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Owner" Type="int" Nullable="false" />
           <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
         </EntityType>
@@ -101,16 +104,16 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="Playlist" Type="uniqueidentifier" Nullable="false" />
-          <Property Name="Track" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Id" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Playlist" Type="bigint" Nullable="false" />
+          <Property Name="Track" Type="bigint" Nullable="false" />
           <Property Name="Order" Type="int" />
         </EntityType>
         <EntityType Name="Qualities">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Id" Type="int" Nullable="false" />
           <Property Name="Name" Type="nvarchar" MaxLength="20" Nullable="false" />
           <Property Name="Codec" Type="nvarchar" MaxLength="50" />
           <Property Name="Bitrate" Type="int" />
@@ -122,7 +125,7 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Id" Type="int" Nullable="false" />
           <Property Name="Name" Type="nvarchar" MaxLength="30" Nullable="false" />
           <Property Name="DisplayName" Type="nvarchar" MaxLength="30" Nullable="false" />
           <Property Name="Type" Type="nvarchar" MaxLength="20" Nullable="false" />
@@ -136,7 +139,7 @@
           <Property Name="User" Type="int" Nullable="false" />
           <Property Name="InitialIP" Type="nvarchar" MaxLength="15" Nullable="false" />
           <Property Name="ApiKey" Type="int" Nullable="false" />
-          <Property Name="InitializedTime" Type="datetime" Nullable="false" StoreGeneratedPattern="Computed" />
+          <Property Name="InitializedTime" Type="datetime" Nullable="false" />
           <Property Name="IdleTimeout" Type="datetime" Nullable="false" />
           <Property Name="AbsoluteTimeout" Type="datetime" Nullable="false" />
         </EntityType>
@@ -144,11 +147,13 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Id" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="GuidId" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Owner" Type="int" Nullable="false" />
+          <Property Name="DateAdded" Type="datetime" Nullable="false" />
           <Property Name="Hash" Type="nchar" MaxLength="40" />
           <Property Name="Album" Type="int" />
-          <Property Name="Art" Type="uniqueidentifier" />
+          <Property Name="Art" Type="bigint" />
           <Property Name="OriginalBitrate" Type="int" />
           <Property Name="OriginalSampling" Type="int" />
           <Property Name="OriginalMimetype" Type="nvarchar" MaxLength="30" />
@@ -220,9 +225,7 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_AUTOPLAYLISTRULES_PLAYLIST">
-          <End Role="Autoplaylists" Type="Self.Autoplaylists" Multiplicity="1">
-            <OnDelete Action="Cascade" />
-          </End>
+          <End Role="Autoplaylists" Type="Self.Autoplaylists" Multiplicity="1" />
           <End Role="AutoplaylistRules" Type="Self.AutoplaylistRules" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Autoplaylists">
@@ -390,7 +393,9 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_TRACKS_ART">
-          <End Role="Art" Type="Self.Art" Multiplicity="0..1" />
+          <End Role="Art" Type="Self.Art" Multiplicity="0..1">
+            <OnDelete Action="Cascade" />
+          </End>
           <End Role="Tracks" Type="Self.Tracks" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Art">
@@ -402,7 +407,9 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_TRACKS_OWNER">
-          <End Role="Users" Type="Self.Users" Multiplicity="1" />
+          <End Role="Users" Type="Self.Users" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
           <End Role="Tracks" Type="Self.Tracks" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Users">
@@ -414,7 +421,9 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_USERSETTINGS_USER">
-          <End Role="Users" Type="Self.Users" Multiplicity="1" />
+          <End Role="Users" Type="Self.Users" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
           <End Role="UserSettings" Type="Self.UserSettings" Multiplicity="0..1" />
           <ReferentialConstraint>
             <Principal Role="Users">
@@ -426,33 +435,42 @@
           </ReferentialConstraint>
         </Association>
         <Function Name="DecrementPlaylistTrackOrder" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
-          <Parameter Name="playlist" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="playlist" Type="bigint" Mode="In" />
           <Parameter Name="position" Type="int" Mode="In" />
+        </Function>
+        <Function Name="DeleteAutoplaylist" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="autoplaylistGuid" Type="uniqueidentifier" Mode="In" />
+        </Function>
+        <Function Name="DeletePlaylist" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="playlistGuid" Type="uniqueidentifier" Mode="In" />
+        </Function>
+        <Function Name="DeleteTrack" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="trackGuid" Type="uniqueidentifier" Mode="In" />
         </Function>
         <Function Name="GetAndLockTopArtItem" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
         <Function Name="GetAndLockTopMetadataItem" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
         <Function Name="GetAndLockTopOnboardingItem" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo" />
         <Function Name="IncrementPlaylistTrackOrder" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
-          <Parameter Name="playlist" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="playlist" Type="bigint" Mode="In" />
           <Parameter Name="position" Type="int" Mode="In" />
         </Function>
         <Function Name="ReleaseAndCompleteArtChange" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
-          <Parameter Name="workItem" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="workItem" Type="bigint" Mode="In" />
         </Function>
         <Function Name="ReleaseAndCompleteMetadataUpdate" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
-          <Parameter Name="workItem" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="workItem" Type="bigint" Mode="In" />
         </Function>
         <Function Name="ReleaseAndCompleteOnboardingItem" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
-          <Parameter Name="workItem" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="workItem" Type="bigint" Mode="In" />
         </Function>
         <Function Name="ResetOnboardingStatus" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
-          <Parameter Name="guid" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="trackId" Type="bigint" Mode="In" />
         </Function>
         <Function Name="SetTrackHash" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
-          <Parameter Name="trackId" Type="uniqueidentifier" Mode="In" />
+          <Parameter Name="trackId" Type="bigint" Mode="In" />
           <Parameter Name="hash" Type="text" Mode="In" />
         </Function>
-        <EntityContainer Name="DolomiteModelEntityFrameworkStoreContainer">
+        <EntityContainer Name="EntityFrameworkStoreContainer">
           <EntitySet Name="Albums" EntityType="Self.Albums" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="ApiKeys" EntityType="Self.ApiKeys" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Art" EntityType="Self.Art" Schema="dbo" store:Type="Tables" />
@@ -548,22 +566,11 @@
             <End Role="UserSettings" EntitySet="UserSettings" />
           </AssociationSet>
         </EntityContainer>
-      </Schema></edmx:StorageModels>
+      </Schema>
+    </edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
-      <Schema Namespace="DolomiteModel.EntityFramework" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
-        <Function Name="ConvertToInt32" ReturnType="Edm.Int32">
-          <Parameter Name="myStr" Type="Edm.String" />
-          <DefiningExpression>
-            CAST(myStr AS Edm.Int32)
-          </DefiningExpression>
-        </Function>
-        <Function Name="ConvertToDecimal" ReturnType="Edm.Decimal">
-          <Parameter Name="myStr" Type="Edm.String" />
-          <DefiningExpression>
-            CAST(myStr AS Edm.Decimal(12, 2))
-          </DefiningExpression>
-        </Function>
+      <Schema Namespace="EntityFramework" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
         <EntityType Name="Album">
           <Key>
             <PropertyRef Name="Id" />
@@ -575,11 +582,21 @@
           <NavigationProperty Name="Tracks" Relationship="Self.Album1" FromRole="Albums" ToRole="Tracks" />
           <NavigationProperty Name="Artist1" Relationship="Self.FK_ALBUMS_ARTIST" FromRole="Albums" ToRole="Artists" />
         </EntityType>
+        <EntityType Name="ApiKey">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="ApiKey1" Type="String" MaxLength="64" FixedLength="true" Unicode="true" Nullable="false" />
+          <Property Name="FriendlyName" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="Sessions" Relationship="Self.FK_SESSION_APIKEY" FromRole="ApiKeys" ToRole="Sessions" />
+        </EntityType>
         <EntityType Name="Art">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="Guid" Nullable="false" />
+          <Property Name="Id" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="GuidId" Type="Guid" Nullable="false" />
           <Property Name="Mimetype" Type="String" MaxLength="30" FixedLength="false" Unicode="true" Nullable="false" />
           <Property Name="Hash" Type="String" MaxLength="40" FixedLength="true" Unicode="true" Nullable="false" />
           <NavigationProperty Name="Tracks" Relationship="Self.FK_TRACKS_ART" FromRole="Art" ToRole="Tracks" />
@@ -596,8 +613,8 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="Autoplaylist" Type="Guid" Nullable="false" />
+          <Property Name="Id" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Autoplaylist" Type="Int64" Nullable="false" />
           <Property Name="Rule" Type="Int32" Nullable="false" />
           <Property Name="MetadataField" Type="Int32" Nullable="false" />
           <Property Name="Value" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
@@ -609,23 +626,24 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="None" />
+          <Property Name="Id" Type="Int64" Nullable="false" />
+          <Property Name="GuidId" Type="Guid" Nullable="false" />
           <Property Name="Owner" Type="Int32" Nullable="false" />
           <Property Name="Name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="MatchAll" Type="Boolean" Nullable="false" />
+          <Property Name="Limit" Type="Int32" />
+          <Property Name="SortField" Type="Int32" />
+          <Property Name="SortDesc" Type="Boolean" />
           <NavigationProperty Name="AutoplaylistRules" Relationship="Self.FK_AUTOPLAYLISTRULES_PLAYLIST" FromRole="Autoplaylists" ToRole="AutoplaylistRules" />
           <NavigationProperty Name="User" Relationship="Self.FK_AUTOPLAYLISTS_OWNER" FromRole="Autoplaylists" ToRole="Users" />
-          <Property Name="Limit" Type="Int32" />
-          <Property Name="MatchAll" Type="Boolean" Nullable="false" />
-          <Property Name="SortDesc" Type="Boolean" />
-          <Property Name="SortField" Type="Int32" Nullable="true" />
-          <NavigationProperty Name="SortFieldMetadataField" Relationship="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTS_SORTFIELD" FromRole="Autoplaylist" ToRole="MetadataField" />
+          <NavigationProperty Name="SortField1" Relationship="Self.FK_AUTOPLAYLISTS_SORTFIELD" FromRole="Autoplaylists" ToRole="MetadataFields" />
         </EntityType>
         <EntityType Name="AvailableQuality">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="Track" Type="Guid" Nullable="false" />
+          <Property Name="Id" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Track" Type="Int64" Nullable="false" />
           <Property Name="Quality" Type="Int32" Nullable="false" />
           <NavigationProperty Name="Quality1" Relationship="Self.FK_AVAILABLEQUALITIES_QUALITY" FromRole="AvailableQualities" ToRole="Qualities" />
           <NavigationProperty Name="Track1" Relationship="Self.FK_AVAILABLEQUALITIES_TRACK" FromRole="AvailableQualities" ToRole="Tracks" />
@@ -634,34 +652,35 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="Track" Type="Guid" Nullable="false" />
+          <Property Name="Id" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Track" Type="Int64" Nullable="false" />
           <Property Name="Field" Type="Int32" Nullable="false" />
           <Property Name="Value" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="WriteOut" Type="Boolean" Nullable="false" />
           <NavigationProperty Name="MetadataField" Relationship="Self.FK_METADATA_FIELD" FromRole="Metadata" ToRole="MetadataFields" />
           <NavigationProperty Name="Track1" Relationship="Self.FK_METADATA_TRACK" FromRole="Metadata" ToRole="Tracks" />
-          <Property Name="WriteOut" Type="Boolean" Nullable="false" />
         </EntityType>
         <EntityType Name="MetadataField">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Id" Type="Int32" Nullable="false" />
           <Property Name="TagName" Type="String" MaxLength="20" FixedLength="false" Unicode="true" Nullable="false" />
           <Property Name="DisplayName" Type="String" MaxLength="20" FixedLength="false" Unicode="true" Nullable="false" />
-          <NavigationProperty Name="AutoplaylistRules" Relationship="Self.FK_AUTOPLAYLISTRULES_METADATA" FromRole="MetadataFields" ToRole="AutoplaylistRules" />
-          <NavigationProperty Name="Metadatas" Relationship="Self.FK_METADATA_FIELD" FromRole="MetadataFields" ToRole="Metadata" />
-          <Property Name="Type" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
-          <NavigationProperty Name="Autoplaylists" Relationship="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTS_SORTFIELD" FromRole="MetadataField" ToRole="Autoplaylist" />
+          <Property Name="Type" Type="String" MaxLength="20" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Searchable" Type="Boolean" Nullable="false" />
           <Property Name="FileSupported" Type="Boolean" Nullable="false" />
           <Property Name="TagLibArray" Type="Boolean" Nullable="false" />
-          <Property Name="Searchable" Type="Boolean" Nullable="false" />
+          <NavigationProperty Name="AutoplaylistRules" Relationship="Self.FK_AUTOPLAYLISTRULES_METADATA" FromRole="MetadataFields" ToRole="AutoplaylistRules" />
+          <NavigationProperty Name="Autoplaylists" Relationship="Self.FK_AUTOPLAYLISTS_SORTFIELD" FromRole="MetadataFields" ToRole="Autoplaylists" />
+          <NavigationProperty Name="Metadatas" Relationship="Self.FK_METADATA_FIELD" FromRole="MetadataFields" ToRole="Metadata" />
         </EntityType>
         <EntityType Name="Playlist">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="None" />
+          <Property Name="Id" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="GuidId" Type="Guid" Nullable="false" />
           <Property Name="Owner" Type="Int32" Nullable="false" />
           <Property Name="Name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
           <NavigationProperty Name="User" Relationship="Self.FK_PLAYLISTS_OWNER" FromRole="Playlists" ToRole="Users" />
@@ -671,9 +690,9 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="Playlist" Type="Guid" Nullable="false" />
-          <Property Name="Track" Type="Guid" Nullable="false" />
+          <Property Name="Id" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Playlist" Type="Int64" Nullable="false" />
+          <Property Name="Track" Type="Int64" Nullable="false" />
           <Property Name="Order" Type="Int32" />
           <NavigationProperty Name="Playlist1" Relationship="Self.FK_PLAYLISTTRACKS_PLAYLISTS" FromRole="PlaylistTracks" ToRole="Playlists" />
           <NavigationProperty Name="Track1" Relationship="Self.FK_PLAYLISTTRACKS_TRACKS" FromRole="PlaylistTracks" ToRole="Tracks" />
@@ -682,7 +701,7 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Id" Type="Int32" Nullable="false" />
           <Property Name="Name" Type="String" MaxLength="20" FixedLength="false" Unicode="true" Nullable="false" />
           <Property Name="Codec" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="Bitrate" Type="Int32" />
@@ -695,21 +714,38 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Id" Type="Int32" Nullable="false" />
           <Property Name="Name" Type="String" MaxLength="30" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="DisplayName" Type="String" MaxLength="30" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Type" Type="String" MaxLength="20" FixedLength="false" Unicode="true" Nullable="false" />
           <NavigationProperty Name="AutoplaylistRules" Relationship="Self.FK_AUTOPLAYLISTRULES_RULE" FromRole="Rules" ToRole="AutoplaylistRules" />
-          <Property Name="DisplayName" Type="String" Nullable="false" MaxLength="30" FixedLength="false" Unicode="true" />
-          <Property Name="Type" Type="String" Nullable="false" MaxLength="20" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityType Name="Session">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Token" Type="String" MaxLength="64" FixedLength="true" Unicode="true" Nullable="false" />
+          <Property Name="User" Type="Int32" Nullable="false" />
+          <Property Name="InitialIP" Type="String" MaxLength="15" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="ApiKey" Type="Int32" Nullable="false" />
+          <Property Name="InitializedTime" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="IdleTimeout" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="AbsoluteTimeout" Type="DateTime" Nullable="false" Precision="3" />
+          <NavigationProperty Name="ApiKey1" Relationship="Self.FK_SESSION_APIKEY" FromRole="Sessions" ToRole="ApiKeys" />
+          <NavigationProperty Name="User1" Relationship="Self.FK_SESSION_USER" FromRole="Sessions" ToRole="Users" />
         </EntityType>
         <EntityType Name="Track">
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="Guid" Nullable="false" />
+          <Property Name="Id" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="GuidId" Type="Guid" Nullable="false" />
           <Property Name="Owner" Type="Int32" Nullable="false" />
+          <Property Name="DateAdded" Type="DateTime" Nullable="false" Precision="3" />
           <Property Name="Hash" Type="String" MaxLength="40" FixedLength="true" Unicode="true" />
           <Property Name="Album" Type="Int32" />
-          <Property Name="Art" Type="Guid" />
+          <Property Name="Art" Type="Int64" />
           <Property Name="OriginalBitrate" Type="Int32" />
           <Property Name="OriginalSampling" Type="Int32" />
           <Property Name="OriginalMimetype" Type="String" MaxLength="30" FixedLength="false" Unicode="true" />
@@ -717,13 +753,21 @@
           <Property Name="HasBeenOnboarded" Type="Boolean" Nullable="false" />
           <Property Name="Locked" Type="Boolean" Nullable="false" />
           <Property Name="TrackInTempStorage" Type="Boolean" Nullable="false" />
+          <Property Name="ArtChange" Type="Boolean" Nullable="false" />
           <NavigationProperty Name="Album1" Relationship="Self.Album1" FromRole="Tracks" ToRole="Albums" />
           <NavigationProperty Name="Art1" Relationship="Self.FK_TRACKS_ART" FromRole="Tracks" ToRole="Art" />
           <NavigationProperty Name="AvailableQualities" Relationship="Self.FK_AVAILABLEQUALITIES_TRACK" FromRole="Tracks" ToRole="AvailableQualities" />
           <NavigationProperty Name="Metadatas" Relationship="Self.FK_METADATA_TRACK" FromRole="Tracks" ToRole="Metadata" />
           <NavigationProperty Name="PlaylistTracks" Relationship="Self.FK_PLAYLISTTRACKS_TRACKS" FromRole="Tracks" ToRole="PlaylistTracks" />
           <NavigationProperty Name="User" Relationship="Self.FK_TRACKS_OWNER" FromRole="Tracks" ToRole="Users" />
-          <Property Name="ArtChange" Type="Boolean" Nullable="false" />
+        </EntityType>
+        <EntityType Name="UserKey">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Guid" Nullable="false" />
+          <Property Name="Email" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="Claimed" Type="Boolean" Nullable="false" />
         </EntityType>
         <EntityType Name="User">
           <Key>
@@ -731,14 +775,22 @@
           </Key>
           <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="Username" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="PasswordHash" Type="String" MaxLength="64" FixedLength="true" Unicode="true" Nullable="false" />
+          <Property Name="PasswordReset" Type="Boolean" Nullable="false" />
+          <Property Name="Email" Type="String" MaxLength="255" FixedLength="false" Unicode="true" Nullable="false" />
           <NavigationProperty Name="Autoplaylists" Relationship="Self.FK_AUTOPLAYLISTS_OWNER" FromRole="Users" ToRole="Autoplaylists" />
           <NavigationProperty Name="Playlists" Relationship="Self.FK_PLAYLISTS_OWNER" FromRole="Users" ToRole="Playlists" />
+          <NavigationProperty Name="Sessions" Relationship="Self.FK_SESSION_USER" FromRole="Users" ToRole="Sessions" />
           <NavigationProperty Name="Tracks" Relationship="Self.FK_TRACKS_OWNER" FromRole="Users" ToRole="Tracks" />
-          <Property Name="PasswordHash" Type="String" Nullable="false" MaxLength="64" FixedLength="true" Unicode="true" />
-          <Property Name="PasswordReset" Type="Boolean" Nullable="false" />
-          <Property Name="Email" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
-          <NavigationProperty Name="Sessions" Relationship="DolomiteModel.EntityFramework.FK_SESSION_USER" FromRole="User" ToRole="Session" />
-          <NavigationProperty Name="UserSetting" Relationship="DolomiteModel.EntityFramework.FK_USERSETTINGS_USER" FromRole="User" ToRole="UserSetting" />
+          <NavigationProperty Name="UserSetting" Relationship="Self.FK_USERSETTINGS_USER" FromRole="Users" ToRole="UserSettings" />
+        </EntityType>
+        <EntityType Name="UserSetting">
+          <Key>
+            <PropertyRef Name="User" />
+          </Key>
+          <Property Name="User" Type="Int32" Nullable="false" />
+          <Property Name="SettingsSerialized" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="User1" Relationship="Self.FK_USERSETTINGS_USER" FromRole="UserSettings" ToRole="Users" />
         </EntityType>
         <Association Name="Album1">
           <End Role="Albums" Type="Self.Album" Multiplicity="0..1" />
@@ -764,8 +816,22 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_SESSION_APIKEY">
+          <End Role="ApiKeys" Type="Self.ApiKey" Multiplicity="1" />
+          <End Role="Sessions" Type="Self.Session" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ApiKeys">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Sessions">
+              <PropertyRef Name="ApiKey" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_TRACKS_ART">
-          <End Role="Art" Type="Self.Art" Multiplicity="0..1" />
+          <End Role="Art" Type="Self.Art" Multiplicity="0..1">
+            <OnDelete Action="Cascade" />
+          </End>
           <End Role="Tracks" Type="Self.Track" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Art">
@@ -821,6 +887,18 @@
             </Principal>
             <Dependent Role="Autoplaylists">
               <PropertyRef Name="Owner" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_AUTOPLAYLISTS_SORTFIELD">
+          <End Role="MetadataFields" Type="Self.MetadataField" Multiplicity="0..1" />
+          <End Role="Autoplaylists" Type="Self.Autoplaylist" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="MetadataFields">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Autoplaylists">
+              <PropertyRef Name="SortField" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -891,7 +969,9 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_PLAYLISTTRACKS_PLAYLISTS">
-          <End Role="Playlists" Type="Self.Playlist" Multiplicity="1" />
+          <End Role="Playlists" Type="Self.Playlist" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
           <End Role="PlaylistTracks" Type="Self.PlaylistTrack" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Playlists">
@@ -903,7 +983,9 @@
           </ReferentialConstraint>
         </Association>
         <Association Name="FK_PLAYLISTTRACKS_TRACKS">
-          <End Role="Tracks" Type="Self.Track" Multiplicity="1" />
+          <End Role="Tracks" Type="Self.Track" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
           <End Role="PlaylistTracks" Type="Self.PlaylistTrack" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Tracks">
@@ -914,8 +996,24 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_SESSION_USER">
+          <End Role="Users" Type="Self.User" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="Sessions" Type="Self.Session" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Users">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Sessions">
+              <PropertyRef Name="User" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_TRACKS_OWNER">
-          <End Role="Users" Type="Self.User" Multiplicity="1" />
+          <End Role="Users" Type="Self.User" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
           <End Role="Tracks" Type="Self.Track" Multiplicity="*" />
           <ReferentialConstraint>
             <Principal Role="Users">
@@ -926,8 +1024,23 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
-        <EntityContainer Name="DbEntities" annotation:LazyLoadingEnabled="true">
+        <Association Name="FK_USERSETTINGS_USER">
+          <End Role="Users" Type="Self.User" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="UserSettings" Type="Self.UserSetting" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="Users">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="UserSettings">
+              <PropertyRef Name="User" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="Entities" annotation:LazyLoadingEnabled="true">
           <EntitySet Name="Albums" EntityType="Self.Album" />
+          <EntitySet Name="ApiKeys" EntityType="Self.ApiKey" />
           <EntitySet Name="Arts" EntityType="Self.Art" />
           <EntitySet Name="Artists" EntityType="Self.Artist" />
           <EntitySet Name="AutoplaylistRules" EntityType="Self.AutoplaylistRule" />
@@ -939,8 +1052,11 @@
           <EntitySet Name="PlaylistTracks" EntityType="Self.PlaylistTrack" />
           <EntitySet Name="Qualities" EntityType="Self.Quality" />
           <EntitySet Name="Rules" EntityType="Self.Rule" />
+          <EntitySet Name="Sessions" EntityType="Self.Session" />
           <EntitySet Name="Tracks" EntityType="Self.Track" />
+          <EntitySet Name="UserKeys" EntityType="Self.UserKey" />
           <EntitySet Name="Users" EntityType="Self.User" />
+          <EntitySet Name="UserSettings" EntityType="Self.UserSetting" />
           <AssociationSet Name="Album" Association="Self.Album1">
             <End Role="Albums" EntitySet="Albums" />
             <End Role="Tracks" EntitySet="Tracks" />
@@ -948,6 +1064,10 @@
           <AssociationSet Name="FK_ALBUMS_ARTIST" Association="Self.FK_ALBUMS_ARTIST">
             <End Role="Artists" EntitySet="Artists" />
             <End Role="Albums" EntitySet="Albums" />
+          </AssociationSet>
+          <AssociationSet Name="FK_SESSION_APIKEY" Association="Self.FK_SESSION_APIKEY">
+            <End Role="ApiKeys" EntitySet="ApiKeys" />
+            <End Role="Sessions" EntitySet="Sessions" />
           </AssociationSet>
           <AssociationSet Name="FK_TRACKS_ART" Association="Self.FK_TRACKS_ART">
             <End Role="Art" EntitySet="Arts" />
@@ -967,6 +1087,10 @@
           </AssociationSet>
           <AssociationSet Name="FK_AUTOPLAYLISTS_OWNER" Association="Self.FK_AUTOPLAYLISTS_OWNER">
             <End Role="Users" EntitySet="Users" />
+            <End Role="Autoplaylists" EntitySet="Autoplaylists" />
+          </AssociationSet>
+          <AssociationSet Name="FK_AUTOPLAYLISTS_SORTFIELD" Association="Self.FK_AUTOPLAYLISTS_SORTFIELD">
+            <End Role="MetadataFields" EntitySet="MetadataFields" />
             <End Role="Autoplaylists" EntitySet="Autoplaylists" />
           </AssociationSet>
           <AssociationSet Name="FK_AVAILABLEQUALITIES_QUALITY" Association="Self.FK_AVAILABLEQUALITIES_QUALITY">
@@ -997,154 +1121,63 @@
             <End Role="Tracks" EntitySet="Tracks" />
             <End Role="PlaylistTracks" EntitySet="PlaylistTracks" />
           </AssociationSet>
+          <AssociationSet Name="FK_SESSION_USER" Association="Self.FK_SESSION_USER">
+            <End Role="Users" EntitySet="Users" />
+            <End Role="Sessions" EntitySet="Sessions" />
+          </AssociationSet>
           <AssociationSet Name="FK_TRACKS_OWNER" Association="Self.FK_TRACKS_OWNER">
             <End Role="Users" EntitySet="Users" />
             <End Role="Tracks" EntitySet="Tracks" />
           </AssociationSet>
-          <FunctionImport Name="GetAndLockTopOnboardingItem" ReturnType="Collection(Guid)" />
-          <FunctionImport Name="ReleaseAndCompleteOnboardingItem">
-          <Parameter Name="workItem" Mode="In" Type="Guid" />
-          </FunctionImport>
-          <FunctionImport Name="ResetOnboardingStatus">
-          <Parameter Name="guid" Mode="In" Type="Guid" />
-          </FunctionImport>
-          <FunctionImport Name="SetTrackHash">
-            <Parameter Name="trackId" Mode="In" Type="Guid" />
-            <Parameter Name="hash" Mode="In" Type="String" />
-          </FunctionImport>
-          <FunctionImport Name="IncrementPlaylistTrackOrder">
-            <Parameter Name="playlist" Mode="In" Type="Guid" />
-            <Parameter Name="position" Mode="In" Type="Int32" />
-          </FunctionImport>
-          <AssociationSet Name="FK_AUTOPLAYLISTS_SORTFIELD" Association="DolomiteModel.EntityFramework.FK_AUTOPLAYLISTS_SORTFIELD">
-            <End Role="MetadataField" EntitySet="MetadataFields" />
-            <End Role="Autoplaylist" EntitySet="Autoplaylists" />
+          <AssociationSet Name="FK_USERSETTINGS_USER" Association="Self.FK_USERSETTINGS_USER">
+            <End Role="Users" EntitySet="Users" />
+            <End Role="UserSettings" EntitySet="UserSettings" />
           </AssociationSet>
           <FunctionImport Name="DecrementPlaylistTrackOrder">
-            <Parameter Name="playlist" Mode="In" Type="Guid" />
+            <Parameter Name="playlist" Mode="In" Type="Int64" />
             <Parameter Name="position" Mode="In" Type="Int32" />
           </FunctionImport>
-          <EntitySet Name="UserKeys" EntityType="DolomiteModel.EntityFramework.UserKey" />
-          <EntitySet Name="ApiKeys" EntityType="DolomiteModel.EntityFramework.ApiKey" />
-          <EntitySet Name="Sessions" EntityType="DolomiteModel.EntityFramework.Session" />
-          <AssociationSet Name="FK_SESSION_APIKEY" Association="DolomiteModel.EntityFramework.FK_SESSION_APIKEY">
-            <End Role="ApiKey" EntitySet="ApiKeys" />
-            <End Role="Session" EntitySet="Sessions" />
-          </AssociationSet>
-          <AssociationSet Name="FK_SESSION_USER" Association="DolomiteModel.EntityFramework.FK_SESSION_USER">
-            <End Role="User" EntitySet="Users" />
-            <End Role="Session" EntitySet="Sessions" />
-          </AssociationSet>
-          <FunctionImport Name="ReleaseAndCompleteMetadataUpdate">
-          <Parameter Name="workItem" Mode="In" Type="Guid" />
+          <FunctionImport Name="DeleteAutoplaylist">
+            <Parameter Name="autoplaylistGuid" Mode="In" Type="Guid" />
           </FunctionImport>
-          <FunctionImport Name="GetAndLockTopMetadataItem" ReturnType="Collection(Guid)" />
-          <FunctionImport Name="GetAndLockTopArtItem" ReturnType="Collection(Guid)" />
+          <FunctionImport Name="DeletePlaylist">
+            <Parameter Name="playlistGuid" Mode="In" Type="Guid" />
+          </FunctionImport>
+          <FunctionImport Name="DeleteTrack">
+            <Parameter Name="trackGuid" Mode="In" Type="Guid" />
+          </FunctionImport>
+          <FunctionImport Name="GetAndLockTopArtItem" ReturnType="Collection(Int64)" />
+          <FunctionImport Name="GetAndLockTopMetadataItem" ReturnType="Collection(Int64)" />
+          <FunctionImport Name="GetAndLockTopOnboardingItem" ReturnType="Collection(Int64)" />
+          <FunctionImport Name="IncrementPlaylistTrackOrder">
+            <Parameter Name="playlist" Mode="In" Type="Int64" />
+            <Parameter Name="position" Mode="In" Type="Int32" />
+          </FunctionImport>
           <FunctionImport Name="ReleaseAndCompleteArtChange">
-          <Parameter Name="workItem" Mode="In" Type="Guid" />
+            <Parameter Name="workItem" Mode="In" Type="Int64" />
           </FunctionImport>
-          <EntitySet Name="UserSettings" EntityType="DolomiteModel.EntityFramework.UserSetting" />
-          <AssociationSet Name="FK_USERSETTINGS_USER" Association="DolomiteModel.EntityFramework.FK_USERSETTINGS_USER">
-            <End Role="User" EntitySet="Users" />
-            <End Role="UserSetting" EntitySet="UserSettings" />
-          </AssociationSet>
+          <FunctionImport Name="ReleaseAndCompleteMetadataUpdate">
+            <Parameter Name="workItem" Mode="In" Type="Int64" />
+          </FunctionImport>
+          <FunctionImport Name="ReleaseAndCompleteOnboardingItem">
+            <Parameter Name="workItem" Mode="In" Type="Int64" />
+          </FunctionImport>
+          <FunctionImport Name="ResetOnboardingStatus">
+            <Parameter Name="trackId" Mode="In" Type="Int64" />
+          </FunctionImport>
+          <FunctionImport Name="SetTrackHash">
+            <Parameter Name="trackId" Mode="In" Type="Int64" />
+            <Parameter Name="hash" Mode="In" Type="String" />
+          </FunctionImport>
         </EntityContainer>
-        <Association Name="FK_AUTOPLAYLISTS_SORTFIELD">
-          <End Type="DolomiteModel.EntityFramework.MetadataField" Role="MetadataField" Multiplicity="0..1" />
-          <End Type="DolomiteModel.EntityFramework.Autoplaylist" Role="Autoplaylist" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="MetadataField">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="Autoplaylist">
-              <PropertyRef Name="SortField" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <EntityType Name="UserKey">
-          <Key>
-            <PropertyRef Name="Id" />
-          </Key>
-          <Property Name="Id" Type="Guid" Nullable="false" />
-          <Property Name="Email" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
-          <Property Name="Claimed" Type="Boolean" Nullable="false" />
-        </EntityType>
-        <EntityType Name="ApiKey">
-          <Key>
-            <PropertyRef Name="Id" />
-          </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="Key" Type="String" Nullable="false" MaxLength="64" FixedLength="true" Unicode="true" />
-          <Property Name="FriendlyName" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
-          <NavigationProperty Name="Sessions" Relationship="DolomiteModel.EntityFramework.FK_SESSION_APIKEY" FromRole="ApiKey" ToRole="Session" />
-        </EntityType>
-        <EntityType Name="Session">
-          <Key>
-            <PropertyRef Name="Id" />
-          </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="Token" Type="String" Nullable="false" MaxLength="64" FixedLength="true" Unicode="true" />
-          <Property Name="ApiKey" Type="Int32" Nullable="false" />
-          <Property Name="IdleTimeout" Type="DateTime" Nullable="false" Precision="3" />
-          <Property Name="AbsoluteTimeout" Type="DateTime" Nullable="false" Precision="3" />
-          <NavigationProperty Name="ApiKey1" Relationship="DolomiteModel.EntityFramework.FK_SESSION_APIKEY" FromRole="Session" ToRole="ApiKey" />
-          <Property Name="User" Type="Int32" Nullable="false" />
-          <NavigationProperty Name="User1" Relationship="DolomiteModel.EntityFramework.FK_SESSION_USER" FromRole="Session" ToRole="User" />
-          <Property Name="InitialIP" Type="String" Nullable="false" MaxLength="15" FixedLength="false" Unicode="true" />
-          <Property Name="InitializedTime" Type="DateTime" Nullable="false" Precision="3" annotation:StoreGeneratedPattern="Computed" />
-        </EntityType>
-        <Association Name="FK_SESSION_APIKEY">
-          <End Type="DolomiteModel.EntityFramework.ApiKey" Role="ApiKey" Multiplicity="1" />
-          <End Type="DolomiteModel.EntityFramework.Session" Role="Session" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="ApiKey">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="Session">
-              <PropertyRef Name="ApiKey" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_SESSION_USER">
-          <End Type="DolomiteModel.EntityFramework.User" Role="User" Multiplicity="1" />
-          <End Type="DolomiteModel.EntityFramework.Session" Role="Session" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="User">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="Session">
-              <PropertyRef Name="User" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <EntityType Name="UserSetting">
-          <Key>
-            <PropertyRef Name="User" />
-          </Key>
-          <Property Name="User" Type="Int32" Nullable="false" />
-          <Property Name="SettingsSerialized" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
-          <NavigationProperty Name="User1" Relationship="DolomiteModel.EntityFramework.FK_USERSETTINGS_USER" FromRole="UserSetting" ToRole="User" />
-        </EntityType>
-        <Association Name="FK_USERSETTINGS_USER">
-          <End Type="DolomiteModel.EntityFramework.User" Role="User" Multiplicity="1" />
-          <End Type="DolomiteModel.EntityFramework.UserSetting" Role="UserSetting" Multiplicity="0..1" />
-          <ReferentialConstraint>
-            <Principal Role="User">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="UserSetting">
-              <PropertyRef Name="User" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
     <edmx:Mappings>
       <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
-        <EntityContainerMapping StorageEntityContainer="DolomiteModelEntityFrameworkStoreContainer" CdmEntityContainer="DbEntities">
+        <EntityContainerMapping StorageEntityContainer="EntityFrameworkStoreContainer" CdmEntityContainer="Entities">
           <EntitySetMapping Name="Albums">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Album">
+            <EntityTypeMapping TypeName="EntityFramework.Album">
               <MappingFragment StoreEntitySet="Albums">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
@@ -1153,17 +1186,27 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
+          <EntitySetMapping Name="ApiKeys">
+            <EntityTypeMapping TypeName="EntityFramework.ApiKey">
+              <MappingFragment StoreEntitySet="ApiKeys">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="ApiKey1" ColumnName="ApiKey" />
+                <ScalarProperty Name="FriendlyName" ColumnName="FriendlyName" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
           <EntitySetMapping Name="Arts">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Art">
+            <EntityTypeMapping TypeName="EntityFramework.Art">
               <MappingFragment StoreEntitySet="Art">
                 <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="GuidId" ColumnName="GuidId" />
                 <ScalarProperty Name="Mimetype" ColumnName="Mimetype" />
                 <ScalarProperty Name="Hash" ColumnName="Hash" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Artists">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Artist">
+            <EntityTypeMapping TypeName="EntityFramework.Artist">
               <MappingFragment StoreEntitySet="Artists">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
@@ -1171,7 +1214,7 @@
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="AutoplaylistRules">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.AutoplaylistRule">
+            <EntityTypeMapping TypeName="EntityFramework.AutoplaylistRule">
               <MappingFragment StoreEntitySet="AutoplaylistRules">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Autoplaylist" ColumnName="Autoplaylist" />
@@ -1182,20 +1225,21 @@
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Autoplaylists">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Autoplaylist">
+            <EntityTypeMapping TypeName="EntityFramework.Autoplaylist">
               <MappingFragment StoreEntitySet="Autoplaylists">
-                <ScalarProperty Name="SortField" ColumnName="SortField" />
-                <ScalarProperty Name="SortDesc" ColumnName="SortDesc" />
-                <ScalarProperty Name="MatchAll" ColumnName="MatchAll" />
-                <ScalarProperty Name="Limit" ColumnName="Limit" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="GuidId" ColumnName="GuidId" />
                 <ScalarProperty Name="Owner" ColumnName="Owner" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="MatchAll" ColumnName="MatchAll" />
+                <ScalarProperty Name="Limit" ColumnName="Limit" />
+                <ScalarProperty Name="SortField" ColumnName="SortField" />
+                <ScalarProperty Name="SortDesc" ColumnName="SortDesc" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="AvailableQualities">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.AvailableQuality">
+            <EntityTypeMapping TypeName="EntityFramework.AvailableQuality">
               <MappingFragment StoreEntitySet="AvailableQualities">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Track" ColumnName="Track" />
@@ -1204,40 +1248,41 @@
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Metadatas">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Metadata">
+            <EntityTypeMapping TypeName="EntityFramework.Metadata">
               <MappingFragment StoreEntitySet="Metadata">
-                <ScalarProperty Name="WriteOut" ColumnName="WriteOut" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Track" ColumnName="Track" />
                 <ScalarProperty Name="Field" ColumnName="Field" />
                 <ScalarProperty Name="Value" ColumnName="Value" />
+                <ScalarProperty Name="WriteOut" ColumnName="WriteOut" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="MetadataFields">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.MetadataField">
+            <EntityTypeMapping TypeName="EntityFramework.MetadataField">
               <MappingFragment StoreEntitySet="MetadataFields">
-                <ScalarProperty Name="Searchable" ColumnName="Searchable" />
-                <ScalarProperty Name="TagLibArray" ColumnName="TagLibArray" />
-                <ScalarProperty Name="FileSupported" ColumnName="FileSupported" />
-                <ScalarProperty Name="Type" ColumnName="Type" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="TagName" ColumnName="TagName" />
                 <ScalarProperty Name="DisplayName" ColumnName="DisplayName" />
+                <ScalarProperty Name="Type" ColumnName="Type" />
+                <ScalarProperty Name="Searchable" ColumnName="Searchable" />
+                <ScalarProperty Name="FileSupported" ColumnName="FileSupported" />
+                <ScalarProperty Name="TagLibArray" ColumnName="TagLibArray" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Playlists">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Playlist">
+            <EntityTypeMapping TypeName="EntityFramework.Playlist">
               <MappingFragment StoreEntitySet="Playlists">
                 <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="GuidId" ColumnName="GuidId" />
                 <ScalarProperty Name="Owner" ColumnName="Owner" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="PlaylistTracks">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.PlaylistTrack">
+            <EntityTypeMapping TypeName="EntityFramework.PlaylistTrack">
               <MappingFragment StoreEntitySet="PlaylistTracks">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Playlist" ColumnName="Playlist" />
@@ -1247,7 +1292,7 @@
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Qualities">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Quality">
+            <EntityTypeMapping TypeName="EntityFramework.Quality">
               <MappingFragment StoreEntitySet="Qualities">
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
@@ -1260,21 +1305,36 @@
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Rules">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Rule">
+            <EntityTypeMapping TypeName="EntityFramework.Rule">
               <MappingFragment StoreEntitySet="Rules">
-                <ScalarProperty Name="Type" ColumnName="Type" />
-                <ScalarProperty Name="DisplayName" ColumnName="DisplayName" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="DisplayName" ColumnName="DisplayName" />
+                <ScalarProperty Name="Type" ColumnName="Type" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Sessions">
+            <EntityTypeMapping TypeName="EntityFramework.Session">
+              <MappingFragment StoreEntitySet="Sessions">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Token" ColumnName="Token" />
+                <ScalarProperty Name="User" ColumnName="User" />
+                <ScalarProperty Name="InitialIP" ColumnName="InitialIP" />
+                <ScalarProperty Name="ApiKey" ColumnName="ApiKey" />
+                <ScalarProperty Name="InitializedTime" ColumnName="InitializedTime" />
+                <ScalarProperty Name="IdleTimeout" ColumnName="IdleTimeout" />
+                <ScalarProperty Name="AbsoluteTimeout" ColumnName="AbsoluteTimeout" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Tracks">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Track">
+            <EntityTypeMapping TypeName="EntityFramework.Track">
               <MappingFragment StoreEntitySet="Tracks">
-                <ScalarProperty Name="ArtChange" ColumnName="ArtChange" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="GuidId" ColumnName="GuidId" />
                 <ScalarProperty Name="Owner" ColumnName="Owner" />
+                <ScalarProperty Name="DateAdded" ColumnName="DateAdded" />
                 <ScalarProperty Name="Hash" ColumnName="Hash" />
                 <ScalarProperty Name="Album" ColumnName="Album" />
                 <ScalarProperty Name="Art" ColumnName="Art" />
@@ -1285,70 +1345,51 @@
                 <ScalarProperty Name="HasBeenOnboarded" ColumnName="HasBeenOnboarded" />
                 <ScalarProperty Name="Locked" ColumnName="Locked" />
                 <ScalarProperty Name="TrackInTempStorage" ColumnName="TrackInTempStorage" />
+                <ScalarProperty Name="ArtChange" ColumnName="ArtChange" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="UserKeys">
+            <EntityTypeMapping TypeName="EntityFramework.UserKey">
+              <MappingFragment StoreEntitySet="UserKeys">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Email" ColumnName="Email" />
+                <ScalarProperty Name="Claimed" ColumnName="Claimed" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Users">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.User">
+            <EntityTypeMapping TypeName="EntityFramework.User">
               <MappingFragment StoreEntitySet="Users">
-                <ScalarProperty Name="Email" ColumnName="Email" />
-                <ScalarProperty Name="PasswordReset" ColumnName="PasswordReset" />
-                <ScalarProperty Name="PasswordHash" ColumnName="PasswordHash" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Username" ColumnName="Username" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <FunctionImportMapping FunctionImportName="GetAndLockTopOnboardingItem" FunctionName="DolomiteModel.EntityFramework.Store.GetAndLockTopOnboardingItem" />
-          <FunctionImportMapping FunctionImportName="ReleaseAndCompleteOnboardingItem" FunctionName="DolomiteModel.EntityFramework.Store.ReleaseAndCompleteOnboardingItem" />
-          <FunctionImportMapping FunctionImportName="ResetOnboardingStatus" FunctionName="DolomiteModel.EntityFramework.Store.ResetOnboardingStatus" />
-          <FunctionImportMapping FunctionImportName="SetTrackHash" FunctionName="DolomiteModel.EntityFramework.Store.SetTrackHash" />
-          <FunctionImportMapping FunctionImportName="IncrementPlaylistTrackOrder" FunctionName="DolomiteModel.EntityFramework.Store.IncrementPlaylistTrackOrder" />
-          <FunctionImportMapping FunctionImportName="DecrementPlaylistTrackOrder" FunctionName="DolomiteModel.EntityFramework.Store.DecrementPlaylistTrackOrder" />
-          <EntitySetMapping Name="UserKeys">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.UserKey">
-              <MappingFragment StoreEntitySet="UserKeys">
-                <ScalarProperty Name="Claimed" ColumnName="Claimed" />
+                <ScalarProperty Name="PasswordHash" ColumnName="PasswordHash" />
+                <ScalarProperty Name="PasswordReset" ColumnName="PasswordReset" />
                 <ScalarProperty Name="Email" ColumnName="Email" />
-                <ScalarProperty Name="Id" ColumnName="Id" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
-          <EntitySetMapping Name="ApiKeys">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.ApiKey">
-              <MappingFragment StoreEntitySet="ApiKeys">
-                <ScalarProperty Name="FriendlyName" ColumnName="FriendlyName" />
-                <ScalarProperty Name="Key" ColumnName="ApiKey" />
-                <ScalarProperty Name="Id" ColumnName="Id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="Sessions">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.Session">
-              <MappingFragment StoreEntitySet="Sessions">
-                <ScalarProperty Name="InitializedTime" ColumnName="InitializedTime" />
-                <ScalarProperty Name="InitialIP" ColumnName="InitialIP" />
-                <ScalarProperty Name="User" ColumnName="User" />
-                <ScalarProperty Name="AbsoluteTimeout" ColumnName="AbsoluteTimeout" />
-                <ScalarProperty Name="IdleTimeout" ColumnName="IdleTimeout" />
-                <ScalarProperty Name="ApiKey" ColumnName="ApiKey" />
-                <ScalarProperty Name="Token" ColumnName="Token" />
-                <ScalarProperty Name="Id" ColumnName="Id" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <FunctionImportMapping FunctionImportName="ReleaseAndCompleteMetadataUpdate" FunctionName="DolomiteModel.EntityFramework.Store.ReleaseAndCompleteMetadataUpdate" />
-          <FunctionImportMapping FunctionImportName="GetAndLockTopMetadataItem" FunctionName="DolomiteModel.EntityFramework.Store.GetAndLockTopMetadataItem" />
-          <FunctionImportMapping FunctionImportName="GetAndLockTopArtItem" FunctionName="DolomiteModel.EntityFramework.Store.GetAndLockTopArtItem" />
-          <FunctionImportMapping FunctionImportName="ReleaseAndCompleteArtChange" FunctionName="DolomiteModel.EntityFramework.Store.ReleaseAndCompleteArtChange" />
           <EntitySetMapping Name="UserSettings">
-            <EntityTypeMapping TypeName="DolomiteModel.EntityFramework.UserSetting">
+            <EntityTypeMapping TypeName="EntityFramework.UserSetting">
               <MappingFragment StoreEntitySet="UserSettings">
-                <ScalarProperty Name="SettingsSerialized" ColumnName="SettingsSerialized" />
                 <ScalarProperty Name="User" ColumnName="User" />
+                <ScalarProperty Name="SettingsSerialized" ColumnName="SettingsSerialized" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
+          <FunctionImportMapping FunctionImportName="DecrementPlaylistTrackOrder" FunctionName="EntityFramework.Store.DecrementPlaylistTrackOrder" />
+          <FunctionImportMapping FunctionImportName="DeleteAutoplaylist" FunctionName="EntityFramework.Store.DeleteAutoplaylist" />
+          <FunctionImportMapping FunctionImportName="DeletePlaylist" FunctionName="EntityFramework.Store.DeletePlaylist" />
+          <FunctionImportMapping FunctionImportName="DeleteTrack" FunctionName="EntityFramework.Store.DeleteTrack" />
+          <FunctionImportMapping FunctionImportName="GetAndLockTopArtItem" FunctionName="EntityFramework.Store.GetAndLockTopArtItem" />
+          <FunctionImportMapping FunctionImportName="GetAndLockTopMetadataItem" FunctionName="EntityFramework.Store.GetAndLockTopMetadataItem" />
+          <FunctionImportMapping FunctionImportName="GetAndLockTopOnboardingItem" FunctionName="EntityFramework.Store.GetAndLockTopOnboardingItem" />
+          <FunctionImportMapping FunctionImportName="IncrementPlaylistTrackOrder" FunctionName="EntityFramework.Store.IncrementPlaylistTrackOrder" />
+          <FunctionImportMapping FunctionImportName="ReleaseAndCompleteArtChange" FunctionName="EntityFramework.Store.ReleaseAndCompleteArtChange" />
+          <FunctionImportMapping FunctionImportName="ReleaseAndCompleteMetadataUpdate" FunctionName="EntityFramework.Store.ReleaseAndCompleteMetadataUpdate" />
+          <FunctionImportMapping FunctionImportName="ReleaseAndCompleteOnboardingItem" FunctionName="EntityFramework.Store.ReleaseAndCompleteOnboardingItem" />
+          <FunctionImportMapping FunctionImportName="ResetOnboardingStatus" FunctionName="EntityFramework.Store.ResetOnboardingStatus" />
+          <FunctionImportMapping FunctionImportName="SetTrackHash" FunctionName="EntityFramework.Store.SetTrackHash" />
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>
@@ -1365,7 +1406,7 @@
         <DesignerProperty Name="ValidateOnBuild" Value="true" />
         <DesignerProperty Name="EnablePluralization" Value="true" />
         <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
-        <DesignerProperty Name="UseLegacyProvider" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
         <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
       </DesignerInfoPropertySet>
     </Options>

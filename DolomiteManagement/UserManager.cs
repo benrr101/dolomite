@@ -112,7 +112,7 @@ namespace DolomiteManagement
         public void ExtendIdleTimeout(string sessionToken)
         {
             // Calculate new idle timeout
-            DateTime idleTimeout = DateTime.Now + IdleTimeoutInterval;
+            DateTime idleTimeout = DateTime.UtcNow + IdleTimeoutInterval;
             DatabaseManager.SetSessionIdleTimeout(sessionToken, idleTimeout);
         }
 
@@ -124,7 +124,7 @@ namespace DolomiteManagement
         public void InvalidateSession(string sessionToken)
         {
             // Calculate new timeouts. Set them for the past to expire the session.
-            DateTime expiredTimeout = DateTime.Now - TimeSpan.FromHours(1);
+            DateTime expiredTimeout = DateTime.UtcNow - TimeSpan.FromHours(1);
 
             // Invalidate the session in the server, swallow invalid session errors
             // since we don't want to expose the existence of a session
@@ -165,8 +165,8 @@ namespace DolomiteManagement
 
             // Everything looks good, fire up a session
             // Determine the timeout times
-            DateTime absTimeout = DateTime.Now + AbsoluteTimeoutInterval;
-            DateTime idleTimeout = DateTime.Now + IdleTimeoutInterval;
+            DateTime absTimeout = DateTime.UtcNow + AbsoluteTimeoutInterval;
+            DateTime idleTimeout = DateTime.UtcNow + IdleTimeoutInterval;
 
             // Create a unique token for the session and create the session
             string token = CreateSessionToken(username);
@@ -201,7 +201,7 @@ namespace DolomiteManagement
             // Perform validation
             // Are the timeouts in the future?
             
-            if (session.AbsoluteTimeout <= DateTime.Now || session.IdleTimeout <= DateTime.Now) 
+            if (session.AbsoluteTimeout <= DateTime.UtcNow || session.IdleTimeout <= DateTime.UtcNow) 
                 throw new InvalidSessionException("The session has expired.");
             
             // Is the API key the same?
@@ -271,7 +271,7 @@ namespace DolomiteManagement
         {
             // The algo: sha256 the username + the current timestamp + a new guid
             SHA256 hasher = new SHA256Cng();
-            byte[] toHash = Encoding.UTF8.GetBytes(username + DateTime.Now + Guid.NewGuid());
+            byte[] toHash = Encoding.UTF8.GetBytes(username + DateTime.UtcNow + Guid.NewGuid());
             byte[] hashBytes = hasher.ComputeHash(toHash);
 
             return BitConverter.ToString(hashBytes).Replace("-", String.Empty);

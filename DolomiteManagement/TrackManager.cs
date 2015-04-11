@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using DolomiteManagement.Asynchronous;
+using DolomiteManagement.Exceptions;
 using TagLib;
 using DolomiteModel;
 using DolomiteModel.PublicRepresentations;
@@ -70,32 +71,31 @@ namespace DolomiteManagement
         /// <summary>
         /// Deletes the track with the given GUID from the database and Azure storage
         /// </summary>
+        /// <
         /// <param name="trackGuid">The GUID of the track to delete.</param>
         /// <param name="owner">The owner of the session</param>
         public void DeleteTrack(Guid trackGuid, string owner)
         {
             // Does the track exist?
-            Track track = DatabaseManager.GetTrackByGuid(trackGuid);
-            if (track == null)
-                throw new FileNotFoundException(String.Format("Track with guid {0} does not exist.", trackGuid));
-
-            // Make sure the owners match
-            if (track.Owner != owner)
-                throw new UnauthorizedAccessException("The requested track is not owned by the session owner.");
+            Track track = DatabaseManager.GetTrack(trackGuid, owner);
 
             // TODO: Verify that we can't have inconsistent states for the database
 
             // Delete the track from Azure
-            foreach (Track.Quality quality in track.Qualities)
+            foreach (string path in track.Qualities.Select(quality => quality.Directory + '/' + trackGuid))
             {
-                string path = quality.Directory + '/' + trackGuid;
                 AzureStorageManager.DeleteBlob(TrackStorageContainer, path);
             }
 
             // Delete the record for the track in the database
-            DatabaseManager.DeleteTrack(trackGuid);
+            DatabaseManager.DeleteTrack(trackGuid, owner);
         }
 
+        /// <summary>
+        /// Gets total count of tracks and total play time of the tracks
+        /// </summary>
+        /// <param name="owner">The username of the owner to get the tracks of</param>
+        /// <returns>Dictionary of count of tracks and total time in seconds</returns>
         public Dictionary<string, string> GetTotalTrackInfo(string owner)
         {
             // Retrieve the list of tracks from the database
@@ -118,11 +118,7 @@ namespace DolomiteManagement
         public Track GetTrack(Guid trackGuid, string owner)
         {
             // Retrieve the track from the database
-            Track track = DatabaseManager.GetTrackByGuid(trackGuid);
-
-            // Make sure the user owns it
-            if (owner != track.Owner)
-                throw new UnauthorizedAccessException("The requested track is not owned by the session owner.");
+            Track track = DatabaseManager.GetTrack(trackGuid, owner);
 
             return track;
         }
@@ -131,16 +127,32 @@ namespace DolomiteManagement
         /// Fetches the stream representing a track with a specific quality
         /// from the database.
         /// </summary>
-        /// <param name="track">The track to fetch</param>
+        /// <exception cref="TrackNotReadyException">
+        /// When the track's ready flag hasn't been set
+        /// </exception>
+        /// <exception cref="UnsupportedFormatException">
+        /// When the track does not have the requested quality
+        /// </exception>
+        /// <param name="trackGuid">The GUID of the track to fetch</param>
         /// <param name="quality">The quality of the track to fetch</param>
+        /// <param name="owner">The username of the track's owner</param>
         /// <returns>A stream for the matching guid and quality</returns>
-        public Track.Quality GetTrackStream(Track track, string quality)
+        /// TODO: Eliminate refetching the track, or find some way to place the track stream in the track object
+        public Track.Quality GetTrackStream(Guid trackGuid, string quality, string owner)
         {
+            // Find the correct track and make sure it's ready
+            Track track = DatabaseManager.GetTrack(trackGuid, owner);
+            if (!track.Ready)
+                throw new TrackNotReadyException();
+
             // Find the correct quality
-            var qualityObj = track.Qualities.FirstOrDefault(q => q.Directory == quality);
+            Track.Quality qualityObj = track.Qualities.FirstOrDefault(q => q.Directory == quality);
             if (qualityObj == null)
-                throw new UnsupportedFormatException(
-                    String.Format("The track with guid {0} and quality {1} does not exist", track.Id, quality));
+            {
+                string message = String.Format("The track with guid {0} and quality {1} does not exist", 
+                    track.Id, quality);
+                throw new UnsupportedFormatException(message);
+            }
 
             // Fetch the file from Azure
             qualityObj.FileStream = AzureStorageManager.GetBlob(TrackStorageContainer, qualityObj.Directory + "/" + track.Id);
@@ -151,16 +163,15 @@ namespace DolomiteManagement
         /// Retrieves the stream and mimetype of the track art object
         /// </summary>
         /// <param name="artGuid">The guid of the art object</param>
-        /// <param name="mimetype">The mimetype of the art is returned via this param</param>
-        /// <returns>The stream for the art from Azure</returns>
-        public Stream GetTrackArt(Guid artGuid, out string mimetype)
+        /// <returns>An art object with the stream for the art from Azure</returns>
+        public Art GetTrackArt(Guid artGuid)
         {
             // Grab the art object from the database
-            var art = DatabaseManager.GetArtByGuid(artGuid);
-
-            mimetype = art.Mimetype;
+            var art = DatabaseManager.GetArt(artGuid);
+            
             string path = ArtDirectory + "/" + art.Id;
-            return AzureStorageManager.GetBlob(TrackStorageContainer, path);
+            art.ArtStream = AzureStorageManager.GetBlob(TrackStorageContainer, path);
+            return art;
         }
 
         /// <summary>
@@ -169,11 +180,7 @@ namespace DolomiteManagement
         /// <returns>List of track objects in the database</returns>
         public List<Track> FetchAllTracksByOwner(string username)
         {
-            // Get the tracks from the database
-            var tracks = DatabaseManager.GetAllTracksByOwner(username);
-
-            // Condense them into a list of tracks
-            return tracks.ToList();
+            return DatabaseManager.GetAllTracksByOwner(username);
         }
 
         /// <summary>
@@ -189,23 +196,19 @@ namespace DolomiteManagement
         /// <param name="hash">The hash of the stream to be calculated by this method</param>
         public void ReplaceTrack(Stream stream, Guid guid, string owner, out string hash)
         {
-            // Step 0: Fetch the track
-            Track track = DatabaseManager.GetTrackByGuid(guid);
+            // Step 0: Fetch the track (to ensure it exists and the owner is correct)
+            Track track = DatabaseManager.GetTrack(guid, owner);
 
-            // Step 0.5: Make sure the owners match
-            if (track.Owner != owner)
-                throw new UnauthorizedAccessException("The requested track is not owned by the session owner.");
-
-            // Step 0.75: Calculate hash to determine if the track is a duplicate
+            // Step 0.5: Calculate hash to determine if the track is a duplicate
             hash = LocalStorageManager.CalculateHash(stream, owner);
 
             // Step 1: Upload the track to temporary storage in azure, asynchronously
             string azurePath = OnboardingDirectory + '/' + guid;
-            UploadAsynchronousState state = new UploadAsynchronousState
+            UploadAsynchronousState state = new ReplaceAsynchronousState
             {
                 Owner = owner,
                 Stream = stream,
-                TrackGuid = guid,
+                TrackId = track.InternalId,
                 TrackHash = hash
             };
             AzureStorageManager.StoreBlobAsync(TrackStorageContainer, azurePath, stream, ReplaceTrackAsyncCallback, state);
@@ -222,11 +225,7 @@ namespace DolomiteManagement
         public void ReplaceMetadata(Guid guid, string owner, Dictionary<string, string> metadata, bool clearAll = false)
         {
             // Grab the track
-            Track track = DatabaseManager.GetTrackByGuid(guid);
-
-            // Make sure the owners match
-            if(track.Owner != owner)
-                throw new UnauthorizedAccessException("The requested track is not owned by the session owner.");
+            Track track = DatabaseManager.GetTrack(guid, owner);
 
             // Only delete the fields that need to be deleted
             IEnumerable<string> fieldsToDelete = clearAll ? track.Metadata.Keys : metadata.Keys;
@@ -236,7 +235,7 @@ namespace DolomiteManagement
             }
 
             // Store the new values
-            DatabaseManager.StoreTrackMetadata(guid, metadata, true);
+            DatabaseManager.StoreTrackMetadata(track, metadata, true);
         }
 
         /// <summary>
@@ -249,48 +248,55 @@ namespace DolomiteManagement
         /// <param name="stream">The stream representing the art file</param>
         public void ReplaceTrackArt(Guid guid, string owner, Stream stream)
         {
-            // Fetch the track and verify its owner
-            Track track = DatabaseManager.GetTrackByGuid(guid);
-            if (track.Owner != owner)
-                throw new UnauthorizedAccessException("The requested track is not owned by the session owner.");
+            // Step 0) Fetch the track and verify its owner
+            Track track = DatabaseManager.GetTrack(guid, owner);
+            long? oldArtId = track.ArtId;
 
-            // Does the track have art?
-            if (track.ArtId.HasValue && !DatabaseManager.DeleteArtByUsage(track.Id))
+            // Step 1) Determine what the new art id's should be
+            long? newArtId;
+            if (stream.Length > 0)
             {
-                // Delete the file from Azure -- it's been deleted from the db already
-                string path = ArtDirectory + "/" + track.ArtId.Value;
-                AzureStorageManager.DeleteBlob(TrackStorageContainer, path);
+                // We have art! Have we already uploaded it?
+                // TODO: This is kinda broken since it does a collision check on the track table.
+                string hash = LocalStorageManager.CalculateHash(stream, owner);
+                newArtId = DatabaseManager.GetArtIdByHash(hash);
+                if (newArtId == default(long))
+                {
+                    // Art was not found, we need to upload it!
+                    // Step 1) Determine if it is a valid mimetype
+                    string mimetype = MimetypeDetector.GetImageMimetype(stream);
+                    if(mimetype == null)
+                        throw new UnsupportedFormatException("The image format provided was either invalid or not supported.");
+
+                    // Step 2) Pick a guid for the art
+                    Guid newArtGuid = Guid.NewGuid();
+
+                    // Step 3) Decide where the art is going to live and upload it
+                    string artPath = String.Format("{0}/{1}", ArtDirectory, newArtGuid);
+                    AzureStorageManager.StoreBlob(TrackStorageContainer, artPath, stream);
+                    newArtId = DatabaseManager.CreateArtRecord(newArtGuid, mimetype, hash);
+                }
+            }
+            else
+            {
+                // We don't have art! Set everything to null.
+                newArtId = null;
             }
 
-            // Was there even an art file attached?
-            if (stream.Length == 0)
+            // Step 2) Reset the track's art
+            DatabaseManager.SetTrackArt(track.InternalId, newArtId, true);
+
+            // Step 3) Did we have an old art file that we may need to blow away?
+            if (oldArtId.HasValue && !DatabaseManager.IsArtInUse(oldArtId.Value))
             {
-                DatabaseManager.SetTrackArt(guid, null, true);
-                return;
+                // Get the art so we can have it's guid
+                Art oldArt = DatabaseManager.GetArt(oldArtId.Value);
+                string oldArtPath = String.Format("{0}/{1}", ArtDirectory, oldArt.Id);
+                AzureStorageManager.DeleteBlob(TrackStorageContainer, oldArtPath);
+
+                // Delete the art from the database
+                DatabaseManager.DeleteArt(oldArtId.Value);
             }
-
-            // Determine the type of the file
-            string mimetype = MimetypeDetector.GetImageMimetype(stream);
-            if(mimetype == null)
-                throw new UnsupportedFormatException("The image format provided was either invalid or not supported.");
-
-            // Calculate the hash
-            string hash = LocalStorageManager.CalculateHash(stream, null);
-            var artGuid = DatabaseManager.GetArtIdByHash(hash);
-            if (artGuid == Guid.Empty)
-            {
-                // Create a new guid for the art (not sure if the track's guid
-                // would suffice or cause conflicts)
-                artGuid = Guid.NewGuid();
-
-                // We need to store the art and create a new db record for it
-                string artPath = ArtDirectory + "/" + artGuid;
-                AzureStorageManager.StoreBlob(TrackStorageContainer, artPath, stream);
-                DatabaseManager.CreateArtRecord(artGuid, mimetype, hash);
-            }
-
-            // Store the art record to the track
-            DatabaseManager.SetTrackArt(guid, artGuid, true);
         }
 
         /// <summary>
@@ -311,18 +317,17 @@ namespace DolomiteManagement
         /// </summary>
         /// <param name="stream">Stream of the uploaded track</param>
         /// <param name="owner">The username of the owner of the track</param>
-        /// <param name="guid">Output variable for the guid of the track</param>
+        /// <param name="guid">The guid of the track as provided by the user</param>
         /// <param name="hash">Output variable for the hash of the track</param>
         /// <returns>The guid for identifying the track</returns>
-        public void UploadTrack(Stream stream, string owner, out Guid guid, out string hash)
+        public void UploadTrack(Stream stream, string owner, Guid guid, out string hash)
         {
             // Step 0: Calculate hash to determine if the track is a duplicate
             hash = LocalStorageManager.CalculateHash(stream, owner);
 
             // Step 1: Upload the track to temporary storage in azure, asynchronously
-            guid = Guid.NewGuid();
             string azurePath = OnboardingDirectory + '/' + guid;
-            UploadAsynchronousState state = new UploadAsynchronousState
+            UploadAsynchronousState state = new NewTrackAsynchronousState
             {
                 Owner = owner,
                 Stream = stream,
@@ -340,7 +345,7 @@ namespace DolomiteManagement
         private void UploadTrackAsyncCallback(IAsyncResult state)
         {
             // Verify the async state object
-            UploadAsynchronousState asyncState = state.AsyncState as UploadAsynchronousState;
+            NewTrackAsynchronousState asyncState = state.AsyncState as NewTrackAsynchronousState;
             if (asyncState == null)
             {
                 // Something really went wrong.
@@ -363,7 +368,7 @@ namespace DolomiteManagement
         private void ReplaceTrackAsyncCallback(IAsyncResult state)
         {
             // Verify the async state object
-            UploadAsynchronousState asyncState = state.AsyncState as UploadAsynchronousState;
+            ReplaceAsynchronousState asyncState = state.AsyncState as ReplaceAsynchronousState;
             if (asyncState == null)
             {
                 // Something really went wrong.
@@ -374,7 +379,7 @@ namespace DolomiteManagement
             asyncState.Stream.Close();
 
             // Delete existing blobs for the track in azure
-            Track track = DatabaseManager.GetTrackByGuid(asyncState.TrackGuid);
+            Track track = DatabaseManager.GetTrack(asyncState.TrackId);
             foreach (Track.Quality quality in track.Qualities)
             {
                 string path = quality.Directory + '/' + track.Id;
@@ -382,15 +387,18 @@ namespace DolomiteManagement
             }
 
             // Delete the album art if it is no longer in use
-            if (track.ArtId.HasValue && !DatabaseManager.DeleteArtByUsage(track.Id))
+            if (track.ArtId.HasValue && !DatabaseManager.IsArtInUse(track.ArtId.Value))
             {
-                // Delete the file from Azure -- it's been deleted from the db already
+                // Delete the art from the database
+                DatabaseManager.DeleteArt(track.ArtId.Value);
+
+                // Delete the file from Azure
                 string path = ArtDirectory + "/" + track.ArtId.Value;
                 AzureStorageManager.DeleteBlob(TrackStorageContainer, path);
             }
 
             // Mark the track a needing re-onboarding
-            DatabaseManager.MarkTrackAsNotOnboarderd(track.Id, asyncState.TrackHash);
+            DatabaseManager.MarkTrackAsNotOnboarderd(track.Id, asyncState.TrackHash, asyncState.Owner);
         }
 
         #endregion

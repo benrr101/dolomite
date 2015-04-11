@@ -115,6 +115,7 @@ namespace DolomiteManagement
         /// <param name="stream">The stream to calculate the hash of</param>
         /// <param name="owner">The owner of the track</param>
         /// <returns>The hash of the file</returns>
+        /// TODO: Don't check for track stuff in here! Or, create a separate method for calculating art hashes and determining if they are different
         public string CalculateHash(Stream stream, string owner)
         {
             stream.Position = 0;

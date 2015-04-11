@@ -54,5 +54,10 @@ namespace DolomiteModel.PublicRepresentations
         /// The type of the playlist
         /// </summary>
         public PlaylistType Type { get; set; }
+
+        /// <summary>
+        /// The internal ID for the playlist -- the database primary key
+        /// </summary>
+        internal long InternalId { get; set; }
     }
 }
