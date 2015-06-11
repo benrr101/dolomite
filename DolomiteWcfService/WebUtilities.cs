@@ -26,6 +26,14 @@ namespace DolomiteWcfService
         private const string WebContextNullMessage =
             "The current web operation context is null. Are you sure you're running this as a web service?";
 
+        /// <summary>
+        /// Global settings for JSON.net encoding.
+        /// </summary>
+        private static readonly JsonSerializerSettings JsonSerializeSettings = new JsonSerializerSettings
+        {
+            StringEscapeHandling = StringEscapeHandling.EscapeHtml  // HTML encode to avoid XSS
+        };
+
         #region Header Management
 
         /// <summary>
@@ -183,12 +191,7 @@ namespace DolomiteWcfService
 
         #endregion
 
-        public static Message GenerateUnauthorizedResponse()
-        {
-            const string message = "Invalid session information provided";
-            SetHeader(HttpResponseHeader.WwwAuthenticate, "DOLOMITE href=\"/users/login\"");
-            return GenerateResponse(new ErrorResponse(message), HttpStatusCode.Unauthorized);
-        }
+        #region Response Generators
 
         /// <summary>
         /// Generates a Message object suitable for returning after a request to the server.
@@ -208,13 +211,38 @@ namespace DolomiteWcfService
                 throw new CommunicationException(WebContextNullMessage);
 
             // Serialize the response
-            string responseJson = JsonConvert.SerializeObject(response);
+            string responseJson = JsonEncodeHtmlEncode(response);
 
             // Set the status code and let the response fly
             WebOperationContext.Current.OutgoingResponse.StatusCode = statusCode;
             return WebOperationContext.Current.CreateTextResponse(responseJson, "application/json", Encoding.UTF8);
         }
 
+        public static Message GenerateUnauthorizedResponse()
+        {
+            const string message = "Invalid session information provided<script>alert('hello bitches')</script>";
+            SetHeader(HttpResponseHeader.WwwAuthenticate, "DOLOMITE href=\"/users/login\"");
+            return GenerateResponse(new ErrorResponse(message), HttpStatusCode.Unauthorized);
+        }
+
+        #endregion
+
+        #region Helpers
+
+        /// <summary>
+        /// Helper to convert the object to JSON and htmlencode it
+        /// </summary>
+        /// <param name="obj">The object to convert to JSON</param>
+        /// <returns>JSON encoded, htmlencoded version of the object</returns>
+        public static string JsonEncodeHtmlEncode(object obj)
+        {
+            return JsonConvert.SerializeObject(obj, JsonSerializeSettings);
+        }
+
+        /// <summary>
+        /// Sets the status code for the outgoing message
+        /// </summary>
+        /// <param name="code">The status code to set for the response</param>
         public static void SetStatusCode(HttpStatusCode code)
         {
             // Make sure there is a current operation context to use
@@ -244,5 +272,7 @@ namespace DolomiteWcfService
                 }
             }
         }
+
+        #endregion
     }
 }
