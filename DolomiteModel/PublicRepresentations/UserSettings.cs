@@ -32,15 +32,6 @@ namespace DolomiteModel.PublicRepresentations
         #endregion
 
         /// <summary>
-        /// Converts the string to a properly formatted JSON string
-        /// </summary>
-        /// <returns>String serialization of the settings object</returns>
-        public override string ToString()
-        {
-            return JsonConvert.SerializeObject(this);
-        }
-
-        /// <summary>
         /// Creates a user settings object from a JSON serialization of them
         /// </summary>
         /// <param name="serializedSettings">The JSON serialized settings</param>

@@ -220,7 +220,7 @@ namespace DolomiteWcfService
 
         public static Message GenerateUnauthorizedResponse()
         {
-            const string message = "Invalid session information provided<script>alert('hello bitches')</script>";
+            const string message = "Invalid session information provided";
             SetHeader(HttpResponseHeader.WwwAuthenticate, "DOLOMITE href=\"/users/login\"");
             return GenerateResponse(new ErrorResponse(message), HttpStatusCode.Unauthorized);
         }
