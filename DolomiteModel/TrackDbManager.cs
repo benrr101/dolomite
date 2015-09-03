@@ -471,6 +471,21 @@ namespace DolomiteModel
         }
 
         /// <summary>
+        /// Determines if a track exists based on the GUID and the owner's username
+        /// </summary>
+        /// <param name="trackGuid">The GUID of the track to lookup</param>
+        /// <param name="owner">The username of the owner</param>
+        /// <returns>True if the track exists, false otherwise</returns>
+        public bool TrackExists(Guid trackGuid, string owner)
+        {
+            using (var context = new Entities())
+            {
+                // Search for the track
+                return context.Tracks.Any(t => t.GuidId == trackGuid && t.User.Username == owner);
+            }
+        }
+
+        /// <summary>
         /// Searches the track database using the search criteria for matching
         /// tracks. Using "all" allows searching all fields that have searching
         /// enabled. Searches using LIKE %value%.
