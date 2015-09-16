@@ -9,14 +9,9 @@ namespace DolomiteWcfService.Responses
         [DataMember]
         public string Guid { get; set; }
 
-        [DataMember]
-        public string Hash { get; set; }
-
-        public UploadSuccessResponse(Guid guid, string hash)
-            : base(StatusValue.Success)
+        public UploadSuccessResponse(Guid guid) : base(StatusValue.Success)
         {
             Guid = guid.ToString();
-            Hash = hash;
         }
     }
 }
