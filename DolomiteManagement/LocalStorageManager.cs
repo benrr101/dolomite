@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Data;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 using DolomiteModel;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
@@ -55,6 +57,7 @@ namespace DolomiteManagement
         /// <param name="stream">The stream to store</param>
         /// <param name="filename">The name of the file</param>
         /// <param name="owner">The owner of the file</param>
+        [Obsolete]
         public string StoreStream(Stream stream, string filename, string owner)
         {
             // Copy the stream to the file
@@ -65,6 +68,22 @@ namespace DolomiteManagement
 
             // Calculate the hash of the file
             return CalculateHash(stream, owner);
+        }
+
+        /// <summary>
+        /// Stores the contents of the stream to the file with the given filename.
+        /// </summary>
+        /// <param name="stream">The stream to store</param>
+        /// <param name="filename">
+        /// The filename to store the file to (usually the GUID of the track)
+        /// </param>
+        public async Task StoreStreamAsync(Stream stream, string filename)
+        {
+            // Copy the stream to the local temporary storage
+            using (FileStream newFile = File.Create(GetPath(filename)))
+            {
+                await stream.CopyToAsync(newFile);
+            }
         }
 
         #endregion
@@ -116,6 +135,7 @@ namespace DolomiteManagement
         /// <param name="owner">The owner of the track</param>
         /// <returns>The hash of the file</returns>
         /// TODO: Don't check for track stuff in here! Or, create a separate method for calculating art hashes and determining if they are different
+        [Obsolete("Use CalculateMd5Hash, check existing hash in your own logic")]
         public string CalculateHash(Stream stream, string owner)
         {
             stream.Position = 0;
@@ -136,6 +156,22 @@ namespace DolomiteManagement
             }
 
             return hashString;
+        }
+        
+        /// <summary>
+        /// Calculates an MD5 hash of the file specified by <paramref name="filename"/>
+        /// </summary>
+        /// <param name="filename">The file to hash</param>
+        /// <returns>The MD5 hash of the file</returns>
+        [Pure]
+        public string CalculateMd5Hash(string filename)
+        {
+            using (FileStream file = File.OpenRead(GetPath(filename)))
+            {
+                MD5 hasher = MD5.Create();
+                byte[] hashBytes = hasher.ComputeHash(file);
+                return BitConverter.ToString(hashBytes).Replace("-", String.Empty);
+            }
         }
 
         #endregion
