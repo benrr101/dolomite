@@ -6,8 +6,9 @@ AS
 	BEGIN TRANSACTION
 		
 	-- Remove the onboarded flag, and lock it at the same time
+	-- Status = 1 sets the track to Initial
 	UPDATE Tracks
-		SET HasBeenOnboarded = ((0)), Locked = ((1))
+		SET [Status] = 1, Locked = ((1))
 		WHERE Id = @trackId;
 
 	-- Remove all quality records

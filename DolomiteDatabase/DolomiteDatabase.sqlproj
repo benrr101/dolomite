@@ -130,6 +130,8 @@
     <Build Include="StoredProcedures\DeleteTrack.sql" />
     <Build Include="StoredProcedures\DeleteAutoplaylist.sql" />
     <Build Include="StoredProcedures\DeletePlaylist.sql" />
+    <Build Include="Tables\Statuses.sql" />
+    <Build Include="Foreign Keys\FK_TRACKS_STATUS.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Script.PostDeployment1.sql" />
@@ -141,5 +143,6 @@
     <None Include="DolomiteDatabaseRecreate.publish.xml" />
     <None Include="Metadata\Qualities.sql" />
     <None Include="Metadata\Rules.sql" />
+    <None Include="Metadata\Statuses.sql" />
   </ItemGroup>
 </Project>

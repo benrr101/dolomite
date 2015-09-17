@@ -13,3 +13,7 @@ GO
 PRINT N'Inserting Qualities...';
 GO
 :r ..\Metadata\Qualities.sql
+
+PRINT N'Inserting Statuses...';
+GO
+:r ..\Metadata\Statuses.sql
