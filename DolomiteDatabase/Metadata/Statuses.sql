@@ -5,7 +5,9 @@ USING ( VALUES
 	(2, 'Onboarding'),
 	(3, 'Ready'),
 	(4, 'MetadataUpdate'),
-	(5, 'Error')
+	(5, 'Error'),
+	(6, 'PendingOnboarding'),
+	(7, 'PendingMetaUpdate')
 ) AS [source] ([Id], [Status])
 ON [source].[Id] = [target].[Id]
 WHEN MATCHED THEN

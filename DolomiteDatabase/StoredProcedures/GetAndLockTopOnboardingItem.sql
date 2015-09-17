@@ -6,7 +6,7 @@ AS
 	SELECT @workItem = (SELECT TOP 1 Id 
 						FROM Tracks
 						WHERE
-							[Status] = 1		-- Initial status
+							[Status] = 6		-- Initial status
 							AND Locked = 0);
 	
 	-- Lock it up
