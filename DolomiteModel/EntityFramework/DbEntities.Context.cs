@@ -45,6 +45,7 @@ namespace DolomiteModel.EntityFramework
         public virtual DbSet<UserKey> UserKeys { get; set; }
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<UserSetting> UserSettings { get; set; }
+        public virtual DbSet<Status> Statuses { get; set; }
     
         public virtual int DecrementPlaylistTrackOrder(Nullable<long> playlist, Nullable<int> position)
         {

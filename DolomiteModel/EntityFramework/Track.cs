@@ -32,10 +32,10 @@ namespace DolomiteModel.EntityFramework
         public Nullable<int> OriginalSampling { get; set; }
         public string OriginalMimetype { get; set; }
         public string OriginalExtension { get; set; }
-        public bool HasBeenOnboarded { get; set; }
         public bool Locked { get; set; }
-        public bool TrackInTempStorage { get; set; }
         public bool ArtChange { get; set; }
+        public int Status { get; set; }
+        public System.DateTime DateLastModified { get; set; }
     
         public virtual Album Album1 { get; set; }
         public virtual Art Art1 { get; set; }
@@ -43,5 +43,6 @@ namespace DolomiteModel.EntityFramework
         public virtual ICollection<Metadata> Metadatas { get; set; }
         public virtual ICollection<PlaylistTrack> PlaylistTracks { get; set; }
         public virtual User User { get; set; }
+        public virtual Status Status1 { get; set; }
     }
 }

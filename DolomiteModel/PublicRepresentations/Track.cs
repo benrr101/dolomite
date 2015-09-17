@@ -160,10 +160,11 @@ namespace DolomiteModel.PublicRepresentations
         internal Track(EF.Track track, EF.Entities context, bool fullFetch = true)
         {
             // Store the minimum information
+            // TODO: Don't use magic numbers
             FullObject = fullFetch;
             InternalId = track.Id;
             Id = track.GuidId;
-            Ready = track.HasBeenOnboarded;
+            Ready = track.Status == 3;
             ArtChange = track.ArtChange;
             Owner = track.User.Username;
 

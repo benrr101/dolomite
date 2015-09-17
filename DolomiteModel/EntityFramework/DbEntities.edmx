@@ -4,7 +4,7 @@
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-      <Schema Namespace="EntityFramework.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+    <Schema Namespace="EntityFramework.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012.Azure" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="Albums">
           <Key>
             <PropertyRef Name="Id" />
@@ -143,6 +143,13 @@
           <Property Name="IdleTimeout" Type="datetime" Nullable="false" />
           <Property Name="AbsoluteTimeout" Type="datetime" Nullable="false" />
         </EntityType>
+        <EntityType Name="Statuses">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" Nullable="false" />
+          <Property Name="Status" Type="varchar" MaxLength="100" Nullable="false" />
+        </EntityType>
         <EntityType Name="Tracks">
           <Key>
             <PropertyRef Name="Id" />
@@ -150,7 +157,9 @@
           <Property Name="Id" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="GuidId" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Owner" Type="int" Nullable="false" />
+          <Property Name="Status" Type="int" Nullable="false" />
           <Property Name="DateAdded" Type="datetime" Nullable="false" />
+          <Property Name="DateLastModified" Type="datetime" Nullable="false" />
           <Property Name="Hash" Type="nchar" MaxLength="40" />
           <Property Name="Album" Type="int" />
           <Property Name="Art" Type="bigint" />
@@ -158,9 +167,7 @@
           <Property Name="OriginalSampling" Type="int" />
           <Property Name="OriginalMimetype" Type="nvarchar" MaxLength="30" />
           <Property Name="OriginalExtension" Type="nvarchar" MaxLength="10" />
-          <Property Name="HasBeenOnboarded" Type="bit" Nullable="false" />
           <Property Name="Locked" Type="bit" Nullable="false" />
-          <Property Name="TrackInTempStorage" Type="bit" Nullable="false" />
           <Property Name="ArtChange" Type="bit" Nullable="false" />
         </EntityType>
         <EntityType Name="UserKeys">
@@ -420,6 +427,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_TRACKS_STATUS">
+          <End Role="Statuses" Type="Self.Statuses" Multiplicity="1" />
+          <End Role="Tracks" Type="Self.Tracks" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Statuses">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Tracks">
+              <PropertyRef Name="Status" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_USERSETTINGS_USER">
           <End Role="Users" Type="Self.Users" Multiplicity="1">
             <OnDelete Action="Cascade" />
@@ -485,6 +504,7 @@
           <EntitySet Name="Qualities" EntityType="Self.Qualities" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Rules" EntityType="Self.Rules" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Sessions" EntityType="Self.Sessions" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Statuses" EntityType="Self.Statuses" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Tracks" EntityType="Self.Tracks" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="UserKeys" EntityType="Self.UserKeys" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Users" EntityType="Self.Users" Schema="dbo" store:Type="Tables" />
@@ -561,13 +581,16 @@
             <End Role="Users" EntitySet="Users" />
             <End Role="Tracks" EntitySet="Tracks" />
           </AssociationSet>
+          <AssociationSet Name="FK_TRACKS_STATUS" Association="Self.FK_TRACKS_STATUS">
+            <End Role="Statuses" EntitySet="Statuses" />
+            <End Role="Tracks" EntitySet="Tracks" />
+          </AssociationSet>
           <AssociationSet Name="FK_USERSETTINGS_USER" Association="Self.FK_USERSETTINGS_USER">
             <End Role="Users" EntitySet="Users" />
             <End Role="UserSettings" EntitySet="UserSettings" />
           </AssociationSet>
         </EntityContainer>
-      </Schema>
-    </edmx:StorageModels>
+      </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
       <Schema Namespace="EntityFramework" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
@@ -750,9 +773,7 @@
           <Property Name="OriginalSampling" Type="Int32" />
           <Property Name="OriginalMimetype" Type="String" MaxLength="30" FixedLength="false" Unicode="true" />
           <Property Name="OriginalExtension" Type="String" MaxLength="10" FixedLength="false" Unicode="true" />
-          <Property Name="HasBeenOnboarded" Type="Boolean" Nullable="false" />
           <Property Name="Locked" Type="Boolean" Nullable="false" />
-          <Property Name="TrackInTempStorage" Type="Boolean" Nullable="false" />
           <Property Name="ArtChange" Type="Boolean" Nullable="false" />
           <NavigationProperty Name="Album1" Relationship="Self.Album1" FromRole="Tracks" ToRole="Albums" />
           <NavigationProperty Name="Art1" Relationship="Self.FK_TRACKS_ART" FromRole="Tracks" ToRole="Art" />
@@ -760,6 +781,9 @@
           <NavigationProperty Name="Metadatas" Relationship="Self.FK_METADATA_TRACK" FromRole="Tracks" ToRole="Metadata" />
           <NavigationProperty Name="PlaylistTracks" Relationship="Self.FK_PLAYLISTTRACKS_TRACKS" FromRole="Tracks" ToRole="PlaylistTracks" />
           <NavigationProperty Name="User" Relationship="Self.FK_TRACKS_OWNER" FromRole="Tracks" ToRole="Users" />
+          <Property Name="Status" Type="Int32" Nullable="false" />
+          <Property Name="DateLastModified" Type="DateTime" Nullable="false" Precision="3" />
+          <NavigationProperty Name="Status1" Relationship="EntityFramework.FK_TRACKS_STATUS" FromRole="Track" ToRole="Status" />
         </EntityType>
         <EntityType Name="UserKey">
           <Key>
@@ -1138,13 +1162,13 @@
             <Parameter Name="position" Mode="In" Type="Int32" />
           </FunctionImport>
           <FunctionImport Name="DeleteAutoplaylist">
-            <Parameter Name="autoplaylistGuid" Mode="In" Type="Guid" />
+          <Parameter Name="autoplaylistGuid" Mode="In" Type="Guid" />
           </FunctionImport>
           <FunctionImport Name="DeletePlaylist">
-            <Parameter Name="playlistGuid" Mode="In" Type="Guid" />
+          <Parameter Name="playlistGuid" Mode="In" Type="Guid" />
           </FunctionImport>
           <FunctionImport Name="DeleteTrack">
-            <Parameter Name="trackGuid" Mode="In" Type="Guid" />
+          <Parameter Name="trackGuid" Mode="In" Type="Guid" />
           </FunctionImport>
           <FunctionImport Name="GetAndLockTopArtItem" ReturnType="Collection(Int64)" />
           <FunctionImport Name="GetAndLockTopMetadataItem" ReturnType="Collection(Int64)" />
@@ -1154,22 +1178,47 @@
             <Parameter Name="position" Mode="In" Type="Int32" />
           </FunctionImport>
           <FunctionImport Name="ReleaseAndCompleteArtChange">
-            <Parameter Name="workItem" Mode="In" Type="Int64" />
+          <Parameter Name="workItem" Mode="In" Type="Int64" />
           </FunctionImport>
           <FunctionImport Name="ReleaseAndCompleteMetadataUpdate">
-            <Parameter Name="workItem" Mode="In" Type="Int64" />
+          <Parameter Name="workItem" Mode="In" Type="Int64" />
           </FunctionImport>
           <FunctionImport Name="ReleaseAndCompleteOnboardingItem">
-            <Parameter Name="workItem" Mode="In" Type="Int64" />
+          <Parameter Name="workItem" Mode="In" Type="Int64" />
           </FunctionImport>
           <FunctionImport Name="ResetOnboardingStatus">
-            <Parameter Name="trackId" Mode="In" Type="Int64" />
+          <Parameter Name="trackId" Mode="In" Type="Int64" />
           </FunctionImport>
           <FunctionImport Name="SetTrackHash">
             <Parameter Name="trackId" Mode="In" Type="Int64" />
             <Parameter Name="hash" Mode="In" Type="String" />
           </FunctionImport>
+          <EntitySet Name="Statuses" EntityType="EntityFramework.Status" />
+          <AssociationSet Name="FK_TRACKS_STATUS" Association="EntityFramework.FK_TRACKS_STATUS">
+            <End Role="Status" EntitySet="Statuses" />
+            <End Role="Track" EntitySet="Tracks" />
+          </AssociationSet>
         </EntityContainer>
+        <EntityType Name="Status">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" />
+          <Property Name="Status1" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="false" />
+          <NavigationProperty Name="Tracks" Relationship="EntityFramework.FK_TRACKS_STATUS" FromRole="Status" ToRole="Track" />
+        </EntityType>
+        <Association Name="FK_TRACKS_STATUS">
+          <End Type="EntityFramework.Status" Role="Status" Multiplicity="1" />
+          <End Type="EntityFramework.Track" Role="Track" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Status">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Track">
+              <PropertyRef Name="Status" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -1331,6 +1380,8 @@
           <EntitySetMapping Name="Tracks">
             <EntityTypeMapping TypeName="EntityFramework.Track">
               <MappingFragment StoreEntitySet="Tracks">
+                <ScalarProperty Name="DateLastModified" ColumnName="DateLastModified" />
+                <ScalarProperty Name="Status" ColumnName="Status" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="GuidId" ColumnName="GuidId" />
                 <ScalarProperty Name="Owner" ColumnName="Owner" />
@@ -1342,9 +1393,7 @@
                 <ScalarProperty Name="OriginalSampling" ColumnName="OriginalSampling" />
                 <ScalarProperty Name="OriginalMimetype" ColumnName="OriginalMimetype" />
                 <ScalarProperty Name="OriginalExtension" ColumnName="OriginalExtension" />
-                <ScalarProperty Name="HasBeenOnboarded" ColumnName="HasBeenOnboarded" />
                 <ScalarProperty Name="Locked" ColumnName="Locked" />
-                <ScalarProperty Name="TrackInTempStorage" ColumnName="TrackInTempStorage" />
                 <ScalarProperty Name="ArtChange" ColumnName="ArtChange" />
               </MappingFragment>
             </EntityTypeMapping>
@@ -1390,6 +1439,14 @@
           <FunctionImportMapping FunctionImportName="ReleaseAndCompleteOnboardingItem" FunctionName="EntityFramework.Store.ReleaseAndCompleteOnboardingItem" />
           <FunctionImportMapping FunctionImportName="ResetOnboardingStatus" FunctionName="EntityFramework.Store.ResetOnboardingStatus" />
           <FunctionImportMapping FunctionImportName="SetTrackHash" FunctionName="EntityFramework.Store.SetTrackHash" />
+          <EntitySetMapping Name="Statuses">
+            <EntityTypeMapping TypeName="EntityFramework.Status">
+              <MappingFragment StoreEntitySet="Statuses">
+                <ScalarProperty Name="Status1" ColumnName="Status" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

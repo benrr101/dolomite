@@ -42,6 +42,8 @@
         <AssociationConnector Association="EntityFramework.FK_SESSION_USER" ManuallyRouted="false" />
         <AssociationConnector Association="EntityFramework.FK_TRACKS_OWNER" ManuallyRouted="false" />
         <AssociationConnector Association="EntityFramework.FK_USERSETTINGS_USER" ManuallyRouted="false" />
+        <EntityTypeShape EntityType="EntityFramework.Status" Width="1.5" PointX="9.25" PointY="6" />
+        <AssociationConnector Association="EntityFramework.FK_TRACKS_STATUS" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

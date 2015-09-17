@@ -103,16 +103,17 @@ namespace DolomiteModel
         {
             using (var context = new Entities())
             {
+                // TODO: Don't use magic numbers
                 // Create the new track record
                 var track = new Track
                 {
                     DateAdded = DateTime.UtcNow,
+                    DateLastModified = DateTime.UtcNow,
                     GuidId = guid,
                     Hash = hash,
-                    TrackInTempStorage = true,
-                    HasBeenOnboarded = false,
                     Locked = false,
-                    Owner = context.Users.First(u => u.Username == owner).Id
+                    Owner = context.Users.First(u => u.Username == owner).Id,
+                    Status = 1      // The "Initial" status
                 };
                 context.Tracks.Add(track);
                 context.SaveChanges();
@@ -176,8 +177,9 @@ namespace DolomiteModel
                 // This is because the .ToDictionary method isn't supported in LINQ-to-EF
                 // </remarks>
                 // TODO: Find a better way to do this using anonymous object types
+                // TODO: Don't use magic numbers
                 var ormTracks = context.Tracks.AsNoTracking()
-                    .Where(t => t.HasBeenOnboarded && t.User.Username == owner).ToList();
+                    .Where(t => t.Status == 3 && t.User.Username == owner).ToList();
 
                 // Parse them into the model version of the track
                 return ormTracks.Select(t => new Pub.Track()

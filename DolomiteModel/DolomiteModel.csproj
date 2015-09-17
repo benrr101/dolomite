@@ -111,6 +111,9 @@
     <Compile Include="EntityFramework\Session.cs">
       <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
+    <Compile Include="EntityFramework\Status.cs">
+      <DependentUpon>DbEntities.tt</DependentUpon>
+    </Compile>
     <Compile Include="EntityFramework\Track.cs">
       <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
