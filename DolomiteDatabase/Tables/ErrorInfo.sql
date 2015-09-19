@@ -1,0 +1,6 @@
+﻿CREATE TABLE [dbo].[ErrorInfo]
+(
+	[Id]			BIGINT NOT NULL PRIMARY KEY IDENTITY(1,1),
+	[UserError]		NVARCHAR(140) NOT NULL,
+	[AdminError]	NVARCHAR(140) NOT NULL
+)

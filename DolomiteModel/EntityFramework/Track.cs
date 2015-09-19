@@ -36,6 +36,7 @@ namespace DolomiteModel.EntityFramework
         public bool ArtChange { get; set; }
         public int Status { get; set; }
         public System.DateTime DateLastModified { get; set; }
+        public Nullable<long> ErrorInfo { get; set; }
     
         public virtual Album Album1 { get; set; }
         public virtual Art Art1 { get; set; }
@@ -44,5 +45,6 @@ namespace DolomiteModel.EntityFramework
         public virtual ICollection<PlaylistTrack> PlaylistTracks { get; set; }
         public virtual User User { get; set; }
         public virtual Status Status1 { get; set; }
+        public virtual ErrorInfo ErrorInfo1 { get; set; }
     }
 }

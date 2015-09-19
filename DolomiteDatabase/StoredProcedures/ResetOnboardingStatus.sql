@@ -7,8 +7,9 @@ AS
 		
 	-- Remove the onboarded flag, and lock it at the same time
 	-- Status = 1 sets the track to Initial
+	-- Track will be ready for onboarding once this is executed
 	UPDATE Tracks
-		SET [Status] = 1, Locked = ((1))
+		SET [Status] = 6, Locked = ((1))
 		WHERE Id = @trackId;
 
 	-- Remove all quality records

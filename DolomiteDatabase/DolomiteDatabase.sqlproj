@@ -132,6 +132,9 @@
     <Build Include="StoredProcedures\DeletePlaylist.sql" />
     <Build Include="Tables\Statuses.sql" />
     <Build Include="Foreign Keys\FK_TRACKS_STATUS.sql" />
+    <Build Include="StoredProcedures\MarkTrackAsError.sql" />
+    <Build Include="Tables\ErrorInfo.sql" />
+    <Build Include="Foreign Keys\FK_TRACKS_ERRORINFO.sql" />
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Scripts\Script.PostDeployment1.sql" />

@@ -69,6 +69,14 @@
           <Property Name="Track" Type="bigint" Nullable="false" />
           <Property Name="Quality" Type="int" Nullable="false" />
         </EntityType>
+        <EntityType Name="ErrorInfo">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="UserError" Type="nvarchar" MaxLength="140" Nullable="false" />
+          <Property Name="AdminError" Type="nvarchar" MaxLength="140" Nullable="false" />
+        </EntityType>
         <EntityType Name="Metadata">
           <Key>
             <PropertyRef Name="Id" />
@@ -158,6 +166,7 @@
           <Property Name="GuidId" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Owner" Type="int" Nullable="false" />
           <Property Name="Status" Type="int" Nullable="false" />
+          <Property Name="ErrorInfo" Type="bigint" />
           <Property Name="DateAdded" Type="datetime" Nullable="false" />
           <Property Name="DateLastModified" Type="datetime" Nullable="false" />
           <Property Name="Hash" Type="nchar" MaxLength="40" />
@@ -413,6 +422,18 @@
             </Dependent>
           </ReferentialConstraint>
         </Association>
+        <Association Name="FK_TRACKS_ERRORINFO">
+          <End Role="ErrorInfo" Type="Self.ErrorInfo" Multiplicity="0..1" />
+          <End Role="Tracks" Type="Self.Tracks" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ErrorInfo">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Tracks">
+              <PropertyRef Name="ErrorInfo" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
         <Association Name="FK_TRACKS_OWNER">
           <End Role="Users" Type="Self.Users" Multiplicity="1">
             <OnDelete Action="Cascade" />
@@ -473,6 +494,11 @@
           <Parameter Name="playlist" Type="bigint" Mode="In" />
           <Parameter Name="position" Type="int" Mode="In" />
         </Function>
+        <Function Name="MarkTrackAsError" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
+          <Parameter Name="trackId" Type="bigint" Mode="In" />
+          <Parameter Name="userError" Type="varchar" Mode="In" />
+          <Parameter Name="adminError" Type="varchar" Mode="In" />
+        </Function>
         <Function Name="ReleaseAndCompleteArtChange" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="workItem" Type="bigint" Mode="In" />
         </Function>
@@ -497,6 +523,7 @@
           <EntitySet Name="AutoplaylistRules" EntityType="Self.AutoplaylistRules" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Autoplaylists" EntityType="Self.Autoplaylists" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="AvailableQualities" EntityType="Self.AvailableQualities" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ErrorInfo" EntityType="Self.ErrorInfo" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Metadata" EntityType="Self.Metadata" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="MetadataFields" EntityType="Self.MetadataFields" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Playlists" EntityType="Self.Playlists" Schema="dbo" store:Type="Tables" />
@@ -575,6 +602,10 @@
           </AssociationSet>
           <AssociationSet Name="FK_TRACKS_ART" Association="Self.FK_TRACKS_ART">
             <End Role="Art" EntitySet="Art" />
+            <End Role="Tracks" EntitySet="Tracks" />
+          </AssociationSet>
+          <AssociationSet Name="FK_TRACKS_ERRORINFO" Association="Self.FK_TRACKS_ERRORINFO">
+            <End Role="ErrorInfo" EntitySet="ErrorInfo" />
             <End Role="Tracks" EntitySet="Tracks" />
           </AssociationSet>
           <AssociationSet Name="FK_TRACKS_OWNER" Association="Self.FK_TRACKS_OWNER">
@@ -784,6 +815,8 @@
           <Property Name="Status" Type="Int32" Nullable="false" />
           <Property Name="DateLastModified" Type="DateTime" Nullable="false" Precision="3" />
           <NavigationProperty Name="Status1" Relationship="EntityFramework.FK_TRACKS_STATUS" FromRole="Track" ToRole="Status" />
+          <Property Name="ErrorInfo" Type="Int64" />
+          <NavigationProperty Name="ErrorInfo1" Relationship="EntityFramework.FK_TRACKS_ERRORINFO" FromRole="Track" ToRole="ErrorInfo" />
         </EntityType>
         <EntityType Name="UserKey">
           <Key>
@@ -1198,6 +1231,16 @@
             <End Role="Status" EntitySet="Statuses" />
             <End Role="Track" EntitySet="Tracks" />
           </AssociationSet>
+          <EntitySet Name="ErrorInfoes" EntityType="EntityFramework.ErrorInfo" />
+          <AssociationSet Name="FK_TRACKS_ERRORINFO" Association="EntityFramework.FK_TRACKS_ERRORINFO">
+            <End Role="ErrorInfo" EntitySet="ErrorInfoes" />
+            <End Role="Track" EntitySet="Tracks" />
+          </AssociationSet>
+          <FunctionImport Name="MarkTrackAsError">
+            <Parameter Name="trackId" Mode="In" Type="Int64" />
+            <Parameter Name="userError" Mode="In" Type="String" />
+            <Parameter Name="adminError" Mode="In" Type="String" />
+          </FunctionImport>
         </EntityContainer>
         <EntityType Name="Status">
           <Key>
@@ -1216,6 +1259,27 @@
             </Principal>
             <Dependent Role="Track">
               <PropertyRef Name="Status" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityType Name="ErrorInfo">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="UserError" Type="String" Nullable="false" MaxLength="140" FixedLength="false" Unicode="true" />
+          <Property Name="AdminError" Type="String" Nullable="false" MaxLength="140" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Tracks" Relationship="EntityFramework.FK_TRACKS_ERRORINFO" FromRole="ErrorInfo" ToRole="Track" />
+        </EntityType>
+        <Association Name="FK_TRACKS_ERRORINFO">
+          <End Type="EntityFramework.ErrorInfo" Role="ErrorInfo" Multiplicity="0..1" />
+          <End Type="EntityFramework.Track" Role="Track" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="ErrorInfo">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Track">
+              <PropertyRef Name="ErrorInfo" />
             </Dependent>
           </ReferentialConstraint>
         </Association>
@@ -1380,6 +1444,7 @@
           <EntitySetMapping Name="Tracks">
             <EntityTypeMapping TypeName="EntityFramework.Track">
               <MappingFragment StoreEntitySet="Tracks">
+                <ScalarProperty Name="ErrorInfo" ColumnName="ErrorInfo" />
                 <ScalarProperty Name="DateLastModified" ColumnName="DateLastModified" />
                 <ScalarProperty Name="Status" ColumnName="Status" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
@@ -1447,6 +1512,16 @@
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
+          <EntitySetMapping Name="ErrorInfoes">
+            <EntityTypeMapping TypeName="EntityFramework.ErrorInfo">
+              <MappingFragment StoreEntitySet="ErrorInfo">
+                <ScalarProperty Name="AdminError" ColumnName="AdminError" />
+                <ScalarProperty Name="UserError" ColumnName="UserError" />
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <FunctionImportMapping FunctionImportName="MarkTrackAsError" FunctionName="EntityFramework.Store.MarkTrackAsError" />
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>

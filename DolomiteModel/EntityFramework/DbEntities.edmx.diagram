@@ -44,6 +44,8 @@
         <AssociationConnector Association="EntityFramework.FK_USERSETTINGS_USER" ManuallyRouted="false" />
         <EntityTypeShape EntityType="EntityFramework.Status" Width="1.5" PointX="9.25" PointY="6" />
         <AssociationConnector Association="EntityFramework.FK_TRACKS_STATUS" />
+        <EntityTypeShape EntityType="EntityFramework.ErrorInfo" Width="1.5" PointX="9.25" PointY="3.75" />
+        <AssociationConnector Association="EntityFramework.FK_TRACKS_ERRORINFO" />
       </Diagram>
     </edmx:Diagrams>
   </edmx:Designer>

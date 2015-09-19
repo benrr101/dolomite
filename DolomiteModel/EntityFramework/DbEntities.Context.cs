@@ -46,6 +46,7 @@ namespace DolomiteModel.EntityFramework
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<UserSetting> UserSettings { get; set; }
         public virtual DbSet<Status> Statuses { get; set; }
+        public virtual DbSet<ErrorInfo> ErrorInfoes { get; set; }
     
         public virtual int DecrementPlaylistTrackOrder(Nullable<long> playlist, Nullable<int> position)
         {
@@ -162,6 +163,23 @@ namespace DolomiteModel.EntityFramework
                 new ObjectParameter("hash", typeof(string));
     
             return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("SetTrackHash", trackIdParameter, hashParameter);
+        }
+    
+        public virtual int MarkTrackAsError(Nullable<long> trackId, string userError, string adminError)
+        {
+            var trackIdParameter = trackId.HasValue ?
+                new ObjectParameter("trackId", trackId) :
+                new ObjectParameter("trackId", typeof(long));
+    
+            var userErrorParameter = userError != null ?
+                new ObjectParameter("userError", userError) :
+                new ObjectParameter("userError", typeof(string));
+    
+            var adminErrorParameter = adminError != null ?
+                new ObjectParameter("adminError", adminError) :
+                new ObjectParameter("adminError", typeof(string));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("MarkTrackAsError", trackIdParameter, userErrorParameter, adminErrorParameter);
         }
     }
 }
