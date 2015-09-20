@@ -22,10 +22,24 @@ namespace DolomiteManagement.Utility
                     a.AppendLine();
                 }
 
-                a.AppendLine(b.Message);
-                a.AppendLine(b.StackTrace);
+                a.AppendLine(b.ComposeExceptionMessage());
                 return a;
             }).ToString();
+        }
+
+        /// <summary>
+        /// Composes the message and stack trace from an exception into a single string for ease of
+        /// use and simplicity.
+        /// </summary>
+        /// <param name="ex">The exception to put together</param>
+        /// <returns>The message and the stack trace</returns>
+        public static string ComposeExceptionMessage(this Exception ex)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine(ex.Message);
+            sb.AppendLine(ex.StackTrace);
+
+            return sb.ToString();
         }
     }
 }

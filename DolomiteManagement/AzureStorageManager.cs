@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using DolomiteManagement.Asynchronous;
-using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 
@@ -10,10 +10,21 @@ namespace DolomiteManagement
 {
     public class AzureStorageManager
     {
+
+        /// <summary>
+        /// The key in the cloud configuration management for the storage connection string
+        /// </summary>
+        public const string ConnectionStringKey = "StorageConnectionString";
+
         /// <summary>
         /// Internal instance of the blob client
         /// </summary>
         private CloudBlobClient BlobClient { get; set; }
+
+        /// <summary>
+        /// The storage connection string
+        /// </summary>
+        public static string StorageConnectionString { get; set; }
 
         #region Singleton Instance Code
 
@@ -32,8 +43,12 @@ namespace DolomiteManagement
         /// </summary>
         private AzureStorageManager() 
         {
+            // Make sure that the storage connection is set before using it
+            if (String.IsNullOrWhiteSpace(StorageConnectionString))
+                throw new InvalidOperationException("Azure storage string has not been initialized.");
+
             // Create a client for accessing the Azure storage
-            CloudStorageAccount account = CloudStorageAccount.Parse(CloudConfigurationManager.GetSetting("StorageConnectionString"));
+            CloudStorageAccount account = CloudStorageAccount.Parse(StorageConnectionString);
             BlobClient = account.CreateCloudBlobClient();
         }
 
@@ -48,6 +63,7 @@ namespace DolomiteManagement
         /// <param name="containerName">Name of the container to store the blob to</param>
         /// <param name="fileName">The path for the file to be stored</param>
         /// <param name="bytes">A stream of the bytes to store</param>
+        [Obsolete]
         public void StoreBlob(string containerName, string fileName, Stream bytes)
         {
             Trace.TraceInformation("Attempting to upload block blob '{0}' to container '{1}'", fileName, containerName);
@@ -77,6 +93,7 @@ namespace DolomiteManagement
         /// <param name="callback">The callback to perform when completed</param>
         /// <param name="state">The object to pass to the callback</param>
         /// @TODO Should replace the type of the asynchronous state to some inheritance thingy
+        [Obsolete]
         public void StoreBlobAsync(string containerName, string fileName, Stream bytes, AsyncCallback callback, AzureAsynchronousState state)
         {
             try
@@ -95,6 +112,26 @@ namespace DolomiteManagement
             {
                 Trace.TraceError("Failed to start upload of block blob {0}: {1}", fileName, e.Message);
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Stores a blob in Azure storage asynchronously.
+        /// </summary>
+        /// <param name="containerName"></param>
+        /// <param name="sourceFile"></param>
+        /// <param name="destFile"></param>
+        /// <returns></returns>
+        public async Task StoreBlobAsync(string containerName, string sourceFile, string destFile)
+        {
+            using (FileStream stream = File.OpenRead(sourceFile))
+            {
+                // Grab the container that is being used
+                CloudBlobContainer container = BlobClient.GetContainerReference(containerName);
+
+                // Grab a reference to the file that will be created
+                CloudBlockBlob block = container.GetBlockBlobReference(destFile);
+                await block.UploadFromStreamAsync(stream);
             }
         }
 

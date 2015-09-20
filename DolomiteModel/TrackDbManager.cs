@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Entity.Core;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 using DolomiteModel.EntityFramework;
 using Pub = DolomiteModel.PublicRepresentations;
 
@@ -98,8 +99,8 @@ namespace DolomiteModel
         /// </summary>
         /// <param name="owner">The username for the owner of the track</param>
         /// <param name="guid">The guid of the track</param>
-        /// <param name="hash">The hash of the track</param>
-        public long CreateInitialTrackRecord(string owner, Guid guid, string hash)
+        /// <returns>The internal ID of the new track</returns>
+        public async Task<long> CreateInitialTrackRecordAsync(string owner, Guid guid)
         {
             using (var context = new Entities())
             {
@@ -110,13 +111,12 @@ namespace DolomiteModel
                     DateAdded = DateTime.UtcNow,
                     DateLastModified = DateTime.UtcNow,
                     GuidId = guid,
-                    Hash = hash,
                     Locked = false,
                     Owner = context.Users.First(u => u.Username == owner).Id,
-                    Status = 1      // The "Initial" status
+                    Status = 1        // The "Initial" status
                 };
                 context.Tracks.Add(track);
-                context.SaveChanges();
+                await context.SaveChangesAsync();
 
                 return track.Id;
             }
@@ -468,6 +468,7 @@ namespace DolomiteModel
             using (var context = new Entities())
             {
                 // Search for the track
+
                 return context.Tracks.Any(t => t.GuidId == trackGuid);
             }
         }
@@ -547,13 +548,14 @@ namespace DolomiteModel
         /// <param name="trackGuid">Guid of the track to update</param>
         /// <param name="newHash">The new hash of the track</param>
         /// <param name="owner">The owner of the track</param>
-        public void MarkTrackAsNotOnboarderd(Guid trackGuid, string newHash, string owner)
+        public void TransitionTrackToPendingOnboarding(Guid trackGuid, string newHash, string owner)
         {
             using (var context = new Entities())
             {
                 // Fetch the track that is to be marked as not onboarded
                 Track track = GetTrackModel(trackGuid, owner, context, false).FirstOrDefault();
 
+                // TODO: Do these checks in the sproc to allow for passing in an id and that's it
                 // Verify that the track exists
                 if (track == null)
                     throw new ObjectNotFoundException(String.Format("Track {0} does not exist.", trackGuid));
@@ -571,6 +573,25 @@ namespace DolomiteModel
                 // Store the new track hash
                 track.Hash = newHash;
                 context.SaveChanges();
+            }
+        }
+
+        /// <summary>
+        /// Moves a track into the error state and stores the errors
+        /// </summary>
+        /// <param name="trackGuid">Guid of the track to update</param>
+        /// /// <param name="owner">The owner of the track</param>
+        /// <param name="userError">The error to report back to the user</param>
+        /// <param name="adminError">The error for internal debugging</param>
+        public void TransitionTrackToError(Guid trackGuid, string owner, string userError, string adminError)
+        {
+            using (var context = new Entities())
+            {
+                // Fetch the track to be marked as error
+                Track track = GetTrackModel(trackGuid, owner, context, true).First();
+
+                // Execute the sproc for setting error state
+                context.MarkTrackAsError(track.Id, userError, adminError);
             }
         }
 

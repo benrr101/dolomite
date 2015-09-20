@@ -6,12 +6,16 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using DolomiteModel;
-using Microsoft.WindowsAzure.ServiceRuntime;
 
 namespace DolomiteManagement
 {
     public class LocalStorageManager
     {
+        /// <summary>
+        /// The path to the local resources folder
+        /// </summary>
+        public static string LocalResourcePath { get; set; }
+
         #region Singleton Instance
 
         private static LocalStorageManager _instance;
@@ -34,15 +38,19 @@ namespace DolomiteManagement
         /// <summary>
         /// Generates the path to the file in local storage
         /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if the local storage path was not set before using
+        /// </exception>
         /// <param name="filename">The name of the file</param>
         /// <returns>String path to the file</returns>
         public string GetPath(string filename)
         {
-            // Create reference to the local storage
-            LocalResource localStorage = RoleEnvironment.GetLocalResource("OnboardingStorage");
+            // Make sure that we have a local path before loading it
+            if(String.IsNullOrWhiteSpace(LocalResourcePath))
+                throw new InvalidOperationException("Local storage path has not been initialized.");
 
             // Build the path of the file
-            return Path.Combine(localStorage.RootPath, filename);
+            return Path.Combine(LocalResourcePath, filename);
         }
 
         #region Storage Methods
@@ -126,7 +134,7 @@ namespace DolomiteManagement
 
         #endregion
 
-        #region Helper Methods
+        #region Hashing Methods
 
         /// <summary>
         /// Calculates the RIPEMD160 hash of the given stream
@@ -172,6 +180,17 @@ namespace DolomiteManagement
                 byte[] hashBytes = hasher.ComputeHash(file);
                 return BitConverter.ToString(hashBytes).Replace("-", String.Empty);
             }
+        }
+
+        /// <summary>
+        /// Calculates an MD5 hash of the file specified by <paramref name="filename"/>
+        /// </summary>
+        /// <param name="filename">The file to hash</param>
+        /// <returns>The MD5 hash of the file</returns>
+        [Pure]
+        public async Task<string> CalculateMd5HashAsync(string filename)
+        {
+            return await Task.Run(() => CalculateMd5Hash(filename));
         }
 
         #endregion
