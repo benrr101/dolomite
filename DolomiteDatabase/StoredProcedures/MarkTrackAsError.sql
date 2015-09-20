@@ -1,7 +1,7 @@
 ﻿CREATE PROCEDURE [dbo].[MarkTrackAsError]
 	@trackId	BIGINT,
-	@userError	VARCHAR(140),
-	@adminError	VARCHAR(140)
+	@userError	NVARCHAR(140),
+	@adminError	NVARCHAR(MAX)
 AS
 	SET XACT_ABORT ON
 	BEGIN TRANSACTION

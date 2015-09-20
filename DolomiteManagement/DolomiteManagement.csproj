@@ -95,6 +95,7 @@
     <Compile Include="TrackManager.cs" />
     <Compile Include="TrackUploadType.cs" />
     <Compile Include="UserManager.cs" />
+    <Compile Include="Utility\ExtensionMethods.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DolomiteModel\DolomiteModel.csproj">
