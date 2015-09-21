@@ -373,6 +373,9 @@ namespace DolomiteManagement
 
                 // Step 2: Mark the track as ready for onboarding
                 TrackDbManager.Instance.TransitionTrackToPendingOnboarding(guid, calculateHashTask.Result, owner);
+
+                // Step 3: Delete the local file
+                LocalStorageManager.Instance.DeleteFile(guid.ToString());
             }
             catch (AggregateException e)
             {

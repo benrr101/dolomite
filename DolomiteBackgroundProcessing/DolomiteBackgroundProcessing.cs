@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using DolomiteManagement;
+using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
 namespace DolomiteBackgroundProcessing
@@ -14,6 +15,7 @@ namespace DolomiteBackgroundProcessing
         #region Constants
 
         private const string TrackContainerKey = "TrackStorageContainer";
+        private const string LocalStorageResourceKey = "OnboardingStorage";
 
         #endregion
 
@@ -54,6 +56,14 @@ namespace DolomiteBackgroundProcessing
             try
             {
                 InitializeTrackManager();
+
+                // Grab the connection string for Azure storage
+                string azureConnectionString = CloudConfigurationManager.GetSetting(AzureStorageManager.ConnectionStringKey);
+                AzureStorageManager.StorageConnectionString = azureConnectionString;
+
+                // Grab the local storage path
+                LocalResource localStorage = RoleEnvironment.GetLocalResource(LocalStorageResourceKey);
+                LocalStorageManager.LocalResourcePath = localStorage.RootPath;
             }
             catch (Exception e)
             {

@@ -8,6 +8,7 @@ using System.ServiceModel.Web;
 using System.Threading;
 using DolomiteManagement;
 using DolomiteWcfService.Cors;
+using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
 namespace DolomiteWcfService
@@ -20,6 +21,7 @@ namespace DolomiteWcfService
         private const string AbsolulteTimeoutKey = "AbsoluteTimeout";
         private const string TrackContainerKey = "TrackStorageContainer";
         private const string UserKeyEnabledKey = "UserKeysEnabled";
+        private const string LocalStorageResourceKey = "UploadStorage";
 
         #endregion
 
@@ -70,6 +72,14 @@ namespace DolomiteWcfService
             {
                 InitializeUserManager();
                 InitializeTrackManager();
+
+                // Grab the connection string for Azure storage
+                string azureConnectionString = CloudConfigurationManager.GetSetting(AzureStorageManager.ConnectionStringKey);
+                AzureStorageManager.StorageConnectionString = azureConnectionString;
+
+                // Grab the local storage path
+                LocalResource localStorage = RoleEnvironment.GetLocalResource(LocalStorageResourceKey);
+                LocalStorageManager.LocalResourcePath = localStorage.RootPath;
             }
             catch (Exception e)
             {

@@ -19,6 +19,7 @@
       <Setting name="AbsoluteTimeout" />
     </ConfigurationSettings>
     <LocalResources>
+      <LocalStorage name="UploadStorage" cleanOnRoleRecycle="true" sizeInMB="8092" />
     </LocalResources>
   </WorkerRole>
   <WorkerRole name="DolomiteBackgroundProcessing" vmsize="ExtraSmall">
