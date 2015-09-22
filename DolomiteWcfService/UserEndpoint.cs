@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data;
-using System.Data.Entity.Core;
 using System.IO;
 using System.Net;
 using System.ServiceModel.Channels;
@@ -202,12 +201,12 @@ namespace DolomiteWcfService
                 return WebUtilities.GenerateResponse(new ErrorResponse("The JSON for the login request is invalid."),
                     HttpStatusCode.BadRequest);
             }
-            catch (ApplicationException)
+            catch (InvalidApiKeyException)
             {
                 WebUtilities.SetHeader(HttpResponseHeader.WwwAuthenticate, "DOLOMITE");
                 return WebUtilities.GenerateResponse(new ErrorResponse("Invalid API key"), HttpStatusCode.Unauthorized);
             }
-            catch (ObjectNotFoundException)
+            catch (InvalidLoginCredentialsException)
             {
                 string message = "Username or password was incorrect. Please try again.";
                 WebUtilities.SetHeader(HttpResponseHeader.WwwAuthenticate, "DOLOMITE");
@@ -244,7 +243,6 @@ namespace DolomiteWcfService
                 WebUtilities.SetHeader(HttpResponseHeader.WwwAuthenticate, "DOLOMITE href=\"/users/login\"");
                 return WebUtilities.GenerateResponse(new ErrorResponse(message), HttpStatusCode.Unauthorized);
             }
-            catch(ObjectNotFoundException) {}   // Ignore this one.
             catch (Exception)
             {
                 return WebUtilities.GenerateResponse(new ErrorResponse(WebUtilities.InternalServerMessage),

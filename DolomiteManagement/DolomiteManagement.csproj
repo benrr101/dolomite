@@ -83,6 +83,7 @@
     <Compile Include="Exceptions\DuplicateTrackException.cs" />
     <Compile Include="Exceptions\InvalidSessionException.cs" />
     <Compile Include="Exceptions\TrackNotReadyException.cs" />
+    <Compile Include="Exceptions\UserExceptions.cs" />
     <Compile Include="LocalStorageManager.cs" />
     <Compile Include="MimetypeDetector.cs" />
     <Compile Include="PlaylistManager.cs" />
