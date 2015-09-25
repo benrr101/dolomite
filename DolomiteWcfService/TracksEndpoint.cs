@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity.Core;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.ServiceModel.Channels;
@@ -10,7 +9,6 @@ using System.Threading.Tasks;
 using DolomiteManagement;
 using DolomiteManagement.Exceptions;
 using DolomiteModel.PublicRepresentations;
-using DolomiteWcfService.MultipartParser;
 using DolomiteWcfService.Requests;
 using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
@@ -32,6 +30,9 @@ namespace DolomiteWcfService
         /// Instance of the User Manager
         /// </summary>
         private static UserManager UserManager { get; set; }
+
+        private readonly WebUtilities _webUtilities = new WebUtilities();
+        private WebUtilities WebUtilities { get { return _webUtilities; } }
 
         #endregion
 
