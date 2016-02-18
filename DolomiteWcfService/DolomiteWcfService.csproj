@@ -101,7 +101,6 @@
     <Compile Include="IStaticPlaylistEndpoint.cs" />
     <Compile Include="ITracksEndpoint.cs" />
     <Compile Include="IUserEndpoint.cs" />
-    <Compile Include="MultipartParser.cs" />
     <Compile Include="AutoPlaylistEndpoint.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DolomiteWcfService.cs" />
