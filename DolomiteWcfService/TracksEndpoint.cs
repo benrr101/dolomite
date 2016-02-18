@@ -12,7 +12,6 @@ using DolomiteModel.PublicRepresentations;
 using DolomiteWcfService.Requests;
 using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
-using TagLib;
 
 namespace DolomiteWcfService
 {
@@ -90,7 +89,7 @@ namespace DolomiteWcfService
                 if (!String.Equals(calculatedHash, providedHash, StringComparison.OrdinalIgnoreCase))
                 {
                     LocalStorageManager.Instance.DeleteFile(trackGuid.ToString());
-                    throw new CorruptFileException();
+                    throw new FileLoadException();
                 }
 
                 // Step 3: Triage the upload and kick off an async upload process
@@ -131,7 +130,7 @@ namespace DolomiteWcfService
                     + " Duplicate tracks are not permitted");
                 return WebUtilities.GenerateResponse(eResponse, HttpStatusCode.Conflict);
             }
-            catch (CorruptFileException)
+            catch (FileLoadException)
             {
                 ErrorResponse eResponse = new ErrorResponse(
                     "The provided MD5 hash does not match the calculated MD5 hash."
@@ -206,10 +205,6 @@ namespace DolomiteWcfService
             catch (FormatException)
             {
                 WebUtilities.SetStatusCode(HttpStatusCode.BadRequest);
-            }
-            catch (UnsupportedFormatException)
-            {
-                WebUtilities.SetStatusCode(HttpStatusCode.NotFound);
             }
             catch (ObjectNotFoundException)
             {
