@@ -148,6 +148,7 @@ namespace DolomiteManagement
         /// A stream that represents contains the track. 
         /// The position will be reset to the beginning.
         /// </returns>
+        /// TODO: Use aync calls
         public Stream GetBlob(string containerName, string path)
         {
             try
@@ -166,6 +167,28 @@ namespace DolomiteManagement
                 blob.DownloadToStream(memStream);
                 memStream.Position = 0;
                 return memStream;
+            }
+            catch (Exception e)
+            {
+                Trace.TraceError("Failed to retrieve blob {0}: {1}", path, e.Message);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously downloads a Azure blob to a file location. 
+        /// </summary>
+        /// <param name="containerName"></param>
+        /// <param name="path"></param>
+        /// <param name="outputStream"></param>
+        /// <returns></returns>
+        public async Task DownloadBlobAsync(string containerName, string path, FileStream outputStream)
+        {
+            try
+            {
+                CloudBlobContainer container = BlobClient.GetContainerReference(containerName);
+                ICloudBlob blob = await container.GetBlobReferenceFromServerAsync(path);
+                await blob.DownloadToStreamAsync(outputStream);
             }
             catch (Exception e)
             {
@@ -221,6 +244,20 @@ namespace DolomiteManagement
                 Trace.TraceError("Failed to create container '{0}': {1}", container.Name, e.Message);
                 throw;
             }
+        }
+
+        #endregion
+
+        #region Utility Methods
+
+        /// <summary>
+        /// Combines components of a path to build an Azure blob URL
+        /// </summary>
+        /// <param name="components">A list of path fragments to combine together</param>
+        /// <returns>The combined fragments to make a full blob URL</returns>
+        public static string CombineAzurePath(params string[] components)
+        {
+            return String.Join("/", components);
         }
 
         #endregion

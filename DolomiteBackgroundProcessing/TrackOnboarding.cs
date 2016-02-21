@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Diagnostics;
 using System.Globalization;
+using System.Threading.Tasks;
 using DolomiteManagement;
 using DolomiteModel.PublicRepresentations;
 using IO = System.IO;
@@ -66,6 +67,8 @@ namespace DolomiteBackgroundProcessing
             LocalStorageManager = LocalStorageManager.Instance;
             AzureStorageManager = AzureStorageManager.Instance;
 
+            LocalStorageManager.Instance.InitializeStorageDirectory(OnboardingDirectory);
+
             // Loop until the stop flag has been flown
             while (!_shouldStop)
             {                
@@ -76,12 +79,12 @@ namespace DolomiteBackgroundProcessing
                     // We have work to do!
                     Track track = DatabaseManager.GetTrack(workItemId.Value);
                     Trace.TraceInformation("Work item {0} picked up by {1}", workItemId.Value, GetHashCode());
-
+                    string trackFilePath = IO.Path.Combine(OnboardingDirectory, track.Id.ToString());
                     
                     // Step 1: Grab the track from Azure
                     try
                     {
-                        CopyFileToLocalStorage(LocalStorageManager.GetPath(track.Id.ToString()), track.Id);
+                        CopyFileToLocalStorage(trackFilePath, track.Id).Wait();
                     }
                     catch (Exception)
                     {
@@ -266,17 +269,13 @@ namespace DolomiteBackgroundProcessing
         /// </summary>
         /// <param name="tempPath">Path for the file in local storage</param>
         /// <param name="trackGuid">The guid of the track to pull from azure</param>
-        private void CopyFileToLocalStorage(string tempPath, Guid trackGuid)
+        private static async Task CopyFileToLocalStorage(string tempPath, Guid trackGuid)
         {
             // Get the stream from Azure
-            string azurePath = OnboardingDirectory + '/' + trackGuid;
-            using (IO.Stream origStream = AzureStorageManager.GetBlob(TrackStorageContainer, azurePath))
+            string azurePath = AzureStorageManager.CombineAzurePath(OnboardingDirectory, trackGuid.ToString());
+            using (IO.FileStream localStream = LocalStorageManager.CreateFile(tempPath))
             {
-                using (IO.Stream localFile = IO.File.Create(tempPath))
-                {
-                    // Copy the stream to local storage
-                    origStream.CopyTo(localFile);
-                }
+                await AzureStorageManager.Instance.DownloadBlobAsync(TrackStorageContainer, azurePath, localStream);
             }
         }
 

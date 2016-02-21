@@ -56,6 +56,20 @@ namespace DolomiteManagement
         #region Storage Methods
 
         /// <summary>
+        /// Initializes a given storage directory by creating it if it doesn't already exist.
+        /// </summary>
+        /// <param name="directory">The directory to initialize</param>
+        public void InitializeStorageDirectory(string directory)
+        {
+            // Create the folder if it doesn't already exist
+            string fullPath = GetPath(directory);
+            if (!Directory.Exists(fullPath))
+            {
+                Directory.CreateDirectory(fullPath);
+            }
+        }
+
+        /// <summary>
         /// Stores the contents of the stream to the file with the given file name
         /// <remarks>
         /// This automatically uploads to the onboarding storage. It may be
@@ -92,6 +106,16 @@ namespace DolomiteManagement
             {
                 await stream.CopyToAsync(newFile);
             }
+        }
+
+        /// <summary>
+        /// Creates a new file with the given path and returns the stream for accessing the file.
+        /// </summary>
+        /// <param name="filename">Path to the file to create</param>
+        /// <returns>A stream object that points to the created file</returns>
+        public FileStream CreateFile(string filename)
+        {
+            return File.Create(GetPath(filename));
         }
 
         #endregion
