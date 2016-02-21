@@ -270,15 +270,14 @@ namespace DolomiteBackgroundProcessing
         {
             // Get the stream from Azure
             string azurePath = OnboardingDirectory + '/' + trackGuid;
-            IO.Stream origStream = AzureStorageManager.GetBlob(TrackStorageContainer, azurePath);
-
-            // Copy the stream to local storage
-            IO.Stream localFile = IO.File.Create(tempPath);
-            origStream.CopyTo(localFile);
-
-            // We only need the path for future ops, so close the stream
-            origStream.Close();
-            localFile.Close();
+            using (IO.Stream origStream = AzureStorageManager.GetBlob(TrackStorageContainer, azurePath))
+            {
+                using (IO.Stream localFile = IO.File.Create(tempPath))
+                {
+                    // Copy the stream to local storage
+                    origStream.CopyTo(localFile);
+                }
+            }
         }
 
         /// <summary>
@@ -311,63 +310,64 @@ namespace DolomiteBackgroundProcessing
         /// <param name="track">The track to store metadata of</param>
         private void StoreMetadata(Track track)
         {
-            Trace.TraceInformation("{0} is retrieving metadata from {1}", GetHashCode(), track.Id);
+            //Trace.TraceInformation("{0} is retrieving metadata from {1}", GetHashCode(), track.Id);
 
-            // Generate the mimetype of the track
-            // Why? b/c tag lib isn't smart enough to figure it out for me,
-            // except for determining it based on extension -- which is silly.
-            IO.FileStream localFile = LocalStorageManager.RetrieveReadableFile(track.Id.ToString());
-            string mimetype = MimetypeDetector.GetAudioMimetype(localFile);
-            if (mimetype == null)
-            {
-                localFile.Close();
-                throw new UnsupportedFormatException(String.Format("The mimetype of {0} could not be determined from the file header.", track.Id));
-            }
+            //// Generate the mimetype of the track
+            //// Why? b/c tag lib isn't smart enough to figure it out for me,
+            //// except for determining it based on extension -- which is silly.
+            //IO.FileStream localFile = LocalStorageManager.RetrieveReadableFile(track.Id.ToString());
+            //string mimetype = MimetypeDetector.GetAudioMimetype(localFile);
+            //if (mimetype == null)
+            //{
+            //    localFile.Close();
+            //    throw new UnsupportedFormatException(String.Format("The mimetype of {0} could not be determined from the file header.", track.Id));
+            //}
 
-            // Retrieve the file from temporary storage
-            File file = File.Create(LocalStorageManager.GetPath(track.Id.ToString()), mimetype, ReadStyle.Average);
+            //// Retrieve the file from temporary storage
+            //File file = File.Create(LocalStorageManager.GetPath(track.Id.ToString()), mimetype, ReadStyle.Average);
             
-            Dictionary<string, string> metadata = new Dictionary<string, string>();
+            //Dictionary<string, string> metadata = new Dictionary<string, string>();
             
-            // Use reflection to iterate over the properties in the tag
-            PropertyInfo[] properties = typeof (Tag).GetProperties();
-            foreach (PropertyInfo property in properties)
-            {
-                string name = property.Name;
-                object value = property.GetValue(file.Tag);
+            //// Use reflection to iterate over the properties in the tag
+            //PropertyInfo[] properties = typeof (Tag).GetProperties();
+            //foreach (PropertyInfo property in properties)
+            //{
+            //    string name = property.Name;
+            //    object value = property.GetValue(file.Tag);
 
-                // Strip off "First" from the tag names
-                name = name.Replace("First", string.Empty);
+            //    // Strip off "First" from the tag names
+            //    name = name.Replace("First", string.Empty);
 
-                // We really only want strings to store and ints
-                if(value is string)
-                    metadata.Add(name, (string)value);
-                else if(value is uint && (uint)value != 0)
-                    metadata.Add(name, ((uint)value).ToString(CultureInfo.CurrentCulture));
-            }
+            //    // We really only want strings to store and ints
+            //    if(value is string)
+            //        metadata.Add(name, (string)value);
+            //    else if(value is uint && (uint)value != 0)
+            //        metadata.Add(name, ((uint)value).ToString(CultureInfo.CurrentCulture));
+            //}
 
-            // Grab some extra data from the file
-            metadata.Add("Duration", Math.Round(file.Properties.Duration.TotalSeconds).ToString(CultureInfo.CurrentCulture));
-            metadata.Add("DateAdded",
-                Math.Round((DateTime.UtcNow - new DateTime(1970, 1, 1).ToLocalTime()).TotalSeconds)
-                    .ToString(CultureInfo.CurrentCulture));
-            metadata.Add("PlayCount", "0");
-            metadata.Add("OriginalBitrate", file.Properties.AudioBitrate.ToString(CultureInfo.CurrentCulture));
-            string extension = MimetypeDetector.GetExtension(file.MimeType);
-            metadata.Add("OriginalFormat", extension);
+            //// Grab some extra data from the file
+            //metadata.Add("Duration", Math.Round(file.Properties.Duration.TotalSeconds).ToString(CultureInfo.CurrentCulture));
+            //metadata.Add("DateAdded",
+            //    Math.Round((DateTime.UtcNow - new DateTime(1970, 1, 1).ToLocalTime()).TotalSeconds)
+            //        .ToString(CultureInfo.CurrentCulture));
+            //metadata.Add("PlayCount", "0");
+            //metadata.Add("OriginalBitrate", file.Properties.AudioBitrate.ToString(CultureInfo.CurrentCulture));
+            //string extension = MimetypeDetector.GetExtension(file.MimeType);
+            //metadata.Add("OriginalFormat", extension);
 
-            // Send the metadata to the database
-            DatabaseManager.StoreTrackMetadata(track, metadata, false);
+            //// Send the metadata to the database
+            //DatabaseManager.StoreTrackMetadata(track, metadata, false);
 
-            // Store the audio metadata to the database
-            DatabaseManager.SetAudioQualityInfo(track.InternalId, file.Properties.AudioBitrate,
-                file.Properties.AudioSampleRate, file.MimeType, extension);
+            //// Store the audio metadata to the database
+            //DatabaseManager.SetAudioQualityInfo(track.InternalId, file.Properties.AudioBitrate,
+            //    file.Properties.AudioSampleRate, file.MimeType, extension);
 
-            // Rip out the album art (or whatever is the first art in the file)
-            if (file.Tag.Pictures.Length > 0)
-            {
-                StoreAlbumArt(track.InternalId, file.Tag.Pictures[0]);
-            }
+            //// Rip out the album art (or whatever is the first art in the file)
+            //if (file.Tag.Pictures.Length > 0)
+            //{
+            //    StoreAlbumArt(track.InternalId, file.Tag.Pictures[0]);
+            //}
+            throw new NotImplementedException();
         }
 
         #endregion
