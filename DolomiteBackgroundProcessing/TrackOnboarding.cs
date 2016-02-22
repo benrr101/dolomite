@@ -94,8 +94,13 @@ namespace DolomiteBackgroundProcessing
                     }
 
                     // Step 2: Grab the metadata for the track
+                    TrackMetadata metadata = null;
                     try
                     {
+                        using (IO.FileStream fs = LocalStorageManager.Instance.RetrieveReadableFile(trackFilePath))
+                        {
+                            metadata = new TrackMetadata(fs, track.OriginalMimetype);
+                        }
                         StoreMetadata(track);
                     }
                     catch (UnsupportedFormatException)

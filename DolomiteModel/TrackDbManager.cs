@@ -387,7 +387,7 @@ namespace DolomiteModel
                 if (track == null)
                     throw new ObjectNotFoundException(String.Format("Failed to find track with GUID {0}", trackGuid));
 
-                return new Pub.Track(track, context);
+                return new Pub.Track(track);
             }
         }
 
@@ -407,7 +407,7 @@ namespace DolomiteModel
                 if (track == null)
                     throw new ObjectNotFoundException(String.Format("Failed to find track with id {0}", trackId));
 
-                return new Pub.Track(track, context);
+                return new Pub.Track(track);
             }
         }
 

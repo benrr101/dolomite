@@ -45,12 +45,12 @@ namespace DolomiteBackgroundProcessing
         public byte[] ImageBytes { get; private set; }
         public string ImageMimetype { get; private set; }
 
-        public TrackMetadata(FileStream file)
+        public TrackMetadata(FileStream file, string mimetype)
         {
             // Setup the internal arrays
             CustomFrames = new Dictionary<string, string>();
 
-            File tagFile = File.Create(new StreamFileAbstraction(file.Name, file, null));
+            File tagFile = File.Create(new StreamFileAbstraction(file.Name, file, null), mimetype, ReadStyle.Average);
 
             // Fetch the metadata from the file
             if (tagFile.TagTypesOnDisk.HasFlag(TagTypes.Xiph))
