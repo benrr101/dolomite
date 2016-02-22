@@ -75,7 +75,7 @@
           </Key>
           <Property Name="Id" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="UserError" Type="nvarchar" MaxLength="140" Nullable="false" />
-          <Property Name="AdminError" Type="nvarchar" MaxLength="140" Nullable="false" />
+          <Property Name="AdminError" Type="nvarchar(max)" Nullable="false" />
         </EntityType>
         <EntityType Name="Metadata">
           <Key>
@@ -97,7 +97,6 @@
           <Property Name="Type" Type="nvarchar" MaxLength="20" Nullable="false" />
           <Property Name="Searchable" Type="bit" Nullable="false" />
           <Property Name="FileSupported" Type="bit" Nullable="false" />
-          <Property Name="TagLibArray" Type="bit" Nullable="false" />
         </EntityType>
         <EntityType Name="Playlists">
           <Key>
@@ -496,8 +495,8 @@
         </Function>
         <Function Name="MarkTrackAsError" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="trackId" Type="bigint" Mode="In" />
-          <Parameter Name="userError" Type="varchar" Mode="In" />
-          <Parameter Name="adminError" Type="varchar" Mode="In" />
+          <Parameter Name="userError" Type="nvarchar" Mode="In" />
+          <Parameter Name="adminError" Type="nvarchar(max)" Mode="In" />
         </Function>
         <Function Name="ReleaseAndCompleteArtChange" Aggregate="false" BuiltIn="false" NiladicFunction="false" IsComposable="false" ParameterTypeSemantics="AllowImplicitConversion" Schema="dbo">
           <Parameter Name="workItem" Type="bigint" Mode="In" />
@@ -724,7 +723,6 @@
           <Property Name="Type" Type="String" MaxLength="20" FixedLength="false" Unicode="true" Nullable="false" />
           <Property Name="Searchable" Type="Boolean" Nullable="false" />
           <Property Name="FileSupported" Type="Boolean" Nullable="false" />
-          <Property Name="TagLibArray" Type="Boolean" Nullable="false" />
           <NavigationProperty Name="AutoplaylistRules" Relationship="Self.FK_AUTOPLAYLISTRULES_METADATA" FromRole="MetadataFields" ToRole="AutoplaylistRules" />
           <NavigationProperty Name="Autoplaylists" Relationship="Self.FK_AUTOPLAYLISTS_SORTFIELD" FromRole="MetadataFields" ToRole="Autoplaylists" />
           <NavigationProperty Name="Metadatas" Relationship="Self.FK_METADATA_FIELD" FromRole="MetadataFields" ToRole="Metadata" />
@@ -1268,7 +1266,7 @@
           </Key>
           <Property Name="Id" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
           <Property Name="UserError" Type="String" Nullable="false" MaxLength="140" FixedLength="false" Unicode="true" />
-          <Property Name="AdminError" Type="String" Nullable="false" MaxLength="140" FixedLength="false" Unicode="true" />
+          <Property Name="AdminError" Type="String" Nullable="false" MaxLength="Max" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="Tracks" Relationship="EntityFramework.FK_TRACKS_ERRORINFO" FromRole="ErrorInfo" ToRole="Track" />
         </EntityType>
         <Association Name="FK_TRACKS_ERRORINFO">
@@ -1380,7 +1378,6 @@
                 <ScalarProperty Name="Type" ColumnName="Type" />
                 <ScalarProperty Name="Searchable" ColumnName="Searchable" />
                 <ScalarProperty Name="FileSupported" ColumnName="FileSupported" />
-                <ScalarProperty Name="TagLibArray" ColumnName="TagLibArray" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
