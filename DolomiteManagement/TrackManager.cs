@@ -313,28 +313,30 @@ namespace DolomiteManagement
         }
 
         /// <summary>
-        /// Determines what kind of upload this is based on the existance of or lack thereof a
+        /// Determines what kind of upload this is based on the existence of or lack thereof a
         /// track with matching owner and guid.
         /// </summary>
         /// <param name="trackGuid">The guid the user chose for the new upload</param>
         /// <param name="owner">The username of the owner of the track</param>
+        /// <param name="contentType">The mimetype of the upload from the HTTP headers</param>
         /// <returns>
         /// <c>TrackUploadType.NewUpload</c> if the guid is a completely new upload.
         /// <c>TrackUploadType.Replace</c> if the guid already exists for the user. The track is a
         /// replacement for the existing one.
         /// </returns>
-        public async Task<TrackUploadType> TriageUpload(Guid trackGuid, string owner)
+        public async Task<TrackUploadType> TriageUpload(Guid trackGuid, string owner, string contentType)
         {
             // Search the db for a track with that guid
             if (!TrackDbManager.Instance.TrackExists(trackGuid))
             {
                 // Create an initial record we'll use later
-                await TrackDbManager.Instance.CreateInitialTrackRecordAsync(owner, trackGuid);
+                await TrackDbManager.Instance.CreateInitialTrackRecordAsync(owner, trackGuid, contentType);
                 return TrackUploadType.NewUpload;
             }
 
             if (TrackDbManager.Instance.TrackExists(trackGuid, owner))
             {
+                // TODO: Handle the content type
                 return TrackUploadType.Replace;
             }
 
@@ -358,7 +360,7 @@ namespace DolomiteManagement
                 // Step 1.1: Calculate the hash of the track, asynchronously
                 Task<string> calculateHashTask = LocalStorageManager.CalculateMd5HashAsync(guid.ToString());
 
-                // Step 1.2: Upload the track to azure, asyncronously
+                // Step 1.2: Upload the track to azure, asynchronously
                 string azurePath = String.Format(@"{0}/{1}", OnboardingDirectory, guid);
                 Task azureUploadTask = AzureStorageManager.StoreBlobAsync(TrackStorageContainer,
                     LocalStorageManager.GetPath(guid.ToString()), azurePath);

@@ -80,6 +80,13 @@ namespace DolomiteWcfService
                     throw new ArgumentException("A valid MD5 hash of the uploaded file must be provided.");
                 }
 
+                // Step 0.4: Make sure there was content type uploaded
+                string contentType = WebUtilities.GetHeader(HttpRequestHeader.ContentType);
+                if (String.IsNullOrWhiteSpace(contentType))
+                {
+                    throw new ArgumentException("A valid content-type headed must be provided.");
+                }
+
                 // Step 1: Read the request body into the temporary storage
                 await LocalStorageManager.Instance.StoreStreamAsync(file, trackGuid.ToString());
 
@@ -94,7 +101,7 @@ namespace DolomiteWcfService
 
                 // Step 3: Triage the upload and kick off an async upload process
                 HttpStatusCode returnCode;
-                switch (await TrackManager.Instance.TriageUpload(trackGuid, username))
+                switch (await TrackManager.Instance.TriageUpload(trackGuid, username, contentType))
                 {
                     case TrackUploadType.NewUpload:
                         returnCode = HttpStatusCode.Created;
