@@ -207,6 +207,20 @@ namespace DolomiteManagement
         }
 
         /// <summary>
+        /// Calculates an MD5 hash of the contents specified by <paramref name="stream"/>
+        /// </summary>
+        /// <param name="stream">The file to hash</param>
+        /// <returns>The MD5 hash of the file</returns>
+        [Pure]
+        public static string CalculateMd5Hash(Stream stream)
+        {
+            MD5 hasher = MD5.Create();
+            byte[] hashBytes = hasher.ComputeHash(stream);
+            stream.Position = 0;
+            return BitConverter.ToString(hashBytes).Replace("-", String.Empty);
+        }
+
+        /// <summary>
         /// Calculates an MD5 hash of the file specified by <paramref name="filename"/>
         /// </summary>
         /// <param name="filename">The file to hash</param>
@@ -215,6 +229,17 @@ namespace DolomiteManagement
         public async Task<string> CalculateMd5HashAsync(string filename)
         {
             return await Task.Run(() => CalculateMd5Hash(filename));
+        }
+
+        /// <summary>
+        /// Calculates an MD5 hash of the contents specified by <paramref name="stream"/>
+        /// </summary>
+        /// <param name="stream">The file to hash</param>
+        /// <returns>The MD5 hash of the file</returns>
+        [Pure]
+        public async Task<string> CalculateMd5HashAsync(Stream stream)
+        {
+            return await Task.Run(() => CalculateMd5Hash(stream));
         }
 
         #endregion
