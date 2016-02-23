@@ -15,19 +15,20 @@ USING ( VALUES
 	(11,	'TrackNumber',	'Track Number', 'numeric',	((0)), ((1))),
 	(12,	'TotalTracks',	'Total Tracks', 'numeric',	((0)), ((1))),
 	(13,	'Copyright',	'Copyright',	'string',	((1)), ((1))),
-	(14,	'Comment',		'Comment',		'string',	((1)), ((1))),
+	(14,	'Publisher',	'Publisher',	'string',	((1)), ((1))),
+	(15,	'Comment',		'Comment',		'string',	((1)), ((1))),
 
-	(15,	'DurationMilli','Duration',		'numeric',	((0)), ((0))),
+	(16,	'DurationMilli','Duration',		'numeric',	((0)), ((0))),
 	
 	-- Dolomite-specific metadata fields
-	(16,	'Dol:DateAdded',		'Date Added',		'date',		((0)), ((0))),
-	(17,	'Dol:LastPlayed',		'Last Played',		'date',		((0)), ((0))),
-	(18,	'Dol:PlayCount',		'Play Count',		'numeric',	((0)), ((0))),
-	(19,	'Dol:SkipCount',		'Skip Count',		'numeric',	((0)), ((0))),
-	(20,	'Dol:TrackListing',		'TrackListing',		'json',		((1)), ((0))),
-	(21,	'Dol:OriginalBitrate',	'Original Bitrate',	'numeric',	((0)), ((0))),
-	(22,	'Dol:OriginalCodec',	'Original Codec',	'string',	((0)), ((0))),
-	(23,	'Dol:Custom',			'Custom Fields',	'json',		((1)), ((1)))
+	(17,	'Dol:DateAdded',		'Date Added',		'date',		((0)), ((0))),
+	(18,	'Dol:LastPlayed',		'Last Played',		'date',		((0)), ((0))),
+	(19,	'Dol:PlayCount',		'Play Count',		'numeric',	((0)), ((0))),
+	(20,	'Dol:SkipCount',		'Skip Count',		'numeric',	((0)), ((0))),
+	(21,	'Dol:TrackListing',		'TrackListing',		'json',		((1)), ((0))),
+	(22,	'Dol:OriginalBitrate',	'Original Bitrate',	'numeric',	((0)), ((0))),
+	(23,	'Dol:OriginalCodec',	'Original Codec',	'string',	((0)), ((0))),
+	(24,	'Dol:Custom',			'Custom Fields',	'json',		((1)), ((1)))
 	) AS [source] ([Id], [TagName], [DisplayName], [Type], [Searchable], [FileSupported])
 ON [source].[id] = [target].[id]
 WHEN MATCHED THEN
