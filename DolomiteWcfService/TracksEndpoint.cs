@@ -86,6 +86,11 @@ namespace DolomiteWcfService
                 {
                     throw new ArgumentException("A valid content-type headed must be provided.");
                 }
+                if (contentType.StartsWith("multipart/form-data"))
+                {
+                    throw new ArgumentException("multipart/form-data uploads are not supported. " +
+                                                "The request body must only be the upload content");
+                }
 
                 // Step 1: Read the request body into the temporary storage
                 await LocalStorageManager.Instance.StoreStreamAsync(file, trackGuid.ToString());
