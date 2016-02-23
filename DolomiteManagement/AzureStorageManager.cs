@@ -118,21 +118,31 @@ namespace DolomiteManagement
         /// <summary>
         /// Stores a blob in Azure storage asynchronously.
         /// </summary>
-        /// <param name="containerName"></param>
-        /// <param name="sourceFile"></param>
-        /// <param name="destFile"></param>
-        /// <returns></returns>
+        /// <param name="containerName">The storage container to store the blob</param>
+        /// <param name="sourceFile">The local file to upload</param>
+        /// <param name="destFile">The path/name of the destination blob</param>
         public async Task StoreBlobAsync(string containerName, string sourceFile, string destFile)
         {
             using (FileStream stream = File.OpenRead(sourceFile))
             {
-                // Grab the container that is being used
-                CloudBlobContainer container = BlobClient.GetContainerReference(containerName);
-
-                // Grab a reference to the file that will be created
-                CloudBlockBlob block = container.GetBlockBlobReference(destFile);
-                await block.UploadFromStreamAsync(stream);
+                await StoreBlobAsync(containerName, stream, destFile);
             }
+        }
+
+        /// <summary>
+        /// Stores a blob in Azure storage asynchronously.
+        /// </summary>
+        /// <param name="containerName">The storage container to store the blob</param>
+        /// <param name="source">A stream to upload to blob storage</param>
+        /// <param name="destFile">The path/name of the destination blob</param>
+        public async Task StoreBlobAsync(string containerName, Stream source, string destFile)
+        {
+            // Grab the container that is being used
+            CloudBlobContainer container = BlobClient.GetContainerReference(containerName);
+
+            // Grab a reference to the file that will be created
+            CloudBlockBlob block = container.GetBlockBlobReference(destFile);
+            await block.UploadFromStreamAsync(source);
         }
 
         #endregion
