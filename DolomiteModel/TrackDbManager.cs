@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Data.Entity.Core;
 using System.Linq;
 using System.Linq.Expressions;
@@ -76,6 +77,7 @@ namespace DolomiteModel
         /// <param name="guid">GUID for the art item (the ID)</param>
         /// <param name="mimetype">Mimetype of the art file</param>
         /// <param name="hash">Hash of the file</param>
+        [Obsolete("Use CreateArtRecordAsync method")]
         public long CreateArtRecord(Guid guid, string mimetype, string hash)
         {
             using (var context = new Entities())
@@ -89,6 +91,31 @@ namespace DolomiteModel
                 };
                 context.Arts.Add(artObj);
                 context.SaveChanges();
+
+                return artObj.Id;
+            }
+        }
+
+        /// <summary>
+        /// Stores a new art record.
+        /// </summary>
+        /// <param name="guid">GUID for the art item (the ID)</param>
+        /// <param name="mimetype">Mimetype of the art file</param>
+        /// <param name="hash">Hash of the file</param>
+        /// <returns>The internal ID of the newly created art record</returns>
+        public async Task<long> CreateArtRecordAsync(Guid guid, string mimetype, string hash)
+        {
+            using (var context = new Entities())
+            {
+                // Create a new art object
+                Art artObj = new Art
+                {
+                    GuidId = guid,
+                    Hash = hash,
+                    Mimetype = mimetype
+                };
+                context.Arts.Add(artObj);
+                await context.SaveChangesAsync();
 
                 return artObj.Id;
             }
@@ -128,15 +155,14 @@ namespace DolomiteModel
         /// Stores the metadata for the given track
         /// </summary>
         /// <param name="track">The track to store the metadata of</param>
-        /// <param name="metadatas">Dictionary of Metadata Tag Name => Value</param>
         /// <param name="writeOut">Whether or not the metadata change should be written to the file</param>
-        public void StoreTrackMetadata(Pub.Track track, IDictionary<string, string> metadatas, bool writeOut)
+        public async Task StoreTrackMetadataAsync(Pub.Track track, bool writeOut)
         {
             using (var context = new Entities())
             {
                 // Iterate over the metadatas and store new objects for each
                 // Skip values that are null (ie, they should be deleted)
-                foreach (var metadata in metadatas.Where(m => m.Value != null))
+                foreach (var metadata in track.Metadata.Where(m => m.Value != null))
                 {
                     // Skip metadata that doesn't have fields
                     var field = context.MetadataFields.FirstOrDefault(f => f.TagName == metadata.Key);
@@ -155,7 +181,7 @@ namespace DolomiteModel
                 }
 
                 // Commit the changes
-                context.SaveChanges();
+                await context.SaveChangesAsync();
             }
         }
 
@@ -296,15 +322,13 @@ namespace DolomiteModel
         /// Fetches the ID for an art object with the given hash
         /// </summary>
         /// <param name="hash">The hash of the art</param>
-        /// <returns>An internal id of art if found, default(long) if not found</returns>
-        /// TODO: Return art object
-        public long GetArtIdByHash(string hash)
+        /// <returns>An internal id of art if found, <c>null</c> if not found</returns>
+        public long? GetArtIdByHash(string hash)
         {
             using (var context = new Entities())
             {
-                return (from art in context.Arts
-                        where art.Hash == hash
-                        select art.Id).FirstOrDefault();
+                Art art = context.Arts.FirstOrDefault(a => a.Hash == hash);
+                return art == null ? (long?)null : art.Id;
             }
         }
 
@@ -330,8 +354,7 @@ namespace DolomiteModel
                     select new Pub.MetadataChange
                     {
                         TagName = md.MetadataField.TagName,
-                        Value = md.Value,
-                        Array = md.MetadataField.TagLibArray
+                        Value = md.Value
                     };
 
                 return items.Any()
@@ -647,20 +670,19 @@ namespace DolomiteModel
         /// <param name="samplingFrequency">The sampling frequency of the original audio</param>
         /// <param name="extension">The extension of the file</param>
         /// <param name="mimetype">The mimetype of the original file</param>
-        public void SetAudioQualityInfo(long trackId, int bitrate, int samplingFrequency, string mimetype, string extension)
+        public async Task SetAudioQualityInfoAsync(long trackId, int bitrate, string mimetype, string extension)
         {
             using (var context = new Entities())
             {
                 // Fetch the existing record for the track
-                Track track = GetTrackModel(trackId, context, false).FirstOrDefault();
+                Track track = await GetTrackModel(trackId, context, false).FirstOrDefaultAsync();
                 if (track == null)
                     throw new ObjectNotFoundException(String.Format("Track {0} does not exist.", trackId));
 
                 track.OriginalBitrate = bitrate;
-                track.OriginalSampling = samplingFrequency;
                 track.OriginalMimetype = mimetype;
                 track.OriginalExtension = extension;
-                context.SaveChanges();
+                await context.SaveChangesAsync();
             }
         }
 
@@ -671,6 +693,7 @@ namespace DolomiteModel
         /// <param name="trackId">The ID of the track</param>
         /// <param name="artId">The ID of the art record. Can be null.</param>
         /// <param name="fileChange">Whether or not the art change should be processed to the file</param>
+        [Obsolete("Use SetTrackArtAsync method.")]
         public void SetTrackArt(long trackId, long? artId, bool fileChange)
         {
             using (var context = new Entities())
@@ -683,6 +706,27 @@ namespace DolomiteModel
                 track.Art = artId;
                 track.ArtChange = fileChange;
                 context.SaveChanges();
+            }
+        }
+
+        /// <summary>
+        /// Sets the art record for the given track to the given artGuid. It is permissible to set
+        /// it to <c>null</c>.
+        /// </summary>
+        /// <param name="track">The track to update</param>
+        /// <param name="artId">The ID of the art record. Can be null.</param>
+        /// <param name="fileChange">Whether or not the art change should be processed to the file</param>
+        public async Task SetTrackArtAsync(Pub.Track track, long? artId, bool fileChange)
+        {
+            using (var context = new Entities())
+            {
+                Track internalTrack = await GetTrackModel(track.InternalId, context, false).FirstOrDefaultAsync();
+                if (internalTrack == null)
+                    throw new ObjectNotFoundException(String.Format("Track {0} does not exist.", track.InternalId));
+
+                internalTrack.Art = artId;
+                track.ArtChange = fileChange;
+                await context.SaveChangesAsync();
             }
         }
 

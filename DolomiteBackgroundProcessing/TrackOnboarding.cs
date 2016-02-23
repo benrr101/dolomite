@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Threading.Tasks;
 using DolomiteManagement;
 using DolomiteModel.PublicRepresentations;
+using Newtonsoft.Json;
 using IO = System.IO;
 using System.Linq;
 using System.Reflection;
@@ -101,7 +102,9 @@ namespace DolomiteBackgroundProcessing
                         {
                             metadata = new TrackMetadata(fs, track.OriginalMimetype);
                         }
-                        StoreMetadata(track);
+                        StoreMetadata(track, metadata).Wait();
+                        StoreOriginalQuality(track, metadata).Wait();
+                        StoreAlbumArt(track, metadata).Wait();
                     }
                     catch (UnsupportedFormatException)
                     {
@@ -307,107 +310,100 @@ namespace DolomiteBackgroundProcessing
                 DeleteFileWithWait(IO.Path.GetFileName(asyncState.OriginalPath));
         }
 
-        /// <summary>
-        /// Strips the metadata from the track and stores it to the database
-        /// Also retrieves the mimetype in the process.
-        /// </summary>
-        /// <param name="track">The track to store metadata of</param>
-        private void StoreMetadata(Track track)
+
+        private async Task StoreMetadata(Track track, TrackMetadata metadata)
         {
-            //Trace.TraceInformation("{0} is retrieving metadata from {1}", GetHashCode(), track.Id);
+            // Step 1) Inject the metadata we extracted into the track
+            track.Metadata = new Dictionary<string, string>
+            {
+                // Step 1.1) Insert the well known track metadata
+                {@"Artist", metadata.Artist},
+                {@"AlbumArtist", metadata.AlbumArtist},
+                {@"Album", metadata.Album},
+                {@"Composer", metadata.Composer},
+                {@"Performer", metadata.Performer},
+                {@"Date", metadata.Date},
+                {@"Genre", metadata.Genre},
+                {@"Title", metadata.Title},
+                {@"DiscNumber", metadata.DiscNumber},
+                {@"TotalDiscs", metadata.TotalDiscs},
+                {@"TrackNumber", metadata.TrackNumber},
+                {@"TotalTracks", metadata.TotalTracks},
+                {@"Copyright", metadata.Copyright},
+                {@"Comment", metadata.Comment},
+                {@"Publisher", metadata.Publisher},
+                {@"DurationMilli", metadata.Duration.ToString(NumberFormatInfo.InvariantInfo)},
 
-            //// Generate the mimetype of the track
-            //// Why? b/c tag lib isn't smart enough to figure it out for me,
-            //// except for determining it based on extension -- which is silly.
-            //IO.FileStream localFile = LocalStorageManager.RetrieveReadableFile(track.Id.ToString());
-            //string mimetype = MimetypeDetector.GetAudioMimetype(localFile);
-            //if (mimetype == null)
-            //{
-            //    localFile.Close();
-            //    throw new UnsupportedFormatException(String.Format("The mimetype of {0} could not be determined from the file header.", track.Id));
-            //}
+                // Step 1.2) Insert the Dolomite-specific metadata
+                {
+                    @"Dol:DateAdded", 
+                    Math.Round((DateTime.UtcNow - new DateTime(1970, 1, 1)).TotalSeconds).ToString(NumberFormatInfo.InvariantInfo)
+                },
+                {@"Dol:PlayCount", "0"},
+                {@"Dol:SkipCount", "0"},
+                {@"Dol:OriginalBitrate", metadata.BitrateKbps.ToString(NumberFormatInfo.InvariantInfo)},
+                {@"Dol:OriginalCodec", metadata.Codec},
+                
+            };
 
-            //// Retrieve the file from temporary storage
-            //File file = File.Create(LocalStorageManager.GetPath(track.Id.ToString()), mimetype, ReadStyle.Average);
-            
-            //Dictionary<string, string> metadata = new Dictionary<string, string>();
-            
-            //// Use reflection to iterate over the properties in the tag
-            //PropertyInfo[] properties = typeof (Tag).GetProperties();
-            //foreach (PropertyInfo property in properties)
-            //{
-            //    string name = property.Name;
-            //    object value = property.GetValue(file.Tag);
+            // Step 1.3) Add custom frames if they exist
+            if (metadata.CustomFrames.Count > 0)
+            {
+                track.Metadata.Add(@"Dol:Custom", JsonConvert.SerializeObject(metadata.CustomFrames));
+            }
 
-            //    // Strip off "First" from the tag names
-            //    name = name.Replace("First", string.Empty);
+            // Step 1.4) Remove any fields that are null
+            track.Metadata = track.Metadata.Where(kvp => kvp.Value != null)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-            //    // We really only want strings to store and ints
-            //    if(value is string)
-            //        metadata.Add(name, (string)value);
-            //    else if(value is uint && (uint)value != 0)
-            //        metadata.Add(name, ((uint)value).ToString(CultureInfo.CurrentCulture));
-            //}
+            // Step 2) Send the metadata to the database
+            await TrackDbManager.Instance.StoreTrackMetadataAsync(track, false);
+        }
 
-            //// Grab some extra data from the file
-            //metadata.Add("Duration", Math.Round(file.Properties.Duration.TotalSeconds).ToString(CultureInfo.CurrentCulture));
-            //metadata.Add("DateAdded",
-            //    Math.Round((DateTime.UtcNow - new DateTime(1970, 1, 1).ToLocalTime()).TotalSeconds)
-            //        .ToString(CultureInfo.CurrentCulture));
-            //metadata.Add("PlayCount", "0");
-            //metadata.Add("OriginalBitrate", file.Properties.AudioBitrate.ToString(CultureInfo.CurrentCulture));
-            //string extension = MimetypeDetector.GetExtension(file.MimeType);
-            //metadata.Add("OriginalFormat", extension);
+        private async Task StoreOriginalQuality(Track track, TrackMetadata metadata)
+        {
+            await TrackDbManager.Instance.SetAudioQualityInfoAsync(track.InternalId, metadata.BitrateKbps, metadata.Mimetype,
+                metadata.Extension);
+        }
 
-            //// Send the metadata to the database
-            //DatabaseManager.StoreTrackMetadata(track, metadata, false);
+        private async Task StoreAlbumArt(Track track, TrackMetadata metadata)
+        {
+            // Step 0) Make sure there is art to store
+            if (metadata.ImageBytes.Length <= 0)
+            {
+                return;
+            } 
 
-            //// Store the audio metadata to the database
-            //DatabaseManager.SetAudioQualityInfo(track.InternalId, file.Properties.AudioBitrate,
-            //    file.Properties.AudioSampleRate, file.MimeType, extension);
+            // Step 1) Calculate a hash of the album art
+            IO.MemoryStream artStream = new IO.MemoryStream(metadata.ImageBytes);
+            string hash = await LocalStorageManager.CalculateMd5HashAsync(artStream);
 
-            //// Rip out the album art (or whatever is the first art in the file)
-            //if (file.Tag.Pictures.Length > 0)
-            //{
-            //    StoreAlbumArt(track.InternalId, file.Tag.Pictures[0]);
-            //}
-            throw new NotImplementedException();
+            // Step 2) Determine if the album art has already been uploaded
+            long? artId = TrackDbManager.Instance.GetArtIdByHash(hash);
+            if (!artId.HasValue)
+            {
+                // Art has not been uploaded before, start the upload!
+                // Create a new guid to prevent conflicts
+                Guid artGuid = Guid.NewGuid();
+
+                // Start a task for uploading the art
+                string artPath = AzureStorageManager.CombineAzurePath(TrackManager.ArtDirectory, artGuid.ToString());
+
+                // Setup tasks for uploading the art to blob storage and creating the record for it
+                // in the DB
+                var uploadTask = AzureStorageManager.Instance.StoreBlobAsync(TrackStorageContainer, artStream, artPath);
+                var createTask = TrackDbManager.Instance.CreateArtRecordAsync(artGuid, metadata.ImageMimetype, hash);
+
+                await Task.WhenAll(new[] { uploadTask, createTask });
+
+                artId = createTask.Result;
+            }
+
+            // Step 3) Set the track's art in the DB
+            await TrackDbManager.Instance.SetTrackArtAsync(track, artId, false);
         }
 
         #endregion
-
-        /// <summary>
-        /// Stores the album art for the track using the IPicture object from
-        /// the taglib file. If it does not exist (based on hash of the file)
-        /// the file is stored to azure and a new record is added to the database.
-        /// </summary>
-        /// <param name="trackGuid">The guid of the track to store the art for</param>
-        /// <param name="art">The art object to store</param>
-        private void StoreAlbumArt(long trackGuid, IPicture art)
-        {
-            // Grab the info
-            var artMime = art.MimeType;
-            var artFile = new IO.MemoryStream(art.Data.ToArray());
-
-            // Calculate the hash of the album art
-            string hash = LocalStorageManager.CalculateHash(artFile, null);
-            var artId = DatabaseManager.GetArtIdByHash(hash);
-            if (artId == default(long))
-            {
-                // The art guid is a brand new guid to avoid conflicts.
-                Guid? artGuid = Guid.NewGuid();
-
-                // We need to store the art and create a new db record for it
-                string artPath = TrackManager.ArtDirectory + "/" + artGuid;
-                AzureStorageManager.StoreBlob(TrackStorageContainer, artPath, artFile);
-
-                // Create a new record for the art
-                artId = DatabaseManager.CreateArtRecord(artGuid.Value, artMime, hash);
-            }
-
-            // Store the art record to the track
-            DatabaseManager.SetTrackArt(trackGuid, artId, false);
-        }
 
         /// <summary>
         /// Cancels the onboarding process by deleting all created files and

@@ -200,9 +200,7 @@ namespace DolomiteManagement
         {
             using (FileStream file = File.OpenRead(GetPath(filename)))
             {
-                MD5 hasher = MD5.Create();
-                byte[] hashBytes = hasher.ComputeHash(file);
-                return BitConverter.ToString(hashBytes).Replace("-", String.Empty);
+                return CalculateMd5Hash(file);
             }
         }
 

@@ -24,6 +24,8 @@ namespace DolomiteBackgroundProcessing
 
 
         public string Codec { get; private set; }
+        public string Extension { get; private set; }
+        public string Mimetype { get; private set; }
         public int BitrateKbps { get; private set; }
         public int Duration { get; private set; }
         public string Artist { get; private set; }
@@ -45,10 +47,17 @@ namespace DolomiteBackgroundProcessing
         public byte[] ImageBytes { get; private set; }
         public string ImageMimetype { get; private set; }
 
+        /// <summary>
+        /// Creates a new TrackMetadata object using the TagLib-portable libraries. Requires access
+        /// to a file and knowing its mimetype.
+        /// </summary>
+        /// <param name="file">The file to read the metadata for</param>
+        /// <param name="mimetype">The mimetype of the file to read</param>
         public TrackMetadata(FileStream file, string mimetype)
         {
             // Setup the internal arrays
             CustomFrames = new Dictionary<string, string>();
+            Mimetype = mimetype;
 
             File tagFile = File.Create(new StreamFileAbstraction(file.Name, file, null), mimetype, ReadStyle.Average);
 
@@ -176,7 +185,7 @@ namespace DolomiteBackgroundProcessing
                         switch (f.Description.ToUpperInvariant())
                         {
                             case "PERFORMER":
-                                Publisher = f.Text[0];
+                                Performer = f.Text[0];
                                 break;
                             default:
                                 CustomFrames.Add(f.Description, String.Join(";", f.Text));
@@ -275,18 +284,21 @@ namespace DolomiteBackgroundProcessing
                 {
                     Codec += "CBR";
                 }
+                Extension = "mp3";
             }
             else if (codec is TagLib.Flac.StreamHeader)
             {
                 TagLib.Flac.StreamHeader flacCodec = (TagLib.Flac.StreamHeader)codec;
                 BitrateKbps = flacCodec.AudioBitrate;
                 Codec = "FLAC";
+                Extension = "flac";
             }
             else if (codec is TagLib.Ogg.Codecs.Vorbis)
             {
                 TagLib.Ogg.Codecs.Vorbis vorbisCodec = (TagLib.Ogg.Codecs.Vorbis)codec;
                 BitrateKbps = vorbisCodec.AudioBitrate;
                 Codec = "Vorbis";
+                Extension = "ogg";
             }
         }
 
