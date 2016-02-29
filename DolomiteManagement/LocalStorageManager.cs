@@ -141,18 +141,25 @@ namespace DolomiteManagement
         #region Deletion Methods
 
         /// <summary>
-        /// Deletes the file with the fiven name from the onboarding storage
+        /// Deletes the file with the given name from local storage
         /// </summary>
-        /// <param name="filename">Name of the file to delete</param>
+        /// <param name="filename">
+        /// Path of the file to delete, relative to the root of onboarding storage
+        /// </param>
         public void DeleteFile(string filename)
         {
-            Trace.TraceInformation("Attempting to delete {0} from local storage, w/o wait", filename);
+            Trace.TraceInformation("Attempting to delete {0} from local storage", filename);
 
             // Delete the file
             string filePath = GetPath(filename);
             if (File.Exists(filePath))
             {
-                File.Delete(GetPath(filename));
+                File.Delete(filePath);
+                Trace.TraceInformation("Successfully deleted {0}", filePath);
+            }
+            else
+            {
+                Trace.TraceInformation("File does not exist, ignoring {0}", filePath);
             }
         }
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -9,7 +8,6 @@ using DolomiteModel.PublicRepresentations;
 using Newtonsoft.Json;
 using IO = System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using DolomiteModel;
 using TagLib;
@@ -124,7 +122,11 @@ namespace DolomiteBackgroundProcessing
                     // Create all the qualities for the track
                     try
                     {
-                        CreateQualities(workItemId.Value);
+                        var qualities = DetermineQualitiesToGenerate(track, metadata).Result;
+                        foreach (var quality in qualities)
+                        {
+                            GenerateQuality(track, quality).Wait();
+                        } 
                     }
                     catch (Exception)
                     {
@@ -134,7 +136,8 @@ namespace DolomiteBackgroundProcessing
                     }
 
                     // Onboarding complete! Delete the temp copy! Release the lock!
-                    AzureStorageManager.DeleteBlob(TrackStorageContainer, OnboardingDirectory + '/' + workItemId.Value);
+                    LocalStorageManager.Instance.DeleteFile(trackFilePath);
+                    AzureStorageManager.DeleteBlob(TrackStorageContainer, AzureStorageManager.CombineAzurePath(OnboardingDirectory, track.Id.ToString()));
                     DatabaseManager.ReleaseAndCompleteOnboardingItem(workItemId.Value);
                 }
                 else
@@ -147,130 +150,6 @@ namespace DolomiteBackgroundProcessing
         }
 
         #region Onboarding Methods
-
-        /// <summary>
-        /// Utilize FFmpeg process launching to create all the necessary qualities
-        /// of the track file
-        /// </summary>
-        /// <param name="trackId">The ID of the track to create a quality of</param>
-        private void CreateQualities(long trackId)
-        {
-            // Grab the track that will be manipulated
-            var track = DatabaseManager.GetTrack(trackId);
-
-            // Fetch all supported qualities
-            var qualitites = DatabaseManager.GetAllQualities();
-            int originalQuality = track.Qualities.First(q => q.Name == "Original").BitrateKbps;
-
-            // Figure out what qualities to use by picking all qualities with bitrates
-            // lessthan or equal to the original (+/- 5kbps -- for lousy sources)
-            // ReSharper disable PossibleInvalidOperationException  (this isn't possible since the fetching method does not select nulls)
-            var maxQuality = qualitites.Where(q => Math.Abs(q.Bitrate - originalQuality) <= 5);
-            var lessQualities = qualitites.Where(q => q.Bitrate < originalQuality);
-            var requiredQualities = lessQualities.Union(maxQuality);
-            // ReSharper restore PossibleInvalidOperationException
-
-            // Generate new audio files for each quality that is required
-            // @TODO Replace with parallel.foreach
-            foreach (Quality quality in requiredQualities)
-            {
-                // Don't waste time processing the file if we have a really close match
-                if (Math.Abs(quality.Bitrate - originalQuality) <= 5)
-                {
-                    // Copy the original file to this quality's directory
-                    MoveFileToAzure(LocalStorageManager.GetPath(trackId.ToString()), quality.Directory, track.Id, false);
-                    continue;
-                }
-                
-                string inputFilename = LocalStorageManager.GetPath(trackId.ToString());
-
-                string outputFilename = String.Format("{0}.{1}.{2}", trackId, quality.Bitrate, quality.Extension);
-                string outputFilePath = LocalStorageManager.GetPath(outputFilename);
-
-                // Arguments:
-                // -i {2}               - input file path
-                // -vn                  - drop all video streams (including album art, as per http://stackoverflow.com/a/20202233)
-                // -acodec {0}          - the codec to transcode to
-                // -ab {1}000           - the bitrate in bps
-                // -y {3}               - the output path
-                // -map_metadata -1     - drop all metadata
-                string arguments = String.Format("-i \"{2}\" -vn -acodec {0} -map_metadata -1 -ab {1}000 -y \"{3}\"", quality.Codec,
-                                                 quality.Bitrate, inputFilename, outputFilePath);
-
-                // Borrowing some code from http://stackoverflow.com/a/8726175
-                ProcessStartInfo psi = new ProcessStartInfo
-                    {
-                        FileName = @"Externals\ffmpeg.exe",
-                        Arguments = arguments,
-                        CreateNoWindow = true,
-                        ErrorDialog = false,
-                        UseShellExecute = false,
-                        WindowStyle = ProcessWindowStyle.Hidden,
-                        RedirectStandardOutput = true,
-                        RedirectStandardInput = false,
-                        RedirectStandardError = true
-                    };
-
-                // Launch the process
-                Trace.TraceInformation("Launching {0} {1}", psi.FileName, psi.Arguments);
-                using (Process exeProcess = Process.Start(psi))
-                {
-                    string outString = string.Empty;
-                    
-                    // use ansynchronous reading for at least one of the streams
-                    // to avoid deadlock
-                    exeProcess.OutputDataReceived += (s, e) =>
-                        {
-                            outString += e.Data;
-                        };
-                    exeProcess.BeginOutputReadLine();
-                    
-                    // now read the StandardError stream to the end
-                    // this will cause our main thread to wait for the
-                    // stream to close (which is when ffmpeg quits)
-                    string errString = exeProcess.StandardError.ReadToEnd();
-                    Trace.TraceWarning(errString);
-                }
-
-                // @TODO Make sure the process call succeeded
-
-                // Upload the file to azure
-                MoveFileToAzure(outputFilePath, quality.Directory, track.Id);
-
-                // Store the quality record to the database
-                DatabaseManager.AddAvailableQualityRecord(track, quality);
-            }
-
-            // Upload the original file
-            MoveFileToAzure(LocalStorageManager.GetPath(trackId.ToString()), "original", track.Id);
-            DatabaseManager.AddAvailableOriginalQualityRecord(track);
-        }
-
-        /// <summary>
-        /// Moves the file to azure asnynchronously
-        /// </summary>
-        /// <param name="tempPath">Path of the file in local storage to move</param>
-        /// <param name="directory">Directory in Azure to store the file</param>
-        /// <param name="trackGuid">GUID of the track that is being stored</param>
-        /// <param name="deleteOnComplete">Whether or not to delete the original file when the move has completed</param>
-        private void MoveFileToAzure(string tempPath, string directory, Guid trackGuid, bool deleteOnComplete = true)
-        { 
-            // Open a file stream to the file to move
-            IO.FileStream file = LocalStorageManager.RetrieveReadableFile(tempPath);
-
-            // Construct the target destination
-            string targetPath = directory + '/' + trackGuid;
-
-            // Start the upload of the file to azure
-            AsynchronousState state = new AsynchronousState
-                {
-                    FileStream = file,
-                    Delete = deleteOnComplete,
-                    OriginalPath = tempPath,
-                    TrackGuid = trackGuid
-                };
-            AzureStorageManager.StoreBlobAsync(TrackStorageContainer, targetPath, file, CompleteMoveFileToAzure, state);
-        }
 
         /// <summary>
         /// Copies the file from azure to the local, temporary storage
@@ -286,30 +165,6 @@ namespace DolomiteBackgroundProcessing
                 await AzureStorageManager.Instance.DownloadBlobAsync(TrackStorageContainer, azurePath, localStream);
             }
         }
-
-        /// <summary>
-        /// Callback for when the upload has completed.
-        /// </summary>
-        /// <param name="state">The state object from the callback</param>
-        private void CompleteMoveFileToAzure(IAsyncResult state)
-        {
-            // Make sure we have the correct info back
-            AsynchronousState asyncState = state.AsyncState as AsynchronousState;
-            if (asyncState == null)
-            {
-                // Something really went wrong. Cancel the onboarding.
-                throw new IO.InvalidDataException("Expected AsynchronousState object.");
-            }
-
-            // Close the upload
-            asyncState.Blob.EndUploadFromStream(state);
-
-            // Close the file and delete it
-            asyncState.FileStream.Close();
-            if (asyncState.Delete)
-                DeleteFileWithWait(IO.Path.GetFileName(asyncState.OriginalPath));
-        }
-
 
         private async Task StoreMetadata(Track track, TrackMetadata metadata)
         {
@@ -401,6 +256,101 @@ namespace DolomiteBackgroundProcessing
 
             // Step 3) Set the track's art in the DB
             await TrackDbManager.Instance.SetTrackArtAsync(track, artId, false);
+        }
+
+        private async Task<List<Quality>> DetermineQualitiesToGenerate(Track track, TrackMetadata metadata)
+        {
+            // Step 1) Fetch all the supported qualities from the DB
+            List<Quality> allQualities = await TrackDbManager.Instance.GetAllQualitiesAsync();
+
+            // Step 2) Determine which qualities to use by picking all qualities with bitrates less
+            // than or equal to the original (+/- 5kbps to handle lousy sources)
+            var maxQuality = allQualities.Where(q => Math.Abs(q.Bitrate - metadata.BitrateKbps) <= 5);
+            var lesserQualities = allQualities.Where(q => q.Bitrate < metadata.BitrateKbps);
+
+            return lesserQualities.Union(maxQuality).ToList();
+        }
+
+        private async Task GenerateQuality(Track track, Quality quality)
+        {
+            // Determine the paths of the input and output
+            string inputRelativeToLocalStoragePath = IO.Path.Combine(OnboardingDirectory, track.Id.ToString());
+            string inputFilePath = LocalStorageManager.Instance.GetPath(inputRelativeToLocalStoragePath);
+            string outputFilename = String.Format("{0}.{1}.{2}", track.Id, quality.Directory, quality.Extension);
+            string outputLocalRelative = IO.Path.Combine(OnboardingDirectory, outputFilename);
+            string outputLocalFilePath = LocalStorageManager.Instance.GetPath(IO.Path.Combine(OnboardingDirectory, outputFilename));
+
+            // @TODO: Figure out what to do if the quality to generate is the same as the original file
+
+            // Arguments:
+            // -i {2}               - input file path
+            // -vn                  - drop all video streams (including album art, as per http://stackoverflow.com/a/20202233)
+            // -y {3}               - the output path
+            // -map_metadata -1     - drop all metadata
+            string arguments = String.Format(@"-i ""{0}"" -vn {1} -map_metadata -1 -y ""{2}""",
+                inputFilePath, quality.FfmpegArgs, outputLocalFilePath);
+
+            // Borrowing some code from http://stackoverflow.com/a/8726175
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = @"Externals\ffmpeg.exe",
+                Arguments = arguments,
+                CreateNoWindow = true,
+                ErrorDialog = false,
+                UseShellExecute = false,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                RedirectStandardOutput = true,
+                RedirectStandardInput = false,
+                RedirectStandardError = true
+            };
+            await LaunchProcessAsync(psi);
+
+            // @TODO Make sure the process call succeeded
+
+            // Upload the file to Azure and delete it when we're done
+            await MoveFileToAzure(outputLocalFilePath, quality.Directory);
+            LocalStorageManager.Instance.DeleteFile(outputLocalRelative);
+
+            // Store the quality record to the database
+            DatabaseManager.AddAvailableQualityRecord(track, quality);
+        }
+
+        /// <summary>
+        /// Moves the file to azure asynchronously
+        /// </summary>
+        /// <param name="tempPath">Path of the file in local storage to move</param>
+        /// <param name="directory">Directory in Azure to store the file</param>
+        /// <param name="trackGuid">GUID of the track that is being stored</param>
+        /// <param name="deleteOnComplete">Whether or not to delete the original file when the move has completed</param>
+        private async Task MoveFileToAzure(string sourcePath, string destDir)
+        {
+            // Construct the target destination
+            string destPath = AzureStorageManager.CombineAzurePath(destDir, IO.Path.GetFileName(sourcePath));
+
+            // Start the upload of the file to azure
+            await AzureStorageManager.StoreBlobAsync(TrackStorageContainer, sourcePath, destPath);
+        }
+
+        private Task LaunchProcessAsync(ProcessStartInfo psi)
+        {
+            TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
+            
+            Process process = new Process
+            {
+                StartInfo = psi,
+                EnableRaisingEvents = true
+            };
+
+            process.Exited += (sender, args) =>
+            {
+                tcs.SetResult(true);
+                process.Dispose();
+            };
+            // TODO: capture the output
+
+            process.Start();
+
+            return tcs.Task;
         }
 
         #endregion
