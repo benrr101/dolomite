@@ -5,9 +5,9 @@ USING (
 	-- (2, 'MP3 128Kbps',	128, '-c:a libmp3lame -ab 128000',	'mp3', 'mp3_128',	'audio/mpeg'),		-- Supported in IE/Safari/VLC plugin
 	   (3, 'MP3 192Kbps',	192, '-c:a libmp3lame -ab 192000',	'mp3', 'mp3_192',	'audio/mpeg'),		-- Supported in IE/Safari/VLC plugin
 	-- (4, 'MP3 320Kbps',	320, '-c:a libmp3lame -ab 320000',	'mp3', 'mp3_320',	'audio/mpeg'),		-- Supported in IE/Safari/VLC plugin
-	   (5, 'OGG/Vorbis 2',	96,	 '-c:libvorbis -q:a 2',			'ogg', 'ogg_4',		'audio/ogg'),		-- Supported in FireFox/Chrome
-	   (6, 'OGG/Vorbis 4',	128, '-c:libvorbis -q:a 4',			'ogg', 'ogg_6',		'audio/ogg'),		-- Supported in FireFox/Chrome
-	   (7, 'OGG/Vorbis 6',	192, '-c:libvorbis -q:a 6',			'ogg', 'ogg_8',		'audio/ogg'),		-- Supported in FireFox/Chrome
+	   (5, 'OGG/Vorbis 2',	96,	 '-c:a libvorbis -q:a 2',		'ogg', 'ogg_4',		'audio/ogg'),		-- Supported in FireFox/Chrome
+	   (6, 'OGG/Vorbis 4',	128, '-c:a libvorbis -q:a 4',		'ogg', 'ogg_6',		'audio/ogg'),		-- Supported in FireFox/Chrome
+	   (7, 'OGG/Vorbis 6',	192, '-c:a libvorbis -q:a 6',		'ogg', 'ogg_8',		'audio/ogg'),		-- Supported in FireFox/Chrome
 	   (1, 'Original',		NULL, NULL,							NULL,	'original', NULL)				-- Required
 	) AS [source] ([Id], [Name], [Bitrate], [FfmpegArgs], [Extension], [Directory], [Mimetype])
 ON [source].[Id] = [target].[Id]

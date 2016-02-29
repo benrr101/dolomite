@@ -756,7 +756,6 @@
           </Key>
           <Property Name="Id" Type="Int32" Nullable="false" />
           <Property Name="Name" Type="String" MaxLength="20" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="Codec" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="Bitrate" Type="Int32" />
           <Property Name="Extension" Type="String" MaxLength="3" FixedLength="true" Unicode="true" />
           <Property Name="Mimetype" Type="String" MaxLength="30" FixedLength="false" Unicode="true" />
@@ -1409,7 +1408,6 @@
                 <ScalarProperty Name="FfmpegArgs" ColumnName="FfmpegArgs" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
-                <ScalarProperty Name="Codec" ColumnName="Codec" />
                 <ScalarProperty Name="Bitrate" ColumnName="Bitrate" />
                 <ScalarProperty Name="Extension" ColumnName="Extension" />
                 <ScalarProperty Name="Mimetype" ColumnName="Mimetype" />

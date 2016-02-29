@@ -230,7 +230,7 @@ namespace DolomiteModel
             {
                 // Grab all the qualities from the db
                 return context.Qualities.AsNoTracking()
-                    .Where(q => q.Bitrate != null && q.Codec != null)
+                    .Where(q => q.Bitrate != null)
                     .Select(q => new Pub.Quality
                     {
                         Id = q.Id,
@@ -253,7 +253,7 @@ namespace DolomiteModel
             using (var context = new Entities())
             {
                 return await context.Qualities.AsNoTracking()
-                    .Where(q => q.Bitrate != null && q.Codec != null)
+                    .Where(q => q.Bitrate != null)
                     .Select(q => new Pub.Quality
                     {
                         Id = q.Id,
