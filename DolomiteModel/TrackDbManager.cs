@@ -223,6 +223,7 @@ namespace DolomiteModel
         /// Fetches all supported qualities from the database
         /// </summary>
         /// <returns>A list of qualitites</returns>
+        [Obsolete("Use GetAllQualitiesAsync.")]
         public List<Pub.Quality> GetAllQualities()
         {
             using (var context = new Entities())
@@ -234,11 +235,33 @@ namespace DolomiteModel
                     {
                         Id = q.Id,
                         Bitrate = q.Bitrate.Value,
-                        Codec = q.Codec,
+                        FfmpegArgs = q.FfmpegArgs,
                         Directory = q.Directory,
                         Extension = q.Extension
                     })
                     .ToList();
+            }
+        }
+
+        /// <summary>
+        /// Fetches all supported qualities from the database
+        /// </summary>
+        /// <returns>A list of qualities</returns>
+        /// TODO: Add caching
+        public async Task<List<Pub.Quality>> GetAllQualitiesAsync()
+        {
+            using (var context = new Entities())
+            {
+                return await context.Qualities.AsNoTracking()
+                    .Where(q => q.Bitrate != null && q.Codec != null)
+                    .Select(q => new Pub.Quality
+                    {
+                        Id = q.Id,
+                        Bitrate = q.Bitrate.Value,
+                        FfmpegArgs = q.FfmpegArgs,
+                        Directory = q.Directory,
+                        Extension = q.Extension
+                    }).ToListAsync();
             }
         }
 

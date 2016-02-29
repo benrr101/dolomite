@@ -26,6 +26,7 @@ namespace DolomiteModel.EntityFramework
         public string Extension { get; set; }
         public string Mimetype { get; set; }
         public string Directory { get; set; }
+        public string FfmpegArgs { get; set; }
     
         public virtual ICollection<AvailableQuality> AvailableQualities { get; set; }
     }

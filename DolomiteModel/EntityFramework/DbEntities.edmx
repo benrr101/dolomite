@@ -125,6 +125,7 @@
           <Property Name="Codec" Type="nvarchar" MaxLength="50" />
           <Property Name="Bitrate" Type="int" />
           <Property Name="Extension" Type="nchar" MaxLength="3" />
+          <Property Name="FfmpegArgs" Type="nvarchar" MaxLength="140" />
           <Property Name="Mimetype" Type="nvarchar" MaxLength="30" />
           <Property Name="Directory" Type="nvarchar" MaxLength="50" Nullable="false" />
         </EntityType>
@@ -761,6 +762,7 @@
           <Property Name="Mimetype" Type="String" MaxLength="30" FixedLength="false" Unicode="true" />
           <Property Name="Directory" Type="String" MaxLength="50" FixedLength="false" Unicode="true" Nullable="false" />
           <NavigationProperty Name="AvailableQualities" Relationship="Self.FK_AVAILABLEQUALITIES_QUALITY" FromRole="Qualities" ToRole="AvailableQualities" />
+          <Property Name="FfmpegArgs" Type="String" MaxLength="140" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="Rule">
           <Key>
@@ -1404,6 +1406,7 @@
           <EntitySetMapping Name="Qualities">
             <EntityTypeMapping TypeName="EntityFramework.Quality">
               <MappingFragment StoreEntitySet="Qualities">
+                <ScalarProperty Name="FfmpegArgs" ColumnName="FfmpegArgs" />
                 <ScalarProperty Name="Id" ColumnName="Id" />
                 <ScalarProperty Name="Name" ColumnName="Name" />
                 <ScalarProperty Name="Codec" ColumnName="Codec" />
