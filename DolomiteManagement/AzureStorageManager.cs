@@ -216,6 +216,7 @@ namespace DolomiteManagement
         /// </summary>
         /// <param name="containerName">The name of the container that houses the blob</param>
         /// <param name="path">Path of the blob</param>
+        [Obsolete("Use DeleteBlobAsync")]
         public void DeleteBlob(string containerName, string path)
         {
             // Retreive a reference to the container
@@ -225,6 +226,21 @@ namespace DolomiteManagement
             // Create a reference to the blob and delete it
             CloudBlockBlob blob = container.GetBlockBlobReference(path);
             blob.DeleteIfExists();
+        }
+
+        /// <summary>
+        /// Asynchronously deletes the blob with the given path from the given container
+        /// </summary>
+        /// <param name="containerName">The name of the container that houses the blob</param>
+        /// <param name="path">Path of the blob</param>
+        public async Task DeleteBlobAsync(string containerName, string path)
+        {
+            // Retrieve a reference to the container and container
+            CloudBlobContainer container = BlobClient.GetContainerReference(containerName);
+            ICloudBlob blob = container.GetBlockBlobReference(path);
+
+            // Delete the blob
+            await blob.DeleteIfExistsAsync();
         }
 
         #endregion
