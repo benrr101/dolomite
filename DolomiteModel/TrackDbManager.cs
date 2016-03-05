@@ -743,12 +743,67 @@ namespace DolomiteModel
         {
             using (var context = new Entities())
             {
+                // Fetch down the track to make sure it exists, we'll be making changes to it soon
                 Track internalTrack = await GetTrackModel(track.InternalId, context, false).FirstOrDefaultAsync();
                 if (internalTrack == null)
                     throw new ObjectNotFoundException(String.Format("Track {0} does not exist.", track.InternalId));
 
+                // Set the track's information
                 internalTrack.Art = artId;
                 track.ArtChange = fileChange;
+
+                if (artId != null)
+                {
+                    // Before we try to save, make sure that the art exists
+                    Art internalArt = await GetArtModel(artId.Value, context, true).FirstOrDefaultAsync();
+                    if (internalArt == null)
+                        throw new ObjectNotFoundException(String.Format("Art {0} does not exist.", artId));
+                }
+                else
+                {
+                    // Since we're removing art from a track, see if we can just remove the art
+                    if (internalTrack.Art != null && internalTrack.Art1.Tracks.Count <= 1)
+                    {
+                        context.Arts.Remove(internalTrack.Art1);
+                    }
+                }
+                
+                await context.SaveChangesAsync();
+            }
+        }
+
+        /// <summary>
+        /// TODO: Make this a sproc
+        /// </summary>
+        /// <param name="track"></param>
+        /// <param name="userError"></param>
+        /// <param name="adminError"></param>
+        /// <returns></returns>
+        public async Task SetTrackErrorStateAsync(Pub.Track track, string userError, string adminError)
+        {
+            using (var context = new Entities())
+            {
+                // Create a new error info
+                ErrorInfo ei = new ErrorInfo
+                {
+                    AdminError = adminError,
+                    UserError = userError
+                };
+                context.ErrorInfoes.Add(ei);
+                await context.SaveChangesAsync();
+
+                // Link the error info to the track
+                Track internalTrack = await GetTrackModel(track.InternalId, context, false).FirstOrDefaultAsync();
+                if (internalTrack == null)
+                {
+                    throw new ObjectNotFoundException(String.Format("Track {0} does not exist.", track.InternalId));
+                }
+                internalTrack.ErrorInfo = ei.Id;
+
+                // Unlock the track
+                internalTrack.Locked = false;
+                internalTrack.Status = 5;
+
                 await context.SaveChangesAsync();
             }
         }
@@ -860,6 +915,22 @@ namespace DolomiteModel
                 // Delete the record
                 context.Metadatas.Remove(field);
                 context.SaveChanges();
+            }
+        }
+
+        /// <summary>
+        /// Deletes all metadata for a given track. Should only be used when marking a track into
+        /// an error state.
+        /// </summary>
+        /// <param name="trackGuid">GUID of the track to delete the metadata for</param>
+        public async Task DeleteAllMetadataAsync(Guid trackGuid)
+        {
+            using (var context = new Entities())
+            {
+                // Delete all the metadata for the given track
+                var trackMetadatas = context.Metadatas.Where(m => m.Track1.GuidId == trackGuid);
+                context.Metadatas.RemoveRange(trackMetadatas);
+                await context.SaveChangesAsync();
             }
         }
 

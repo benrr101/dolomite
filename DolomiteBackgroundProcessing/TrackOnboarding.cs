@@ -10,25 +10,11 @@ using IO = System.IO;
 using System.Linq;
 using System.Threading;
 using DolomiteModel;
-using TagLib;
 
 namespace DolomiteBackgroundProcessing
 {
     class TrackOnboarding
     {
-
-        #region Internal Asynchronous Callback Object
-
-        public class AsynchronousState : DolomiteManagement.Asynchronous.AzureAsynchronousState
-        {
-            public IO.FileStream FileStream { get; set; }
-            public string OriginalPath { get; set; }
-            public Guid TrackGuid { get; set; }
-            public bool Delete { get; set; }
-        }
-
-        #endregion
-
         #region Properties and Constants
 
         private const int SleepSeconds = 10;
@@ -42,6 +28,8 @@ namespace DolomiteBackgroundProcessing
         private static AzureStorageManager AzureStorageManager { get; set; }
 
         public static string TrackStorageContainer { private get; set; }
+
+        private List<Process> _launchedProcesses; 
 
         #endregion
 
@@ -68,6 +56,8 @@ namespace DolomiteBackgroundProcessing
 
             LocalStorageManager.Instance.InitializeStorageDirectory(OnboardingDirectory);
 
+            _launchedProcesses = new List<Process>();
+
             // Loop until the stop flag has been flown
             while (!_shouldStop)
             {                
@@ -79,66 +69,43 @@ namespace DolomiteBackgroundProcessing
                     Track track = DatabaseManager.GetTrack(workItemId.Value);
                     Trace.TraceInformation("Work item {0} picked up by {1}", workItemId.Value, GetHashCode());
                     string trackFilePath = IO.Path.Combine(OnboardingDirectory, track.Id.ToString());
-                    
-                    // Step 1: Grab the track from Azure
-                    try
-                    {
-                        CopyFileToLocalStorage(trackFilePath, track.Id).Wait();
-                    }
-                    catch (Exception)
-                    {
-                        Trace.TraceError("{1} failed to retrieve uploaded track {0} from Azure. Removing record...", workItemId, GetHashCode());
-                        CancelOnboarding(track);
-                        continue;
-                    }
 
-                    // Step 2: Grab the metadata for the track
-                    TrackMetadata metadata = null;
                     try
                     {
+                        // Step 1: Grab the track from Azure
+                        CopyFileToLocalStorage(trackFilePath, track.Id).Wait();
+
+                        // Step 2: Grab the metadata for the track
+                        TrackMetadata metadata;
                         using (IO.FileStream fs = LocalStorageManager.Instance.RetrieveReadableFile(trackFilePath))
                         {
                             metadata = new TrackMetadata(fs, track.OriginalMimetype);
                         }
-                        StoreMetadata(track, metadata).Wait();
-                        StoreOriginalQuality(track, metadata).Wait();
-                        StoreAlbumArt(track, metadata).Wait();
-                    }
-                    catch (UnsupportedFormatException)
-                    {
-                        // Failed to determine type. We don't want this file.
-                        Trace.TraceError("{1} failed to determine the type of track {0}. Removing record...", workItemId, GetHashCode());
-                        CancelOnboarding(track);
-                        continue;
-                    }
-                    catch (CorruptFileException)
-                    {
-                        // File is corrupt for whatever reason. We don't want this file.
-                        Trace.TraceError("{1} found corrupt file for track {0}. Removing record...", workItemId, GetHashCode());
-                        CancelOnboarding(track);
-                        continue;
-                    }
 
-                    // Create all the qualities for the track
-                    try
-                    {
-                        var qualities = DetermineQualitiesToGenerate(track, metadata).Result;
-                        foreach (var quality in qualities)
+                        // Step 3: Store the metadata to the database
+                        Task[] metadataTasks =
                         {
-                            GenerateQuality(track, quality).Wait();
-                        } 
-                    }
-                    catch (Exception)
-                    {
-                        Trace.TraceError("{1} failed to create qualities for this track {0}. Removing record...", workItemId, GetHashCode());
-                        CancelOnboarding(track);
-                        continue;
-                    }
+                            StoreMetadata(track, metadata),
+                            StoreOriginalQuality(track, metadata),
+                            StoreAlbumArt(track, metadata)
+                        };
+                        Task.WaitAll(metadataTasks);
 
-                    // Onboarding complete! Delete the temp copy! Release the lock!
-                    LocalStorageManager.Instance.DeleteFile(trackFilePath);
-                    AzureStorageManager.DeleteBlob(TrackStorageContainer, AzureStorageManager.CombineAzurePath(OnboardingDirectory, track.Id.ToString()));
-                    DatabaseManager.ReleaseAndCompleteOnboardingItem(workItemId.Value);
+                        // Step 4: Create all the qualities for the track
+                        var qualities = DetermineQualitiesToGenerate(metadata).Result;
+                        Task.WaitAll(qualities.Select(q => GenerateQuality(track, q)).ToArray());
+
+                        // Onboarding complete! Delete the temp copy! Release the lock!
+                        LocalStorageManager.Instance.DeleteFile(trackFilePath);
+                        string trackOnboardingAzurePath = AzureStorageManager.CombineAzurePath(OnboardingDirectory,
+                            track.Id.ToString());
+                        AzureStorageManager.DeleteBlobAsync(TrackStorageContainer, trackOnboardingAzurePath).Wait();
+                        DatabaseManager.ReleaseAndCompleteOnboardingItem(workItemId.Value);
+                    }
+                    catch (Exception e)
+                    {
+                        CancelOnboarding(track, "something went wrong", e.Message).Wait();
+                    }
                 }
                 else
                 {
@@ -152,21 +119,115 @@ namespace DolomiteBackgroundProcessing
         #region Onboarding Methods
 
         /// <summary>
-        /// Copies the file from azure to the local, temporary storage
+        /// Based on the list of qualities in the database, determine what qualities are lower
+        /// than the original quality of the track.
         /// </summary>
-        /// <param name="tempPath">Path for the file in local storage</param>
-        /// <param name="trackGuid">The guid of the track to pull from azure</param>
-        private static async Task CopyFileToLocalStorage(string tempPath, Guid trackGuid)
+        /// <param name="metadata">Metadata from the track to convert.</param>
+        private static async Task<List<Quality>> DetermineQualitiesToGenerate(TrackMetadata metadata)
         {
-            // Get the stream from Azure
-            string azurePath = AzureStorageManager.CombineAzurePath(OnboardingDirectory, trackGuid.ToString());
-            using (IO.FileStream localStream = LocalStorageManager.CreateFile(tempPath))
+            // Step 1) Fetch all the supported qualities from the DB
+            List<Quality> allQualities = await TrackDbManager.Instance.GetAllQualitiesAsync();
+
+            // Step 2) Determine which qualities to use by picking all qualities with bitrates less
+            // than or equal to the original (+/- 5kbps to handle lousy sources)
+            var maxQuality = allQualities.Where(q => Math.Abs(q.Bitrate - metadata.BitrateKbps) <= 5);
+            var lesserQualities = allQualities.Where(q => q.Bitrate < metadata.BitrateKbps);
+
+            // Step 3) Make sure that some qualities will be created
+            var qualitiesToCreate = lesserQualities.Union(maxQuality).ToList();
+            if (qualitiesToCreate.Count == 0)
             {
-                await AzureStorageManager.Instance.DownloadBlobAsync(TrackStorageContainer, azurePath, localStream);
+                // TODO: Better exceptions
+                throw new Exception("Quality too low! No qualities to generate!");
             }
+
+            return qualitiesToCreate;
         }
 
-        private async Task StoreMetadata(Track track, TrackMetadata metadata)
+        /// <summary>
+        /// Launches an instance ffmpeg to create lower quality version of the track that is being
+        /// onboarded. The lower quality track will be uploaded to Azure.
+        /// </summary>
+        /// <param name="track">The track to generate a lower quality of</param>
+        /// <param name="quality">The quality to convert the track to</param>
+        private async Task GenerateQuality(Track track, Quality quality)
+        {
+            // Determine the paths of the input and output
+            string inputRelativeToLocalStoragePath = IO.Path.Combine(OnboardingDirectory, track.Id.ToString());
+            string inputFilePath = LocalStorageManager.Instance.GetPath(inputRelativeToLocalStoragePath);
+            string outputFilename = GetQualityFileName(track, quality);
+            string outputLocalRelative = IO.Path.Combine(OnboardingDirectory, outputFilename);
+            string outputLocalFilePath = LocalStorageManager.Instance.GetPath(IO.Path.Combine(OnboardingDirectory, outputFilename));
+
+            // @TODO: Figure out what to do if the quality to generate is the same as the original file
+
+            // Arguments:
+            // -i {2}               - input file path
+            // -vn                  - drop all video streams (including album art, as per http://stackoverflow.com/a/20202233)
+            // -y {3}               - the output path
+            // -map_metadata -1     - drop all metadata
+            string arguments = String.Format(@"-i ""{0}"" -vn {1} -map_metadata -1 -y ""{2}""",
+                inputFilePath, quality.FfmpegArgs, outputLocalFilePath);
+
+            // Launch the process
+            await LaunchProcessAsync(@"Externals\ffmpeg.exe", arguments);
+
+            // Upload the file to Azure and delete it when we're done
+            await MoveFileToAzure(outputLocalFilePath, quality.Directory);
+            LocalStorageManager.Instance.DeleteFile(outputLocalRelative);
+
+            // Store the quality record to the database
+            DatabaseManager.AddAvailableQualityRecord(track, quality);
+        }
+
+        /// <summary>
+        /// Stores the album art record in the database, then uploads it to Azure.
+        /// </summary>
+        /// <param name="track">The track to store the album art for</param>
+        /// <param name="metadata">The metadata of the track to store album art for</param>
+        private static async Task StoreAlbumArt(Track track, TrackMetadata metadata)
+        {
+            // Step 0) Make sure there is art to store
+            if (metadata.ImageBytes.Length <= 0)
+            {
+                return;
+            }
+
+            // Step 1) Calculate a hash of the album art
+            IO.MemoryStream artStream = new IO.MemoryStream(metadata.ImageBytes);
+            string hash = await LocalStorageManager.CalculateMd5HashAsync(artStream);
+
+            // Step 2) Determine if the album art has already been uploaded
+            long? artId = TrackDbManager.Instance.GetArtIdByHash(hash);
+            if (!artId.HasValue)
+            {
+                // Art has not been uploaded before, start the upload!
+                // Create a new guid to prevent conflicts
+                Guid artGuid = Guid.NewGuid();
+
+                // Start a task for uploading the art
+                string artPath = AzureStorageManager.CombineAzurePath(TrackManager.ArtDirectory, artGuid.ToString());
+
+                // Setup tasks for uploading the art to blob storage and creating the record for it
+                // in the DB
+                var uploadTask = AzureStorageManager.Instance.StoreBlobAsync(TrackStorageContainer, artStream, artPath);
+                var createTask = TrackDbManager.Instance.CreateArtRecordAsync(artGuid, metadata.ImageMimetype, hash);
+
+                await Task.WhenAll(new[] { uploadTask, createTask });
+
+                artId = createTask.Result;
+            }
+
+            // Step 3) Set the track's art in the DB
+            await TrackDbManager.Instance.SetTrackArtAsync(track, artId, false);
+        }
+
+        /// <summary>
+        /// Stores the metadata of the track into the database
+        /// </summary>
+        /// <param name="track">The track to store the metadata for</param>
+        /// <param name="metadata">The metadata to store</param>
+        private static async Task StoreMetadata(Track track, TrackMetadata metadata)
         {
             // Step 1) Inject the metadata we extracted into the track
             track.Metadata = new Dictionary<string, string>
@@ -215,85 +276,141 @@ namespace DolomiteBackgroundProcessing
             await TrackDbManager.Instance.StoreTrackMetadataAsync(track, false);
         }
 
-        private async Task StoreOriginalQuality(Track track, TrackMetadata metadata)
+        /// <summary>
+        /// Store the original information about the track in the database.
+        /// </summary>
+        /// <param name="track">The track to store the information about</param>
+        /// <param name="metadata">The information to store about the track</param>
+        private static async Task StoreOriginalQuality(Track track, TrackMetadata metadata)
         {
             await TrackDbManager.Instance.SetAudioQualityInfoAsync(track.InternalId, metadata.BitrateKbps, metadata.Mimetype,
                 metadata.Extension);
         }
 
-        private async Task StoreAlbumArt(Track track, TrackMetadata metadata)
+        #endregion
+
+        /// <summary>
+        /// Cleans up after a botched onboarding process by deleting any files that were generated
+        /// locally and in Azure. The track record is placed in the an error state.
+        /// </summary>
+        /// <param name="workItem">The track that was being onboarded</param>
+        /// <param name="userError">
+        /// Error message that will be stored in the db and returned to the user. Do not submit any
+        /// private information or internal info via this message.
+        /// </param>
+        /// <param name="adminError">
+        /// Error message that will be stored in the db and provided for admin debugging purposes.
+        /// </param>
+        private async Task CancelOnboarding(Track workItem, string userError, string adminError)
         {
-            // Step 0) Make sure there is art to store
-            if (metadata.ImageBytes.Length <= 0)
+            try
             {
-                return;
-            } 
+                // Make sure there aren't any processes still running that might be tying up the files
+                // we're about to delete
+                foreach (Process process in _launchedProcesses.Where(p => !p.HasExited))
+                {
+                    try
+                    {
+                        process.Kill();
+                    }
+                    catch (Exception e)
+                    {
+                        Trace.TraceWarning("Failed to kill process {0}: {1}", process.Id, e.Message);
+                    }
+                }
 
-            // Step 1) Calculate a hash of the album art
-            IO.MemoryStream artStream = new IO.MemoryStream(metadata.ImageBytes);
-            string hash = await LocalStorageManager.CalculateMd5HashAsync(artStream);
+                // Fetch the qualities from the DB to make this faster
+                List<Quality> qualities = await TrackDbManager.Instance.GetAllQualitiesAsync();
 
-            // Step 2) Determine if the album art has already been uploaded
-            long? artId = TrackDbManager.Instance.GetArtIdByHash(hash);
-            if (!artId.HasValue)
-            {
-                // Art has not been uploaded before, start the upload!
-                // Create a new guid to prevent conflicts
-                Guid artGuid = Guid.NewGuid();
+                // Delete the original file and any generated qualities from azure storage
+                List<Task> cleanupTasks = new List<Task>();
 
-                // Start a task for uploading the art
-                string artPath = AzureStorageManager.CombineAzurePath(TrackManager.ArtDirectory, artGuid.ToString());
+                string originalAzurePath = AzureStorageManager.CombineAzurePath(OnboardingDirectory,
+                    workItem.Id.ToString());
+                cleanupTasks.Add(AzureStorageManager.Instance.DeleteBlobAsync(TrackStorageContainer, originalAzurePath));
+                cleanupTasks.AddRange(qualities.Select(q =>
+                {
+                    string azureFilename = GetQualityFileName(workItem, q);
+                    string azureFilePath = AzureStorageManager.CombineAzurePath(q.Directory, azureFilename);
+                    return AzureStorageManager.Instance.DeleteBlobAsync(TrackStorageContainer, azureFilePath);
+                }));
 
-                // Setup tasks for uploading the art to blob storage and creating the record for it
-                // in the DB
-                var uploadTask = AzureStorageManager.Instance.StoreBlobAsync(TrackStorageContainer, artStream, artPath);
-                var createTask = TrackDbManager.Instance.CreateArtRecordAsync(artGuid, metadata.ImageMimetype, hash);
+                // Delete the original file and any generated qualities from local storage
+                LocalStorageManager.Instance.DeleteFile(IO.Path.Combine(OnboardingDirectory, workItem.Id.ToString()));
+                foreach (Quality quality in qualities)
+                {
+                    string localFilename = GetQualityFileName(workItem, quality);
+                    string relativeFilePath = IO.Path.Combine(OnboardingDirectory, localFilename);
+                    LocalStorageManager.Instance.DeleteFile(relativeFilePath);
+                }
 
-                await Task.WhenAll(new[] { uploadTask, createTask });
+                // Delete the qualities and metadata from the database
+                cleanupTasks.Add(TrackDbManager.Instance.DeleteAllMetadataAsync(workItem.Id));
 
-                artId = createTask.Result;
+                // Remove the art from the track
+                // TODO: Fix this
+                cleanupTasks.Add(TrackDbManager.Instance.SetTrackArtAsync(workItem, null, false));
+
+                // Put the track into an error state
+                await Task.WhenAll(cleanupTasks);
+
             }
-
-            // Step 3) Set the track's art in the DB
-            await TrackDbManager.Instance.SetTrackArtAsync(track, artId, false);
+            catch (Exception e)
+            {
+                Trace.TraceWarning("Failed to properly clean up after onboarding failure of {0}: {1}",
+                    workItem.InternalId, e.Message);
+            }
+            finally
+            {
+                TrackDbManager.Instance.SetTrackErrorStateAsync(workItem, userError, adminError).Wait();
+            }
         }
 
-        private async Task<List<Quality>> DetermineQualitiesToGenerate(Track track, TrackMetadata metadata)
+        #region Private Helper Methods
+
+        /// <summary>
+        /// Copies the file from azure to the local, temporary storage
+        /// </summary>
+        /// <param name="tempPath">Path for the file in local storage</param>
+        /// <param name="trackGuid">The guid of the track to pull from azure</param>
+        private static async Task CopyFileToLocalStorage(string tempPath, Guid trackGuid)
         {
-            // Step 1) Fetch all the supported qualities from the DB
-            List<Quality> allQualities = await TrackDbManager.Instance.GetAllQualitiesAsync();
-
-            // Step 2) Determine which qualities to use by picking all qualities with bitrates less
-            // than or equal to the original (+/- 5kbps to handle lousy sources)
-            var maxQuality = allQualities.Where(q => Math.Abs(q.Bitrate - metadata.BitrateKbps) <= 5);
-            var lesserQualities = allQualities.Where(q => q.Bitrate < metadata.BitrateKbps);
-
-            return lesserQualities.Union(maxQuality).ToList();
+            // Get the stream from Azure
+            string azurePath = AzureStorageManager.CombineAzurePath(OnboardingDirectory, trackGuid.ToString());
+            using (IO.FileStream localStream = LocalStorageManager.CreateFile(tempPath))
+            {
+                await AzureStorageManager.Instance.DownloadBlobAsync(TrackStorageContainer, azurePath, localStream);
+            }
         }
 
-        private async Task GenerateQuality(Track track, Quality quality)
+        /// <summary>
+        /// Generates the filename for the given quality. This is to ensure we use the same names
+        /// everywhere in the process.
+        /// </summary>
+        /// <param name="track">The track to generate the filename for</param>
+        /// <param name="quality">The quality of the track to generate a filename for</param>
+        /// <returns>The filename of the specified quality of the track</returns>
+        private static string GetQualityFileName(Track track, Quality quality)
         {
-            // Determine the paths of the input and output
-            string inputRelativeToLocalStoragePath = IO.Path.Combine(OnboardingDirectory, track.Id.ToString());
-            string inputFilePath = LocalStorageManager.Instance.GetPath(inputRelativeToLocalStoragePath);
-            string outputFilename = String.Format("{0}.{1}.{2}", track.Id, quality.Directory, quality.Extension);
-            string outputLocalRelative = IO.Path.Combine(OnboardingDirectory, outputFilename);
-            string outputLocalFilePath = LocalStorageManager.Instance.GetPath(IO.Path.Combine(OnboardingDirectory, outputFilename));
+            return String.Format("{0}.{1}.{2}", track.Id, quality.Directory, quality.Extension);
+        }
 
-            // @TODO: Figure out what to do if the quality to generate is the same as the original file
+        /// <summary>
+        /// Launches an process that will complete asynchronously. The process will be stored in
+        /// <see cref="_launchedProcesses"/> in order to allow for killing of processes in the
+        /// event of a failure.
+        /// </summary>
+        /// <param name="exeName">The name of the command line program to launch</param>
+        /// <param name="arguments">The arguments to pass to the process</param>
+        /// <returns>An awaitable task for the process to complete running</returns>
+        private Task LaunchProcessAsync(string exeName, string arguments)
+        {
+            // Create a task completion source
+            TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
 
-            // Arguments:
-            // -i {2}               - input file path
-            // -vn                  - drop all video streams (including album art, as per http://stackoverflow.com/a/20202233)
-            // -y {3}               - the output path
-            // -map_metadata -1     - drop all metadata
-            string arguments = String.Format(@"-i ""{0}"" -vn {1} -map_metadata -1 -y ""{2}""",
-                inputFilePath, quality.FfmpegArgs, outputLocalFilePath);
-
-            // Borrowing some code from http://stackoverflow.com/a/8726175
             ProcessStartInfo psi = new ProcessStartInfo
             {
-                FileName = @"Externals\ffmpeg.exe",
+                FileName = exeName,
                 Arguments = arguments,
                 CreateNoWindow = true,
                 ErrorDialog = false,
@@ -303,26 +420,37 @@ namespace DolomiteBackgroundProcessing
                 RedirectStandardInput = false,
                 RedirectStandardError = true
             };
-            await LaunchProcessAsync(psi);
 
+            // Create the process the we're going to run
+            Process process = new Process
+            {
+                StartInfo = psi,
+                EnableRaisingEvents = true
+            };
+            _launchedProcesses.Add(process);
+
+            // Add an event that marks the task completion source as completed. This will complete
+            // the task that is returned to the consumer of this method.
+            process.Exited += (sender, args) =>
+            {
+                tcs.SetResult(true);
+                _launchedProcesses.Remove(process);
+                process.Dispose();
+            };
             // @TODO Make sure the process call succeeded
 
-            // Upload the file to Azure and delete it when we're done
-            await MoveFileToAzure(outputLocalFilePath, quality.Directory);
-            LocalStorageManager.Instance.DeleteFile(outputLocalRelative);
+            // Start up the process
+            process.Start();
 
-            // Store the quality record to the database
-            DatabaseManager.AddAvailableQualityRecord(track, quality);
+            return tcs.Task;
         }
 
         /// <summary>
-        /// Moves the file to azure asynchronously
+        /// Moves the file to azure
         /// </summary>
-        /// <param name="tempPath">Path of the file in local storage to move</param>
-        /// <param name="directory">Directory in Azure to store the file</param>
-        /// <param name="trackGuid">GUID of the track that is being stored</param>
-        /// <param name="deleteOnComplete">Whether or not to delete the original file when the move has completed</param>
-        private async Task MoveFileToAzure(string sourcePath, string destDir)
+        /// <param name="sourcePath">Path of the file in local storage to move</param>
+        /// <param name="destDir">Directory in Azure to store the file</param>
+        private static async Task MoveFileToAzure(string sourcePath, string destDir)
         {
             // Construct the target destination
             string destPath = AzureStorageManager.CombineAzurePath(destDir, IO.Path.GetFileName(sourcePath));
@@ -331,80 +459,6 @@ namespace DolomiteBackgroundProcessing
             await AzureStorageManager.StoreBlobAsync(TrackStorageContainer, sourcePath, destPath);
         }
 
-        private Task LaunchProcessAsync(ProcessStartInfo psi)
-        {
-            TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
-            
-            Process process = new Process
-            {
-                StartInfo = psi,
-                EnableRaisingEvents = true
-            };
-
-            process.Exited += (sender, args) =>
-            {
-                tcs.SetResult(true);
-                process.Dispose();
-            };
-            // TODO: capture the output
-
-            process.Start();
-
-            return tcs.Task;
-        }
-
         #endregion
-
-        /// <summary>
-        /// Cancels the onboarding process by deleting all created files and
-        /// removing the record of the track.
-        /// </summary>
-        /// <param name="workItem">The track that was being onboarded</param>
-        private void CancelOnboarding(Track workItem)
-        {
-            // Delete the original file from the local storage
-            DeleteFileWithWait(workItem.Id.ToString());
-            AzureStorageManager.DeleteBlob(TrackStorageContainer, String.Format("original/{0}", workItem.Id));
-
-            // Delete the original file from azure
-            AzureStorageManager.DeleteBlob(TrackStorageContainer, OnboardingDirectory + '/' + workItem.Id);
-
-            // Iterate over the qualities and delete them from local storage and azure
-            foreach (Quality quality in DatabaseManager.GetAllQualities())
-            {
-                // Delete the local storage instance
-                string fileName = String.Format("{0}.{1}.{2}", workItem.Id, quality.Bitrate, quality.Extension);
-                DeleteFileWithWait(fileName);
-
-                // Delete the file from Azure
-                string azurePath = String.Format("{0}/{1}", quality.Directory, workItem.Id);
-                AzureStorageManager.DeleteBlob(TrackStorageContainer, azurePath);
-            }
-
-            // Delete the track from the database
-            DatabaseManager.DeleteTrack(workItem.InternalId);
-        }
-            
-        /// <summary>
-        /// Attempts to delete the file. If it fails, the thread sleeps until
-        /// the file has been unlocked.
-        /// </summary>
-        /// <param name="fileName">The name of the file in onboarding storage to delete</param>
-        private static void DeleteFileWithWait(string fileName)
-        {
-            while (true)
-            {
-                try
-                {
-                    LocalStorageManager.DeleteFile(fileName);
-                    break;
-                }
-                catch(IO.IOException)
-                {
-                    Trace.TraceWarning("The file '{0}' is still in use. Sleeping until it is unlocked.", fileName);
-                    Thread.Sleep(TimeSpan.FromSeconds(5));
-                }
-            } 
-        }
     }
 }
