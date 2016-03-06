@@ -80,7 +80,9 @@
     <Compile Include="Asynchronous\ReplaceAsynchronousState.cs" />
     <Compile Include="Asynchronous\UploadAsynchronousState.cs" />
     <Compile Include="AzureStorageManager.cs" />
+    <Compile Include="Exceptions\DolomiteException.cs" />
     <Compile Include="Exceptions\DuplicateTrackException.cs" />
+    <Compile Include="Exceptions\ExceptionUtilities.cs" />
     <Compile Include="Exceptions\InvalidSessionException.cs" />
     <Compile Include="Exceptions\TrackNotReadyException.cs" />
     <Compile Include="Exceptions\UserExceptions.cs" />

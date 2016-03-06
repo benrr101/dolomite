@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Tasks;
 using DolomiteManagement;
+using DolomiteManagement.Exceptions;
 using DolomiteModel.PublicRepresentations;
 using Newtonsoft.Json;
 using IO = System.IO;
@@ -73,7 +74,7 @@ namespace DolomiteBackgroundProcessing
                 if (workItemId.HasValue)
                 {
                     // We have work to do!
-                    Track track = DatabaseManager.GetTrack(workItemId.Value);
+                    Track track = TrackDbManager.Instance.GetTrack(workItemId.Value);
                     Trace.TraceInformation("Work item {0} picked up by {1}", workItemId.Value, GetHashCode());
                     string trackFilePath = IO.Path.Combine(OnboardingDirectory, track.Id.ToString());
 
@@ -106,12 +107,25 @@ namespace DolomiteBackgroundProcessing
                         LocalStorageManager.Instance.DeleteFile(trackFilePath);
                         string trackOnboardingAzurePath = AzureStorageManager.CombineAzurePath(OnboardingDirectory,
                             track.Id.ToString());
-                        AzureStorageManager.Instance.DeleteBlobAsync(TrackStorageContainer, trackOnboardingAzurePath).Wait();
+                        AzureStorageManager.Instance.DeleteBlobAsync(TrackStorageContainer, trackOnboardingAzurePath)
+                            .Wait();
                         TrackDbManager.Instance.ReleaseAndCompleteOnboardingItem(workItemId.Value);
+                    }
+                    catch (DolomiteInternalException die)
+                    {
+                        CancelOnboarding(track, die.UserError, die.Message).Wait();
+                    }
+                    catch (AggregateException ae)
+                    {
+                        CancelOnboarding(track,
+                            "An internal error occurred while processing the track.",
+                            ae.GetAllExceptionMessages()).Wait();
                     }
                     catch (Exception e)
                     {
-                        CancelOnboarding(track, "something went wrong", e.Message).Wait();
+                        CancelOnboarding(track, 
+                            "An internal error occurred while processing the track.", 
+                            e.GetAllExceptionMessages()).Wait();
                     }
                 }
                 else
@@ -139,16 +153,8 @@ namespace DolomiteBackgroundProcessing
             // than or equal to the original (+/- 5kbps to handle lousy sources)
             var maxQuality = allQualities.Where(q => Math.Abs(q.Bitrate - metadata.BitrateKbps) <= 5);
             var lesserQualities = allQualities.Where(q => q.Bitrate < metadata.BitrateKbps);
-
-            // Step 3) Make sure that some qualities will be created
-            var qualitiesToCreate = lesserQualities.Union(maxQuality).ToList();
-            if (qualitiesToCreate.Count == 0)
-            {
-                // TODO: Better exceptions
-                throw new Exception("Quality too low! No qualities to generate!");
-            }
-
-            return qualitiesToCreate;
+            
+            return lesserQualities.Union(maxQuality).ToList();
         }
 
         /// <summary>
@@ -313,8 +319,8 @@ namespace DolomiteBackgroundProcessing
             try
             {
                 // Make sure there aren't any processes still running that might be tying up the files
-                // we're about to delete
-                foreach (Process process in _launchedProcesses.Where(p => !p.HasExited))
+                // we're about to delete. (The .ToList is to avoid concurrent modification errors)
+                foreach (Process process in _launchedProcesses.Where(p => !p.HasExited).ToList())
                 {
                     try
                     {
@@ -463,7 +469,7 @@ namespace DolomiteBackgroundProcessing
             string destPath = AzureStorageManager.CombineAzurePath(destDir, IO.Path.GetFileName(sourcePath));
 
             // Start the upload of the file to azure
-            await AzureStorageManager.StoreBlobAsync(TrackStorageContainer, sourcePath, destPath);
+            await AzureStorageManager.Instance.StoreBlobAsync(TrackStorageContainer, sourcePath, destPath);
         }
 
         #endregion

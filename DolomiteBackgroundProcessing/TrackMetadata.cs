@@ -5,8 +5,10 @@ using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Principal;
 using System.Text;
 using System.Text.RegularExpressions;
+using DolomiteManagement.Exceptions;
 using TagLib;
 using TagLib.Id3v2;
 using File = TagLib.File;
@@ -59,7 +61,23 @@ namespace DolomiteBackgroundProcessing
             CustomFrames = new Dictionary<string, string>();
             Mimetype = mimetype;
 
-            File tagFile = File.Create(new StreamFileAbstraction(file.Name, file, null), mimetype, ReadStyle.Average);
+            File tagFile;
+            try
+            {
+                tagFile = File.Create(new StreamFileAbstraction(file.Name, file, null), mimetype, ReadStyle.Average);
+            }
+            catch (UnsupportedFormatException)
+            {
+                throw new DolomiteInternalException(null, "The file format is not supported.",
+                    String.Format("Mimetype {0} is not supported by TagLib-Portable", mimetype));
+            }
+
+            if (tagFile.PossiblyCorrupt)
+            {
+                throw new DolomiteInternalException(null, "The file is corrupt.",
+                    String.Format("Mimetype {0} is reported as possibly corrupt. Reasons: {1}", mimetype,
+                        String.Join(",", tagFile.CorruptionReasons)));
+            }
 
             // Fetch the metadata from the file
             if (tagFile.TagTypesOnDisk.HasFlag(TagTypes.Xiph))
@@ -80,7 +98,9 @@ namespace DolomiteBackgroundProcessing
             }
             else
             {
-                throw new FormatException("File contains tags that should not be read.");
+                throw new DolomiteInternalException(null, "The file format is not supported.",
+                    String.Format("Mimetype {0} was read correctly, no supported TagTypesOnDisk are available. TagTypes: {1}",
+                        mimetype, tagFile.TagTypesOnDisk));
             }
 
             ReadCodecDetails(tagFile);
