@@ -237,7 +237,8 @@ namespace DolomiteManagement
             }
 
             // Store the new values
-            DatabaseManager.StoreTrackMetadata(track, metadata, true);
+            // TODO: Fix this
+            //DatabaseManager.StoreTrackMetadataAsync(track, metadata, true);
         }
 
         /// <summary>
@@ -259,8 +260,7 @@ namespace DolomiteManagement
             if (stream.Length > 0)
             {
                 // We have art! Have we already uploaded it?
-                // TODO: This is kinda broken since it does a collision check on the track table.
-                string hash = LocalStorageManager.CalculateHash(stream, owner);
+                string hash = LocalStorageManager.CalculateMd5Hash(stream);
                 newArtId = DatabaseManager.GetArtIdByHash(hash);
                 if (newArtId == default(long))
                 {
