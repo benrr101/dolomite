@@ -18,6 +18,7 @@
     <ConfigurationSettings>
       <Setting name="TrackStorageContainer" value="trackstorage" />
       <Setting name="StorageConnectionString" value="UseDevelopmentStorage=true" />
+      <Setting name="Onboarding_SleepSeconds" value="10" />
     </ConfigurationSettings>
   </Role>
 </ServiceConfiguration>

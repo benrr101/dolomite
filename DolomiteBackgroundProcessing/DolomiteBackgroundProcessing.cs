@@ -108,8 +108,12 @@ namespace DolomiteBackgroundProcessing
             // Grab the configuration information
             try
             {
+                // Get all the configuration values for the onboarding thread
+                int sleepSeconds = GetConfigurationValue<int>(TrackOnboarding.SleepSecondsKey);
+                TrackOnboarding.SleepSeconds = sleepSeconds;
+
                 // Get the track storage container
-                var trackContainer = RoleEnvironment.GetConfigurationSettingValue(TrackContainerKey);
+                string trackContainer = GetConfigurationValue<string>(TrackContainerKey);
                 TrackOnboarding.TrackStorageContainer = trackContainer;
                 TrackManager.TrackStorageContainer = trackContainer;
             }
@@ -177,6 +181,18 @@ namespace DolomiteBackgroundProcessing
             {
                 throw new InvalidDataException("Failed to initialize the Track Manager.", e);
             }
+        }
+
+        /// <summary>
+        /// Returns the configuration value for the role.
+        /// </summary>
+        /// <typeparam name="T">Type of the value</typeparam>
+        /// <param name="configurationKey">The key to use to look up the config value</param>
+        /// <returns>The converted configuration value</returns>
+        private static T GetConfigurationValue<T>(string configurationKey) where T : IConvertible
+        {
+            string configValue = RoleEnvironment.GetConfigurationSettingValue(configurationKey);
+            return (T) Convert.ChangeType(configValue, typeof (T));
         }
     }
 }

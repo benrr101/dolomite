@@ -13,22 +13,34 @@ using DolomiteModel;
 
 namespace DolomiteBackgroundProcessing
 {
-    class TrackOnboarding
+    internal class TrackOnboarding
     {
         #region Properties and Constants
 
-        private const int SleepSeconds = 10;
-
+        /// <summary>
+        /// The directory to use for onboarding storage locally and in Azure
+        /// </summary>
         public const string OnboardingDirectory = "onboarding";
 
-        private static TrackDbManager DatabaseManager { get; set; }
+        /// <summary>
+        /// The number of seconds to sleep between checks for work
+        /// </summary>
+        public static int SleepSeconds { private get; set; }
 
-        private static LocalStorageManager LocalStorageManager { get; set; }
+        /// <summary>
+        /// Key in the role config for the number of seconds to sleep in between checks for work
+        /// </summary>
+        public const string SleepSecondsKey = "Onboarding_SleepSeconds";
 
-        private static AzureStorageManager AzureStorageManager { get; set; }
-
+        /// <summary>
+        /// The container to store the tracks in
+        /// </summary>
         public static string TrackStorageContainer { private get; set; }
 
+        /// <summary>
+        /// A list of processes that hve been launched. This list is used to keep track of zombie
+        /// processes that need to be killed off.
+        /// </summary>
         private List<Process> _launchedProcesses; 
 
         #endregion
@@ -49,20 +61,15 @@ namespace DolomiteBackgroundProcessing
 
         public void Run()
         {
-            // Set up the thread with some managers
-            DatabaseManager = TrackDbManager.Instance;
-            LocalStorageManager = LocalStorageManager.Instance;
-            AzureStorageManager = AzureStorageManager.Instance;
-
+            // Do initialization steps
             LocalStorageManager.Instance.InitializeStorageDirectory(OnboardingDirectory);
-
             _launchedProcesses = new List<Process>();
 
             // Loop until the stop flag has been flown
             while (!_shouldStop)
             {                
                 // Try to get a work item
-                long? workItemId = DatabaseManager.GetOnboardingWorkItem();
+                long? workItemId = TrackDbManager.Instance.GetOnboardingWorkItem();
                 if (workItemId.HasValue)
                 {
                     // We have work to do!
@@ -99,8 +106,8 @@ namespace DolomiteBackgroundProcessing
                         LocalStorageManager.Instance.DeleteFile(trackFilePath);
                         string trackOnboardingAzurePath = AzureStorageManager.CombineAzurePath(OnboardingDirectory,
                             track.Id.ToString());
-                        AzureStorageManager.DeleteBlobAsync(TrackStorageContainer, trackOnboardingAzurePath).Wait();
-                        DatabaseManager.ReleaseAndCompleteOnboardingItem(workItemId.Value);
+                        AzureStorageManager.Instance.DeleteBlobAsync(TrackStorageContainer, trackOnboardingAzurePath).Wait();
+                        TrackDbManager.Instance.ReleaseAndCompleteOnboardingItem(workItemId.Value);
                     }
                     catch (Exception e)
                     {
@@ -177,7 +184,7 @@ namespace DolomiteBackgroundProcessing
             LocalStorageManager.Instance.DeleteFile(outputLocalRelative);
 
             // Store the quality record to the database
-            DatabaseManager.AddAvailableQualityRecord(track, quality);
+            TrackDbManager.Instance.AddAvailableQualityRecord(track, quality);
         }
 
         /// <summary>
@@ -195,7 +202,7 @@ namespace DolomiteBackgroundProcessing
 
             // Step 1) Calculate a hash of the album art
             IO.MemoryStream artStream = new IO.MemoryStream(metadata.ImageBytes);
-            string hash = await LocalStorageManager.CalculateMd5HashAsync(artStream);
+            string hash = await LocalStorageManager.Instance.CalculateMd5HashAsync(artStream);
 
             // Step 2) Determine if the album art has already been uploaded
             long? artId = TrackDbManager.Instance.GetArtIdByHash(hash);
@@ -377,7 +384,7 @@ namespace DolomiteBackgroundProcessing
         {
             // Get the stream from Azure
             string azurePath = AzureStorageManager.CombineAzurePath(OnboardingDirectory, trackGuid.ToString());
-            using (IO.FileStream localStream = LocalStorageManager.CreateFile(tempPath))
+            using (IO.FileStream localStream = LocalStorageManager.Instance.CreateFile(tempPath))
             {
                 await AzureStorageManager.Instance.DownloadBlobAsync(TrackStorageContainer, azurePath, localStream);
             }
