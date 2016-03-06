@@ -53,16 +53,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EntityFramework\Album.cs">
-      <DependentUpon>DbEntities.tt</DependentUpon>
-    </Compile>
     <Compile Include="EntityFramework\ApiKey.cs">
       <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\Art.cs">
-      <DependentUpon>DbEntities.tt</DependentUpon>
-    </Compile>
-    <Compile Include="EntityFramework\Artist.cs">
       <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
     <Compile Include="EntityFramework\Autoplaylist.cs">

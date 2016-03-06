@@ -5,10 +5,8 @@
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
       <Diagram DiagramId="70ad95e7e6b64e0a8e36b166aae35fc0" Name="Diagram1" ZoomLevel="74">
-        <EntityTypeShape EntityType="EntityFramework.Album" Width="1.5" PointX="13.875" PointY="5.875" IsExpanded="true" />
         <EntityTypeShape EntityType="EntityFramework.ApiKey" Width="1.5" PointX="1.875" PointY="12.375" IsExpanded="true" />
         <EntityTypeShape EntityType="EntityFramework.Art" Width="1.5" PointX="11.375" PointY="3.25" IsExpanded="true" />
-        <EntityTypeShape EntityType="EntityFramework.Artist" Width="1.5" PointX="15.875" PointY="5.875" IsExpanded="true" />
         <EntityTypeShape EntityType="EntityFramework.AutoplaylistRule" Width="1.5" PointX="6.875" PointY="15" IsExpanded="true" />
         <EntityTypeShape EntityType="EntityFramework.Autoplaylist" Width="1.5" PointX="6.875" PointY="11.125" IsExpanded="true" />
         <EntityTypeShape EntityType="EntityFramework.AvailableQuality" Width="1.5" PointX="13.875" PointY="9.125" IsExpanded="true" />
@@ -23,8 +21,6 @@
         <EntityTypeShape EntityType="EntityFramework.UserKey" Width="1.5" PointX="4" PointY="5.875" IsExpanded="true" />
         <EntityTypeShape EntityType="EntityFramework.User" Width="1.5" PointX="4" PointY="8" IsExpanded="true" />
         <EntityTypeShape EntityType="EntityFramework.UserSetting" Width="1.5" PointX="3.75" PointY="12.375" IsExpanded="true" />
-        <AssociationConnector Association="EntityFramework.Album1" ManuallyRouted="false" />
-        <AssociationConnector Association="EntityFramework.FK_ALBUMS_ARTIST" ManuallyRouted="false" />
         <AssociationConnector Association="EntityFramework.FK_SESSION_APIKEY" ManuallyRouted="false" />
         <AssociationConnector Association="EntityFramework.FK_TRACKS_ART" ManuallyRouted="false" />
         <AssociationConnector Association="EntityFramework.FK_AUTOPLAYLISTRULES_METADATA" ManuallyRouted="false" />

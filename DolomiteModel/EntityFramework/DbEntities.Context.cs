@@ -27,10 +27,8 @@ namespace DolomiteModel.EntityFramework
             throw new UnintentionalCodeFirstException();
         }
     
-        public virtual DbSet<Album> Albums { get; set; }
         public virtual DbSet<ApiKey> ApiKeys { get; set; }
         public virtual DbSet<Art> Arts { get; set; }
-        public virtual DbSet<Artist> Artists { get; set; }
         public virtual DbSet<AutoplaylistRule> AutoplaylistRules { get; set; }
         public virtual DbSet<Autoplaylist> Autoplaylists { get; set; }
         public virtual DbSet<AvailableQuality> AvailableQualities { get; set; }

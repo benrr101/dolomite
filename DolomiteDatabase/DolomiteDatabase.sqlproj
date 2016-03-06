@@ -88,10 +88,6 @@
     <Build Include="Foreign Keys\FK_AUTOPLAYLISTRULES_RULE.sql" />
     <Build Include="Foreign Keys\FK_AUTOPLAYLISTRULES_METADATA.sql" />
     <Build Include="Foreign Keys\FK_AUTOPLAYLISTRULES_PLAYLIST.sql" />
-    <Build Include="Tables\Albums.sql" />
-    <Build Include="Tables\Artists.sql" />
-    <Build Include="Foreign Keys\FK_TRACKS_ALBUM.sql" />
-    <Build Include="Foreign Keys\FK_ALBUMS_ARTIST.sql" />
     <Build Include="Tables\Qualities.sql" />
     <Build Include="Tables\AvailableQualities.sql" />
     <Build Include="Foreign Keys\FK_AVAILABLEQUALITIES_TRACK.sql" />

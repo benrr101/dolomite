@@ -702,7 +702,6 @@ namespace DolomiteModel
                 if (track == null)
                     throw new ObjectNotFoundException(String.Format("Track {0} does not exist.", trackId));
 
-                track.OriginalBitrate = bitrate;
                 track.OriginalMimetype = mimetype;
                 track.OriginalExtension = extension;
                 await context.SaveChangesAsync();

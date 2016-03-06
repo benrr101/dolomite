@@ -199,9 +199,6 @@ namespace DolomiteModel.PublicRepresentations
             // Add the original quality back to the list of qualities
             Quality originalQuality = new Quality
             {
-                // ReSharper disable once PossibleInvalidOperationException 
-                //   Shouldn't be possible b/c this field is only set if track has been onboarded
-                BitrateKbps = track.OriginalBitrate.Value,
                 Directory = "original",
                 Extension = track.OriginalExtension,
                 Href = String.Format("/tracks/original/{0}", track.Id),

@@ -8,12 +8,10 @@
 	[DateAdded]				DATETIME NOT NULL DEFAULT GETUTCDATE(),
 	[DateLastModified]		DATETIME NOT NULL DEFAULT GETUTCDATE(),
 	[Hash]					NCHAR(40) NULL, 
-    [Album]					INT NULL,
 	[Art]					BIGINT NULL,
-	[OriginalBitrate]		INT NULL,
-	[OriginalSampling]		INT NULL,
 	[OriginalMimetype]		NVARCHAR(30) NULL,
 	[OriginalExtension]		NVARCHAR(10) NULL, 
+	[OriginalFileName]		NVARCHAR(255) NULL,
     [Locked]				BIT NOT NULL DEFAULT 0,
     [ArtChange]				BIT NOT NULL DEFAULT 0
 )

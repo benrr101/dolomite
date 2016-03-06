@@ -5,15 +5,6 @@
     <!-- SSDL content -->
     <edmx:StorageModels>
     <Schema Namespace="EntityFramework.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012.Azure" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
-        <EntityType Name="Albums">
-          <Key>
-            <PropertyRef Name="Id" />
-          </Key>
-          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
-          <Property Name="Artist" Type="int" Nullable="false" />
-          <Property Name="Art" Type="uniqueidentifier" />
-        </EntityType>
         <EntityType Name="ApiKeys">
           <Key>
             <PropertyRef Name="Id" />
@@ -30,13 +21,6 @@
           <Property Name="GuidId" Type="uniqueidentifier" Nullable="false" />
           <Property Name="Mimetype" Type="nvarchar" MaxLength="30" Nullable="false" />
           <Property Name="Hash" Type="nchar" MaxLength="40" Nullable="false" />
-        </EntityType>
-        <EntityType Name="Artists">
-          <Key>
-            <PropertyRef Name="Id" />
-          </Key>
-          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
-          <Property Name="Name" Type="nvarchar" MaxLength="100" Nullable="false" />
         </EntityType>
         <EntityType Name="AutoplaylistRules">
           <Key>
@@ -170,12 +154,10 @@
           <Property Name="DateAdded" Type="datetime" Nullable="false" />
           <Property Name="DateLastModified" Type="datetime" Nullable="false" />
           <Property Name="Hash" Type="nchar" MaxLength="40" />
-          <Property Name="Album" Type="int" />
           <Property Name="Art" Type="bigint" />
-          <Property Name="OriginalBitrate" Type="int" />
-          <Property Name="OriginalSampling" Type="int" />
           <Property Name="OriginalMimetype" Type="nvarchar" MaxLength="30" />
           <Property Name="OriginalExtension" Type="nvarchar" MaxLength="10" />
+          <Property Name="OriginalFileName" Type="nvarchar" MaxLength="255" />
           <Property Name="Locked" Type="bit" Nullable="false" />
           <Property Name="ArtChange" Type="bit" Nullable="false" />
         </EntityType>
@@ -204,30 +186,6 @@
           <Property Name="User" Type="int" Nullable="false" />
           <Property Name="SettingsSerialized" Type="nvarchar(max)" />
         </EntityType>
-        <Association Name="Album">
-          <End Role="Albums" Type="Self.Albums" Multiplicity="0..1" />
-          <End Role="Tracks" Type="Self.Tracks" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Albums">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="Tracks">
-              <PropertyRef Name="Album" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_ALBUMS_ARTIST">
-          <End Role="Artists" Type="Self.Artists" Multiplicity="1" />
-          <End Role="Albums" Type="Self.Albums" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Artists">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="Albums">
-              <PropertyRef Name="Artist" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <Association Name="FK_AUTOPLAYLISTRULES_METADATA">
           <End Role="MetadataFields" Type="Self.MetadataFields" Multiplicity="1" />
           <End Role="AutoplaylistRules" Type="Self.AutoplaylistRules" Multiplicity="*" />
@@ -516,10 +474,8 @@
           <Parameter Name="hash" Type="text" Mode="In" />
         </Function>
         <EntityContainer Name="EntityFrameworkStoreContainer">
-          <EntitySet Name="Albums" EntityType="Self.Albums" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="ApiKeys" EntityType="Self.ApiKeys" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Art" EntityType="Self.Art" Schema="dbo" store:Type="Tables" />
-          <EntitySet Name="Artists" EntityType="Self.Artists" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="AutoplaylistRules" EntityType="Self.AutoplaylistRules" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Autoplaylists" EntityType="Self.Autoplaylists" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="AvailableQualities" EntityType="Self.AvailableQualities" Schema="dbo" store:Type="Tables" />
@@ -536,14 +492,6 @@
           <EntitySet Name="UserKeys" EntityType="Self.UserKeys" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Users" EntityType="Self.Users" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="UserSettings" EntityType="Self.UserSettings" Schema="dbo" store:Type="Tables" />
-          <AssociationSet Name="Album" Association="Self.Album">
-            <End Role="Albums" EntitySet="Albums" />
-            <End Role="Tracks" EntitySet="Tracks" />
-          </AssociationSet>
-          <AssociationSet Name="FK_ALBUMS_ARTIST" Association="Self.FK_ALBUMS_ARTIST">
-            <End Role="Artists" EntitySet="Artists" />
-            <End Role="Albums" EntitySet="Albums" />
-          </AssociationSet>
           <AssociationSet Name="FK_AUTOPLAYLISTRULES_METADATA" Association="Self.FK_AUTOPLAYLISTRULES_METADATA">
             <End Role="MetadataFields" EntitySet="MetadataFields" />
             <End Role="AutoplaylistRules" EntitySet="AutoplaylistRules" />
@@ -625,17 +573,6 @@
     <!-- CSDL content -->
     <edmx:ConceptualModels>
       <Schema Namespace="EntityFramework" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
-        <EntityType Name="Album">
-          <Key>
-            <PropertyRef Name="Id" />
-          </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="Name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
-          <Property Name="Artist" Type="Int32" Nullable="false" />
-          <Property Name="Art" Type="Guid" />
-          <NavigationProperty Name="Tracks" Relationship="Self.Album1" FromRole="Albums" ToRole="Tracks" />
-          <NavigationProperty Name="Artist1" Relationship="Self.FK_ALBUMS_ARTIST" FromRole="Albums" ToRole="Artists" />
-        </EntityType>
         <EntityType Name="ApiKey">
           <Key>
             <PropertyRef Name="Id" />
@@ -654,14 +591,6 @@
           <Property Name="Mimetype" Type="String" MaxLength="30" FixedLength="false" Unicode="true" Nullable="false" />
           <Property Name="Hash" Type="String" MaxLength="40" FixedLength="true" Unicode="true" Nullable="false" />
           <NavigationProperty Name="Tracks" Relationship="Self.FK_TRACKS_ART" FromRole="Art" ToRole="Tracks" />
-        </EntityType>
-        <EntityType Name="Artist">
-          <Key>
-            <PropertyRef Name="Id" />
-          </Key>
-          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
-          <Property Name="Name" Type="String" MaxLength="100" FixedLength="false" Unicode="true" Nullable="false" />
-          <NavigationProperty Name="Albums" Relationship="Self.FK_ALBUMS_ARTIST" FromRole="Artists" ToRole="Albums" />
         </EntityType>
         <EntityType Name="AutoplaylistRule">
           <Key>
@@ -797,15 +726,11 @@
           <Property Name="Owner" Type="Int32" Nullable="false" />
           <Property Name="DateAdded" Type="DateTime" Nullable="false" Precision="3" />
           <Property Name="Hash" Type="String" MaxLength="40" FixedLength="true" Unicode="true" />
-          <Property Name="Album" Type="Int32" />
           <Property Name="Art" Type="Int64" />
-          <Property Name="OriginalBitrate" Type="Int32" />
-          <Property Name="OriginalSampling" Type="Int32" />
           <Property Name="OriginalMimetype" Type="String" MaxLength="30" FixedLength="false" Unicode="true" />
           <Property Name="OriginalExtension" Type="String" MaxLength="10" FixedLength="false" Unicode="true" />
           <Property Name="Locked" Type="Boolean" Nullable="false" />
           <Property Name="ArtChange" Type="Boolean" Nullable="false" />
-          <NavigationProperty Name="Album1" Relationship="Self.Album1" FromRole="Tracks" ToRole="Albums" />
           <NavigationProperty Name="Art1" Relationship="Self.FK_TRACKS_ART" FromRole="Tracks" ToRole="Art" />
           <NavigationProperty Name="AvailableQualities" Relationship="Self.FK_AVAILABLEQUALITIES_TRACK" FromRole="Tracks" ToRole="AvailableQualities" />
           <NavigationProperty Name="Metadatas" Relationship="Self.FK_METADATA_TRACK" FromRole="Tracks" ToRole="Metadata" />
@@ -816,6 +741,7 @@
           <NavigationProperty Name="Status1" Relationship="EntityFramework.FK_TRACKS_STATUS" FromRole="Track" ToRole="Status" />
           <Property Name="ErrorInfo" Type="Int64" />
           <NavigationProperty Name="ErrorInfo1" Relationship="EntityFramework.FK_TRACKS_ERRORINFO" FromRole="Track" ToRole="ErrorInfo" />
+          <Property Name="OriginalFileName" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
         </EntityType>
         <EntityType Name="UserKey">
           <Key>
@@ -848,30 +774,6 @@
           <Property Name="SettingsSerialized" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
           <NavigationProperty Name="User1" Relationship="Self.FK_USERSETTINGS_USER" FromRole="UserSettings" ToRole="Users" />
         </EntityType>
-        <Association Name="Album1">
-          <End Role="Albums" Type="Self.Album" Multiplicity="0..1" />
-          <End Role="Tracks" Type="Self.Track" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Albums">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="Tracks">
-              <PropertyRef Name="Album" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
-        <Association Name="FK_ALBUMS_ARTIST">
-          <End Role="Artists" Type="Self.Artist" Multiplicity="1" />
-          <End Role="Albums" Type="Self.Album" Multiplicity="*" />
-          <ReferentialConstraint>
-            <Principal Role="Artists">
-              <PropertyRef Name="Id" />
-            </Principal>
-            <Dependent Role="Albums">
-              <PropertyRef Name="Artist" />
-            </Dependent>
-          </ReferentialConstraint>
-        </Association>
         <Association Name="FK_SESSION_APIKEY">
           <End Role="ApiKeys" Type="Self.ApiKey" Multiplicity="1" />
           <End Role="Sessions" Type="Self.Session" Multiplicity="*" />
@@ -1095,10 +997,8 @@
           </ReferentialConstraint>
         </Association>
         <EntityContainer Name="Entities" annotation:LazyLoadingEnabled="true">
-          <EntitySet Name="Albums" EntityType="Self.Album" />
           <EntitySet Name="ApiKeys" EntityType="Self.ApiKey" />
           <EntitySet Name="Arts" EntityType="Self.Art" />
-          <EntitySet Name="Artists" EntityType="Self.Artist" />
           <EntitySet Name="AutoplaylistRules" EntityType="Self.AutoplaylistRule" />
           <EntitySet Name="Autoplaylists" EntityType="Self.Autoplaylist" />
           <EntitySet Name="AvailableQualities" EntityType="Self.AvailableQuality" />
@@ -1113,14 +1013,6 @@
           <EntitySet Name="UserKeys" EntityType="Self.UserKey" />
           <EntitySet Name="Users" EntityType="Self.User" />
           <EntitySet Name="UserSettings" EntityType="Self.UserSetting" />
-          <AssociationSet Name="Album" Association="Self.Album1">
-            <End Role="Albums" EntitySet="Albums" />
-            <End Role="Tracks" EntitySet="Tracks" />
-          </AssociationSet>
-          <AssociationSet Name="FK_ALBUMS_ARTIST" Association="Self.FK_ALBUMS_ARTIST">
-            <End Role="Artists" EntitySet="Artists" />
-            <End Role="Albums" EntitySet="Albums" />
-          </AssociationSet>
           <AssociationSet Name="FK_SESSION_APIKEY" Association="Self.FK_SESSION_APIKEY">
             <End Role="ApiKeys" EntitySet="ApiKeys" />
             <End Role="Sessions" EntitySet="Sessions" />
@@ -1288,16 +1180,6 @@
     <edmx:Mappings>
       <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
         <EntityContainerMapping StorageEntityContainer="EntityFrameworkStoreContainer" CdmEntityContainer="Entities">
-          <EntitySetMapping Name="Albums">
-            <EntityTypeMapping TypeName="EntityFramework.Album">
-              <MappingFragment StoreEntitySet="Albums">
-                <ScalarProperty Name="Id" ColumnName="Id" />
-                <ScalarProperty Name="Name" ColumnName="Name" />
-                <ScalarProperty Name="Artist" ColumnName="Artist" />
-                <ScalarProperty Name="Art" ColumnName="Art" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
           <EntitySetMapping Name="ApiKeys">
             <EntityTypeMapping TypeName="EntityFramework.ApiKey">
               <MappingFragment StoreEntitySet="ApiKeys">
@@ -1314,14 +1196,6 @@
                 <ScalarProperty Name="GuidId" ColumnName="GuidId" />
                 <ScalarProperty Name="Mimetype" ColumnName="Mimetype" />
                 <ScalarProperty Name="Hash" ColumnName="Hash" />
-              </MappingFragment>
-            </EntityTypeMapping>
-          </EntitySetMapping>
-          <EntitySetMapping Name="Artists">
-            <EntityTypeMapping TypeName="EntityFramework.Artist">
-              <MappingFragment StoreEntitySet="Artists">
-                <ScalarProperty Name="Id" ColumnName="Id" />
-                <ScalarProperty Name="Name" ColumnName="Name" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>
@@ -1442,6 +1316,7 @@
           <EntitySetMapping Name="Tracks">
             <EntityTypeMapping TypeName="EntityFramework.Track">
               <MappingFragment StoreEntitySet="Tracks">
+                <ScalarProperty Name="OriginalFileName" ColumnName="OriginalFileName" />
                 <ScalarProperty Name="ErrorInfo" ColumnName="ErrorInfo" />
                 <ScalarProperty Name="DateLastModified" ColumnName="DateLastModified" />
                 <ScalarProperty Name="Status" ColumnName="Status" />
@@ -1450,10 +1325,7 @@
                 <ScalarProperty Name="Owner" ColumnName="Owner" />
                 <ScalarProperty Name="DateAdded" ColumnName="DateAdded" />
                 <ScalarProperty Name="Hash" ColumnName="Hash" />
-                <ScalarProperty Name="Album" ColumnName="Album" />
                 <ScalarProperty Name="Art" ColumnName="Art" />
-                <ScalarProperty Name="OriginalBitrate" ColumnName="OriginalBitrate" />
-                <ScalarProperty Name="OriginalSampling" ColumnName="OriginalSampling" />
                 <ScalarProperty Name="OriginalMimetype" ColumnName="OriginalMimetype" />
                 <ScalarProperty Name="OriginalExtension" ColumnName="OriginalExtension" />
                 <ScalarProperty Name="Locked" ColumnName="Locked" />
