@@ -73,7 +73,6 @@ namespace DolomiteManagement
         /// <summary>
         /// Deletes the track with the given GUID from the database and Azure storage
         /// </summary>
-        /// <
         /// <param name="trackGuid">The GUID of the track to delete.</param>
         /// <param name="owner">The owner of the session</param>
         public void DeleteTrack(Guid trackGuid, string owner)

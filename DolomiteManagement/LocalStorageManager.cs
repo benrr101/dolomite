@@ -70,29 +70,6 @@ namespace DolomiteManagement
         }
 
         /// <summary>
-        /// Stores the contents of the stream to the file with the given file name
-        /// <remarks>
-        /// This automatically uploads to the onboarding storage. It may be
-        /// necessary to expand this to support other local storage later.
-        /// </remarks>
-        /// </summary>
-        /// <param name="stream">The stream to store</param>
-        /// <param name="filename">The name of the file</param>
-        /// <param name="owner">The owner of the file</param>
-        [Obsolete]
-        public string StoreStream(Stream stream, string filename, string owner)
-        {
-            // Copy the stream to the file
-            using (var newFile = File.Create(GetPath(filename)))
-            {
-                stream.CopyTo(newFile);
-            }
-
-            // Calculate the hash of the file
-            return CalculateHash(stream, owner);
-        }
-
-        /// <summary>
         /// Stores the contents of the stream to the file with the given filename.
         /// </summary>
         /// <param name="stream">The stream to store</param>
