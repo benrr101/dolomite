@@ -53,7 +53,7 @@ namespace DolomiteBackgroundProcessing
             while (!_shouldStop)
             {
                 // Check for metadata work items
-                long? workItemId = TrackDatabaseManager.GetMetadataWorkItem();
+                long? workItemId = WorkDbManager.Instance.GetMetadataWorkItem();
                 if (workItemId.HasValue)
                 {
                     // We have work to do!
@@ -63,7 +63,7 @@ namespace DolomiteBackgroundProcessing
                     {
                         // Step 1: Get the track from the db and the metadata to write to the file
                         Track track = TrackDatabaseManager.GetTrack(workItemId.Value);
-                        var metadata = TrackDatabaseManager.GetMetadataToWriteOut(track.Id);
+                        var metadata = MetadataDbManager.Instance.GetMetadataToWriteOut(track.Id);
 
                         // Step 2: Store the track's original stream to local storage
                         string azurePath = IO.Path.Combine(new[]
@@ -93,14 +93,14 @@ namespace DolomiteBackgroundProcessing
                         LocalStorageManager.DeleteFile(localTrackPath);
 
                         // Step 6: Purge empty tags from the database. There's no reason to keep them.
-                        TrackDatabaseManager.DeleteEmptyMetadata(track.InternalId);
+                        MetadataDbManager.Instance.DeleteEmptyMetadata(track.InternalId);
                     }
                     catch (Exception e)
                     {
                         Trace.TraceError("Failed to update metadata on original file: {0}", e.Message);
                     }
-                    TrackDatabaseManager.ReleaseAndCompleteMetadataItem(workItemId.Value);
-                    TrackDatabaseManager.ReleaseAndCompleteArtItem(workItemId.Value);
+                    WorkDbManager.Instance.ReleaseAndCompleteMetadataItem(workItemId.Value);
+                    WorkDbManager.Instance.ReleaseAndCompleteArtItem(workItemId.Value);
                 }
                 else
                 {
@@ -108,7 +108,8 @@ namespace DolomiteBackgroundProcessing
                 }
 
                 // Check for art work items
-                long? artWorkItem = TrackDatabaseManager.GetArtWorkItem();
+                // TODO: Make this a separate thread
+                long? artWorkItem = WorkDbManager.Instance.GetArtWorkItem();
                 if (artWorkItem.HasValue)
                 {
                     try
@@ -117,7 +118,7 @@ namespace DolomiteBackgroundProcessing
                         Track track = TrackDatabaseManager.GetTrack(artWorkItem.Value);
                         ProcessArtChange(track, true);
 
-                        TrackDatabaseManager.ReleaseAndCompleteArtItem(artWorkItem.Value);
+                        WorkDbManager.Instance.ReleaseAndCompleteArtItem(artWorkItem.Value);
                     }
                     catch (Exception e)
                     {

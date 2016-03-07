@@ -70,7 +70,7 @@ namespace DolomiteBackgroundProcessing
             while (!_shouldStop)
             {                
                 // Try to get a work item
-                long? workItemId = TrackDbManager.Instance.GetOnboardingWorkItem();
+                long? workItemId = WorkDbManager.Instance.GetOnboardingWorkItem();
                 if (workItemId.HasValue)
                 {
                     // We have work to do!
@@ -109,7 +109,7 @@ namespace DolomiteBackgroundProcessing
                             track.Id.ToString());
                         AzureStorageManager.Instance.DeleteBlobAsync(TrackStorageContainer, trackOnboardingAzurePath)
                             .Wait();
-                        TrackDbManager.Instance.ReleaseAndCompleteOnboardingItem(workItemId.Value);
+                        WorkDbManager.Instance.ReleaseAndCompleteOnboardingItem(workItemId.Value);
                     }
                     catch (DolomiteInternalException die)
                     {
@@ -147,7 +147,7 @@ namespace DolomiteBackgroundProcessing
         private static async Task<List<Quality>> DetermineQualitiesToGenerate(TrackMetadata metadata)
         {
             // Step 1) Fetch all the supported qualities from the DB
-            List<Quality> allQualities = await TrackDbManager.Instance.GetAllQualitiesAsync();
+            List<Quality> allQualities = await QualityDbManager.Instance.GetAllQualitiesAsync();
 
             // Step 2) Determine which qualities to use by picking all qualities with bitrates less
             // than or equal to the original (+/- 5kbps to handle lousy sources)
@@ -190,7 +190,7 @@ namespace DolomiteBackgroundProcessing
             LocalStorageManager.Instance.DeleteFile(outputLocalRelative);
 
             // Store the quality record to the database
-            TrackDbManager.Instance.AddAvailableQualityRecord(track, quality);
+            QualityDbManager.Instance.AddAvailableQualityRecord(track, quality);
         }
 
         /// <summary>
@@ -211,7 +211,7 @@ namespace DolomiteBackgroundProcessing
             string hash = await LocalStorageManager.Instance.CalculateMd5HashAsync(artStream);
 
             // Step 2) Determine if the album art has already been uploaded
-            long? artId = TrackDbManager.Instance.GetArtIdByHash(hash);
+            long? artId = ArtDbManager.Instance.GetArtIdByHash(hash);
             if (!artId.HasValue)
             {
                 // Art has not been uploaded before, start the upload!
@@ -224,7 +224,7 @@ namespace DolomiteBackgroundProcessing
                 // Setup tasks for uploading the art to blob storage and creating the record for it
                 // in the DB
                 var uploadTask = AzureStorageManager.Instance.StoreBlobAsync(TrackStorageContainer, artStream, artPath);
-                var createTask = TrackDbManager.Instance.CreateArtRecordAsync(artGuid, metadata.ImageMimetype, hash);
+                var createTask = ArtDbManager.Instance.CreateArtRecordAsync(artGuid, metadata.ImageMimetype, hash);
 
                 await Task.WhenAll(new[] { uploadTask, createTask });
 
@@ -232,7 +232,7 @@ namespace DolomiteBackgroundProcessing
             }
 
             // Step 3) Set the track's art in the DB
-            await TrackDbManager.Instance.SetTrackArtAsync(track, artId, false);
+            await ArtDbManager.Instance.SetTrackArtAsync(track, artId, false);
         }
 
         /// <summary>
@@ -286,7 +286,7 @@ namespace DolomiteBackgroundProcessing
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
             // Step 2) Send the metadata to the database
-            await TrackDbManager.Instance.StoreTrackMetadataAsync(track, false);
+            await MetadataDbManager.Instance.StoreTrackMetadataAsync(track, false);
         }
 
         /// <summary>
@@ -296,8 +296,8 @@ namespace DolomiteBackgroundProcessing
         /// <param name="metadata">The information to store about the track</param>
         private static async Task StoreOriginalQuality(Track track, TrackMetadata metadata)
         {
-            await TrackDbManager.Instance.SetAudioQualityInfoAsync(track.InternalId, metadata.BitrateKbps, metadata.Mimetype,
-                metadata.Extension);
+            await QualityDbManager.Instance.SetAudioQualityInfoAsync(track.InternalId, metadata.BitrateKbps,
+                    metadata.Mimetype, metadata.Extension);
         }
 
         #endregion
@@ -333,7 +333,7 @@ namespace DolomiteBackgroundProcessing
                 }
 
                 // Fetch the qualities from the DB to make this faster
-                List<Quality> qualities = await TrackDbManager.Instance.GetAllQualitiesAsync();
+                List<Quality> qualities = await QualityDbManager.Instance.GetAllQualitiesAsync();
 
                 // Delete the original file and any generated qualities from azure storage
                 List<Task> cleanupTasks = new List<Task>();
@@ -358,11 +358,11 @@ namespace DolomiteBackgroundProcessing
                 }
 
                 // Delete the qualities and metadata from the database
-                cleanupTasks.Add(TrackDbManager.Instance.DeleteAllMetadataAsync(workItem.Id));
+                cleanupTasks.Add(MetadataDbManager.Instance.DeleteAllMetadataAsync(workItem.Id));
 
                 // Remove the art from the track
                 // TODO: Fix this
-                cleanupTasks.Add(TrackDbManager.Instance.SetTrackArtAsync(workItem, null, false));
+                cleanupTasks.Add(ArtDbManager.Instance.SetTrackArtAsync(workItem, null, false));
 
                 // Put the track into an error state
                 await Task.WhenAll(cleanupTasks);

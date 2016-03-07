@@ -338,32 +338,5 @@ namespace DolomiteModel
 
         #endregion
 
-        #region Private Methods
-
-        /// <summary>
-        /// Validates a given session based on the following criteria:
-        /// 1) Both absolute and idle timeouts must be in the future.
-        /// 2) The API key for the current request must be the same as the initial one
-        /// </summary>
-        /// <param name="session">The entity for the session to validate</param>
-        /// <param name="apikey">The API key for the current request</param>
-        /// <returns>True if the session is valid, false otherwise</returns>
-        // TODO: Was I supposed to be using this?
-        private bool ValidateSession(Session session, string apikey)
-        {
-            // Are the timeouts in the future?
-            if (session.AbsoluteTimeout <= DateTime.Now || session.IdleTimeout <= DateTime.Now)
-                return false;
-
-            // Is the API key the same?
-            if (session.ApiKey1.ApiKey1 != apikey)
-                return false;
-
-            // We're good to go!
-            return true;
-        }
-
-        #endregion
-
     }
 }
