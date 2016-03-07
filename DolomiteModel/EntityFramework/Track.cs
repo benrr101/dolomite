@@ -26,22 +26,22 @@ namespace DolomiteModel.EntityFramework
         public int Owner { get; set; }
         public System.DateTime DateAdded { get; set; }
         public string Hash { get; set; }
-        public Nullable<int> Album { get; set; }
         public Nullable<long> Art { get; set; }
-        public Nullable<int> OriginalBitrate { get; set; }
-        public Nullable<int> OriginalSampling { get; set; }
         public string OriginalMimetype { get; set; }
         public string OriginalExtension { get; set; }
-        public bool HasBeenOnboarded { get; set; }
         public bool Locked { get; set; }
-        public bool TrackInTempStorage { get; set; }
         public bool ArtChange { get; set; }
+        public int Status { get; set; }
+        public System.DateTime DateLastModified { get; set; }
+        public Nullable<long> ErrorInfo { get; set; }
+        public string OriginalFileName { get; set; }
     
-        public virtual Album Album1 { get; set; }
         public virtual Art Art1 { get; set; }
         public virtual ICollection<AvailableQuality> AvailableQualities { get; set; }
         public virtual ICollection<Metadata> Metadatas { get; set; }
         public virtual ICollection<PlaylistTrack> PlaylistTracks { get; set; }
         public virtual User User { get; set; }
+        public virtual Status Status1 { get; set; }
+        public virtual ErrorInfo ErrorInfo1 { get; set; }
     }
 }

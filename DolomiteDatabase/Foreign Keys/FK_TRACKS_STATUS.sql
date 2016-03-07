@@ -1,0 +1,4 @@
+﻿ALTER TABLE [dbo].[Tracks]
+	ADD CONSTRAINT [FK_TRACKS_STATUS]
+	FOREIGN KEY ([Status])
+	REFERENCES [Statuses] ([Id])

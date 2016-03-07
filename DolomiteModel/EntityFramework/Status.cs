@@ -12,21 +12,16 @@ namespace DolomiteModel.EntityFramework
     using System;
     using System.Collections.Generic;
     
-    public partial class Quality
+    public partial class Status
     {
-        public Quality()
+        public Status()
         {
-            this.AvailableQualities = new HashSet<AvailableQuality>();
+            this.Tracks = new HashSet<Track>();
         }
     
         public int Id { get; set; }
-        public string Name { get; set; }
-        public Nullable<int> Bitrate { get; set; }
-        public string Extension { get; set; }
-        public string Mimetype { get; set; }
-        public string Directory { get; set; }
-        public string FfmpegArgs { get; set; }
+        public string Status1 { get; set; }
     
-        public virtual ICollection<AvailableQuality> AvailableQualities { get; set; }
+        public virtual ICollection<Track> Tracks { get; set; }
     }
 }

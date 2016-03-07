@@ -121,6 +121,12 @@ namespace DolomiteModel.PublicRepresentations
         public string Owner { get; set; }
 
         /// <summary>
+        /// The mimetype of the original upload. This is not a datamember since it should not be
+        /// used by the client.
+        /// </summary>
+        public string OriginalMimetype { get; set; }
+
+        /// <summary>
         /// List of qualities that are available for the given track.
         /// </summary>
         [DataMember]
@@ -151,21 +157,22 @@ namespace DolomiteModel.PublicRepresentations
         /// Creates an public-ready Track object based on the internal version of the track object.
         /// </summary>
         /// <param name="track">The internal track object to build this version from.</param>
-        /// <param name="context">Database context</param>
         /// <param name="fullFetch">
         /// Whether or not do a full fetch. A full fetch includes metadata, quality, and art info
         /// while a non-full fetch does not include that information.
         /// </param>
         // TODO: Determine if the query for track is god-awful complex and use IQueryable<EF.Track> if it is
-        internal Track(EF.Track track, EF.Entities context, bool fullFetch = true)
+        internal Track(EF.Track track, bool fullFetch = true)
         {
             // Store the minimum information
+            // TODO: Don't use magic numbers
             FullObject = fullFetch;
             InternalId = track.Id;
             Id = track.GuidId;
-            Ready = track.HasBeenOnboarded;
+            Ready = track.Status == 3;
             ArtChange = track.ArtChange;
             Owner = track.User.Username;
+            OriginalMimetype = track.OriginalMimetype;
 
             // Break out if we don't need to store anything else
             if (!fullFetch || !Ready)
@@ -192,9 +199,6 @@ namespace DolomiteModel.PublicRepresentations
             // Add the original quality back to the list of qualities
             Quality originalQuality = new Quality
             {
-                // ReSharper disable once PossibleInvalidOperationException 
-                //   Shouldn't be possible b/c this field is only set if track has been onboarded
-                BitrateKbps = track.OriginalBitrate.Value,
                 Directory = "original",
                 Extension = track.OriginalExtension,
                 Href = String.Format("/tracks/original/{0}", track.Id),

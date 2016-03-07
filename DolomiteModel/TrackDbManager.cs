@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Data.Entity.Core;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 using DolomiteModel.EntityFramework;
 using Pub = DolomiteModel.PublicRepresentations;
 
@@ -75,6 +77,7 @@ namespace DolomiteModel
         /// <param name="guid">GUID for the art item (the ID)</param>
         /// <param name="mimetype">Mimetype of the art file</param>
         /// <param name="hash">Hash of the file</param>
+        [Obsolete("Use CreateArtRecordAsync method")]
         public long CreateArtRecord(Guid guid, string mimetype, string hash)
         {
             using (var context = new Entities())
@@ -94,28 +97,59 @@ namespace DolomiteModel
         }
 
         /// <summary>
+        /// Stores a new art record.
+        /// </summary>
+        /// <param name="guid">GUID for the art item (the ID)</param>
+        /// <param name="mimetype">Mimetype of the art file</param>
+        /// <param name="hash">Hash of the file</param>
+        /// <returns>The internal ID of the newly created art record</returns>
+        public async Task<long> CreateArtRecordAsync(Guid guid, string mimetype, string hash)
+        {
+            using (var context = new Entities())
+            {
+                // Create a new art object
+                Art artObj = new Art
+                {
+                    GuidId = guid,
+                    Hash = hash,
+                    Mimetype = mimetype
+                };
+                context.Arts.Add(artObj);
+                await context.SaveChangesAsync();
+
+                return artObj.Id;
+            }
+        }
+
+        /// <summary>
         /// Create a stubbed out record for the track
         /// </summary>
         /// <param name="owner">The username for the owner of the track</param>
         /// <param name="guid">The guid of the track</param>
-        /// <param name="hash">The hash of the track</param>
-        public long CreateInitialTrackRecord(string owner, Guid guid, string hash)
+        /// <param name="mimetype">The mimetype of the upload</param>
+        /// <param name="originalFilename">
+        /// A friendly identifier for the track, usually the name of the file on the user's machine.
+        /// </param>
+        /// <returns>The internal ID of the new track</returns>
+        public async Task<long> CreateInitialTrackRecordAsync(string owner, Guid guid, string mimetype, string originalFilename)
         {
             using (var context = new Entities())
             {
+                // TODO: Don't use magic numbers
                 // Create the new track record
                 var track = new Track
                 {
                     DateAdded = DateTime.UtcNow,
+                    DateLastModified = DateTime.UtcNow,
                     GuidId = guid,
-                    Hash = hash,
-                    TrackInTempStorage = true,
-                    HasBeenOnboarded = false,
                     Locked = false,
-                    Owner = context.Users.First(u => u.Username == owner).Id
+                    Owner = context.Users.First(u => u.Username == owner).Id,
+                    OriginalMimetype = mimetype,
+                    OriginalFileName = originalFilename,
+                    Status = 1        // The "Initial" status
                 };
                 context.Tracks.Add(track);
-                context.SaveChanges();
+                await context.SaveChangesAsync();
 
                 return track.Id;
             }
@@ -125,15 +159,14 @@ namespace DolomiteModel
         /// Stores the metadata for the given track
         /// </summary>
         /// <param name="track">The track to store the metadata of</param>
-        /// <param name="metadatas">Dictionary of Metadata Tag Name => Value</param>
         /// <param name="writeOut">Whether or not the metadata change should be written to the file</param>
-        public void StoreTrackMetadata(Pub.Track track, IDictionary<string, string> metadatas, bool writeOut)
+        public async Task StoreTrackMetadataAsync(Pub.Track track, bool writeOut)
         {
             using (var context = new Entities())
             {
                 // Iterate over the metadatas and store new objects for each
                 // Skip values that are null (ie, they should be deleted)
-                foreach (var metadata in metadatas.Where(m => m.Value != null))
+                foreach (var metadata in track.Metadata.Where(m => m.Value != null))
                 {
                     // Skip metadata that doesn't have fields
                     var field = context.MetadataFields.FirstOrDefault(f => f.TagName == metadata.Key);
@@ -152,7 +185,7 @@ namespace DolomiteModel
                 }
 
                 // Commit the changes
-                context.SaveChanges();
+                await context.SaveChangesAsync();
             }
         }
 
@@ -176,8 +209,9 @@ namespace DolomiteModel
                 // This is because the .ToDictionary method isn't supported in LINQ-to-EF
                 // </remarks>
                 // TODO: Find a better way to do this using anonymous object types
+                // TODO: Don't use magic numbers
                 var ormTracks = context.Tracks.AsNoTracking()
-                    .Where(t => t.HasBeenOnboarded && t.User.Username == owner).ToList();
+                    .Where(t => t.Status == 3 && t.User.Username == owner).ToList();
 
                 // Parse them into the model version of the track
                 return ormTracks.Select(t => new Pub.Track()
@@ -193,22 +227,45 @@ namespace DolomiteModel
         /// Fetches all supported qualities from the database
         /// </summary>
         /// <returns>A list of qualitites</returns>
+        [Obsolete("Use GetAllQualitiesAsync.")]
         public List<Pub.Quality> GetAllQualities()
         {
             using (var context = new Entities())
             {
                 // Grab all the qualities from the db
                 return context.Qualities.AsNoTracking()
-                    .Where(q => q.Bitrate != null && q.Codec != null)
+                    .Where(q => q.Bitrate != null)
                     .Select(q => new Pub.Quality
                     {
                         Id = q.Id,
                         Bitrate = q.Bitrate.Value,
-                        Codec = q.Codec,
+                        FfmpegArgs = q.FfmpegArgs,
                         Directory = q.Directory,
                         Extension = q.Extension
                     })
                     .ToList();
+            }
+        }
+
+        /// <summary>
+        /// Fetches all supported qualities from the database
+        /// </summary>
+        /// <returns>A list of qualities</returns>
+        /// TODO: Add caching
+        public async Task<List<Pub.Quality>> GetAllQualitiesAsync()
+        {
+            using (var context = new Entities())
+            {
+                return await context.Qualities.AsNoTracking()
+                    .Where(q => q.Bitrate != null)
+                    .Select(q => new Pub.Quality
+                    {
+                        Id = q.Id,
+                        Bitrate = q.Bitrate.Value,
+                        FfmpegArgs = q.FfmpegArgs,
+                        Directory = q.Directory,
+                        Extension = q.Extension
+                    }).ToListAsync();
             }
         }
 
@@ -292,15 +349,13 @@ namespace DolomiteModel
         /// Fetches the ID for an art object with the given hash
         /// </summary>
         /// <param name="hash">The hash of the art</param>
-        /// <returns>An internal id of art if found, default(long) if not found</returns>
-        /// TODO: Return art object
-        public long GetArtIdByHash(string hash)
+        /// <returns>An internal id of art if found, <c>null</c> if not found</returns>
+        public long? GetArtIdByHash(string hash)
         {
             using (var context = new Entities())
             {
-                return (from art in context.Arts
-                        where art.Hash == hash
-                        select art.Id).FirstOrDefault();
+                Art art = context.Arts.FirstOrDefault(a => a.Hash == hash);
+                return art == null ? (long?)null : art.Id;
             }
         }
 
@@ -326,8 +381,7 @@ namespace DolomiteModel
                     select new Pub.MetadataChange
                     {
                         TagName = md.MetadataField.TagName,
-                        Value = md.Value,
-                        Array = md.MetadataField.TagLibArray
+                        Value = md.Value
                     };
 
                 return items.Any()
@@ -383,7 +437,7 @@ namespace DolomiteModel
                 if (track == null)
                     throw new ObjectNotFoundException(String.Format("Failed to find track with GUID {0}", trackGuid));
 
-                return new Pub.Track(track, context);
+                return new Pub.Track(track);
             }
         }
 
@@ -403,7 +457,7 @@ namespace DolomiteModel
                 if (track == null)
                     throw new ObjectNotFoundException(String.Format("Failed to find track with id {0}", trackId));
 
-                return new Pub.Track(track, context);
+                return new Pub.Track(track);
             }
         }
 
@@ -450,6 +504,39 @@ namespace DolomiteModel
             using (var context = new Entities())
             {
                 return context.Tracks.Any(t => t.Art == artId);
+            }
+        }
+
+        /// <summary>
+        /// Determines whether or not a track exists based on GUID.
+        /// </summary>
+        /// <remarks>
+        /// This does NOT check owners, so be careful with choosing when to use this.
+        /// </remarks>
+        /// <param name="trackGuid">The GUID of the track to lookup</param>
+        /// <returns>True if the track exists, false if the track does not exist</returns>
+        public bool TrackExists(Guid trackGuid)
+        {
+            using (var context = new Entities())
+            {
+                // Search for the track
+
+                return context.Tracks.Any(t => t.GuidId == trackGuid);
+            }
+        }
+
+        /// <summary>
+        /// Determines if a track exists based on the GUID and the owner's username
+        /// </summary>
+        /// <param name="trackGuid">The GUID of the track to lookup</param>
+        /// <param name="owner">The username of the owner</param>
+        /// <returns>True if the track exists, false otherwise</returns>
+        public bool TrackExists(Guid trackGuid, string owner)
+        {
+            using (var context = new Entities())
+            {
+                // Search for the track
+                return context.Tracks.Any(t => t.GuidId == trackGuid && t.User.Username == owner);
             }
         }
 
@@ -513,13 +600,14 @@ namespace DolomiteModel
         /// <param name="trackGuid">Guid of the track to update</param>
         /// <param name="newHash">The new hash of the track</param>
         /// <param name="owner">The owner of the track</param>
-        public void MarkTrackAsNotOnboarderd(Guid trackGuid, string newHash, string owner)
+        public void TransitionTrackToPendingOnboarding(Guid trackGuid, string newHash, string owner)
         {
             using (var context = new Entities())
             {
                 // Fetch the track that is to be marked as not onboarded
                 Track track = GetTrackModel(trackGuid, owner, context, false).FirstOrDefault();
 
+                // TODO: Do these checks in the sproc to allow for passing in an id and that's it
                 // Verify that the track exists
                 if (track == null)
                     throw new ObjectNotFoundException(String.Format("Track {0} does not exist.", trackGuid));
@@ -537,6 +625,25 @@ namespace DolomiteModel
                 // Store the new track hash
                 track.Hash = newHash;
                 context.SaveChanges();
+            }
+        }
+
+        /// <summary>
+        /// Moves a track into the error state and stores the errors
+        /// </summary>
+        /// <param name="trackGuid">Guid of the track to update</param>
+        /// /// <param name="owner">The owner of the track</param>
+        /// <param name="userError">The error to report back to the user</param>
+        /// <param name="adminError">The error for internal debugging</param>
+        public void TransitionTrackToError(Guid trackGuid, string owner, string userError, string adminError)
+        {
+            using (var context = new Entities())
+            {
+                // Fetch the track to be marked as error
+                Track track = GetTrackModel(trackGuid, owner, context, true).First();
+
+                // Execute the sproc for setting error state
+                context.MarkTrackAsError(track.Id, userError, adminError);
             }
         }
 
@@ -590,20 +697,18 @@ namespace DolomiteModel
         /// <param name="samplingFrequency">The sampling frequency of the original audio</param>
         /// <param name="extension">The extension of the file</param>
         /// <param name="mimetype">The mimetype of the original file</param>
-        public void SetAudioQualityInfo(long trackId, int bitrate, int samplingFrequency, string mimetype, string extension)
+        public async Task SetAudioQualityInfoAsync(long trackId, int bitrate, string mimetype, string extension)
         {
             using (var context = new Entities())
             {
                 // Fetch the existing record for the track
-                Track track = GetTrackModel(trackId, context, false).FirstOrDefault();
+                Track track = await GetTrackModel(trackId, context, false).FirstOrDefaultAsync();
                 if (track == null)
                     throw new ObjectNotFoundException(String.Format("Track {0} does not exist.", trackId));
 
-                track.OriginalBitrate = bitrate;
-                track.OriginalSampling = samplingFrequency;
                 track.OriginalMimetype = mimetype;
                 track.OriginalExtension = extension;
-                context.SaveChanges();
+                await context.SaveChangesAsync();
             }
         }
 
@@ -614,6 +719,7 @@ namespace DolomiteModel
         /// <param name="trackId">The ID of the track</param>
         /// <param name="artId">The ID of the art record. Can be null.</param>
         /// <param name="fileChange">Whether or not the art change should be processed to the file</param>
+        [Obsolete("Use SetTrackArtAsync method.")]
         public void SetTrackArt(long trackId, long? artId, bool fileChange)
         {
             using (var context = new Entities())
@@ -626,6 +732,82 @@ namespace DolomiteModel
                 track.Art = artId;
                 track.ArtChange = fileChange;
                 context.SaveChanges();
+            }
+        }
+
+        /// <summary>
+        /// Sets the art record for the given track to the given artGuid. It is permissible to set
+        /// it to <c>null</c>.
+        /// </summary>
+        /// <param name="track">The track to update</param>
+        /// <param name="artId">The ID of the art record. Can be null.</param>
+        /// <param name="fileChange">Whether or not the art change should be processed to the file</param>
+        public async Task SetTrackArtAsync(Pub.Track track, long? artId, bool fileChange)
+        {
+            using (var context = new Entities())
+            {
+                // Fetch down the track to make sure it exists, we'll be making changes to it soon
+                Track internalTrack = await GetTrackModel(track.InternalId, context, false).FirstOrDefaultAsync();
+                if (internalTrack == null)
+                    throw new ObjectNotFoundException(String.Format("Track {0} does not exist.", track.InternalId));
+
+                // Set the track's information
+                internalTrack.Art = artId;
+                track.ArtChange = fileChange;
+
+                if (artId != null)
+                {
+                    // Before we try to save, make sure that the art exists
+                    Art internalArt = await GetArtModel(artId.Value, context, true).FirstOrDefaultAsync();
+                    if (internalArt == null)
+                        throw new ObjectNotFoundException(String.Format("Art {0} does not exist.", artId));
+                }
+                else
+                {
+                    // Since we're removing art from a track, see if we can just remove the art
+                    if (internalTrack.Art != null && internalTrack.Art1.Tracks.Count <= 1)
+                    {
+                        context.Arts.Remove(internalTrack.Art1);
+                    }
+                }
+                
+                await context.SaveChangesAsync();
+            }
+        }
+
+        /// <summary>
+        /// TODO: Make this a sproc
+        /// </summary>
+        /// <param name="track"></param>
+        /// <param name="userError"></param>
+        /// <param name="adminError"></param>
+        /// <returns></returns>
+        public async Task SetTrackErrorStateAsync(Pub.Track track, string userError, string adminError)
+        {
+            using (var context = new Entities())
+            {
+                // Create a new error info
+                ErrorInfo ei = new ErrorInfo
+                {
+                    AdminError = adminError,
+                    UserError = userError
+                };
+                context.ErrorInfoes.Add(ei);
+                await context.SaveChangesAsync();
+
+                // Link the error info to the track
+                Track internalTrack = await GetTrackModel(track.InternalId, context, false).FirstOrDefaultAsync();
+                if (internalTrack == null)
+                {
+                    throw new ObjectNotFoundException(String.Format("Track {0} does not exist.", track.InternalId));
+                }
+                internalTrack.ErrorInfo = ei.Id;
+
+                // Unlock the track
+                internalTrack.Locked = false;
+                internalTrack.Status = 5;
+
+                await context.SaveChangesAsync();
             }
         }
 
@@ -736,6 +918,22 @@ namespace DolomiteModel
                 // Delete the record
                 context.Metadatas.Remove(field);
                 context.SaveChanges();
+            }
+        }
+
+        /// <summary>
+        /// Deletes all metadata for a given track. Should only be used when marking a track into
+        /// an error state.
+        /// </summary>
+        /// <param name="trackGuid">GUID of the track to delete the metadata for</param>
+        public async Task DeleteAllMetadataAsync(Guid trackGuid)
+        {
+            using (var context = new Entities())
+            {
+                // Delete all the metadata for the given track
+                var trackMetadatas = context.Metadatas.Where(m => m.Track1.GuidId == trackGuid);
+                context.Metadatas.RemoveRange(trackMetadatas);
+                await context.SaveChangesAsync();
             }
         }
 

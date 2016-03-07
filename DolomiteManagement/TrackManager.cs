@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using DolomiteManagement.Asynchronous;
 using DolomiteManagement.Exceptions;
+using DolomiteManagement.Utility;
 using TagLib;
 using DolomiteModel;
 using DolomiteModel.PublicRepresentations;
@@ -71,7 +73,6 @@ namespace DolomiteManagement
         /// <summary>
         /// Deletes the track with the given GUID from the database and Azure storage
         /// </summary>
-        /// <
         /// <param name="trackGuid">The GUID of the track to delete.</param>
         /// <param name="owner">The owner of the session</param>
         public void DeleteTrack(Guid trackGuid, string owner)
@@ -235,7 +236,8 @@ namespace DolomiteManagement
             }
 
             // Store the new values
-            DatabaseManager.StoreTrackMetadata(track, metadata, true);
+            // TODO: Fix this
+            //DatabaseManager.StoreTrackMetadataAsync(track, metadata, true);
         }
 
         /// <summary>
@@ -257,8 +259,7 @@ namespace DolomiteManagement
             if (stream.Length > 0)
             {
                 // We have art! Have we already uploaded it?
-                // TODO: This is kinda broken since it does a collision check on the track table.
-                string hash = LocalStorageManager.CalculateHash(stream, owner);
+                string hash = LocalStorageManager.CalculateMd5Hash(stream);
                 newArtId = DatabaseManager.GetArtIdByHash(hash);
                 if (newArtId == default(long))
                 {
@@ -311,52 +312,89 @@ namespace DolomiteManagement
         }
 
         /// <summary>
-        /// Uploads the track to the system. Places the track in temporary
-        /// azure storage then kicks off threads to do the rest of the work. We
-        /// detect duplicate tracks based on hash here.
+        /// Determines what kind of upload this is based on the existence of or lack thereof a
+        /// track with matching owner and guid.
         /// </summary>
-        /// <param name="stream">Stream of the uploaded track</param>
+        /// <param name="trackGuid">The guid the user chose for the new upload</param>
         /// <param name="owner">The username of the owner of the track</param>
-        /// <param name="guid">The guid of the track as provided by the user</param>
-        /// <param name="hash">Output variable for the hash of the track</param>
-        /// <returns>The guid for identifying the track</returns>
-        public void UploadTrack(Stream stream, string owner, Guid guid, out string hash)
+        /// <param name="contentType">The mimetype of the upload from the HTTP headers</param>
+        /// <param name="originalFilename">
+        /// A friendly identifier for the track, usually the name of the file on the user's machine.
+        /// </param>
+        /// <returns>
+        /// <c>TrackUploadType.NewUpload</c> if the guid is a completely new upload.
+        /// <c>TrackUploadType.Replace</c> if the guid already exists for the user. The track is a
+        /// replacement for the existing one.
+        /// </returns>
+        public async Task<TrackUploadType> TriageUpload(Guid trackGuid, string owner, string contentType, string originalFilename)
         {
-            // Step 0: Calculate hash to determine if the track is a duplicate
-            hash = LocalStorageManager.CalculateHash(stream, owner);
-
-            // Step 1: Upload the track to temporary storage in azure, asynchronously
-            string azurePath = OnboardingDirectory + '/' + guid;
-            UploadAsynchronousState state = new NewTrackAsynchronousState
+            // Search the db for a track with that guid
+            if (!TrackDbManager.Instance.TrackExists(trackGuid))
             {
-                Owner = owner,
-                Stream = stream,
-                TrackGuid = guid,
-                TrackHash = hash
-            };
+                // Create an initial record we'll use later
+                await TrackDbManager.Instance.CreateInitialTrackRecordAsync(owner, trackGuid, contentType, originalFilename);
+                return TrackUploadType.NewUpload;
+            }
 
-            AzureStorageManager.StoreBlobAsync(TrackStorageContainer, azurePath, stream, UploadTrackAsyncCallback, state);
+            if (TrackDbManager.Instance.TrackExists(trackGuid, owner))
+            {
+                // TODO: Handle the content type and filename
+                return TrackUploadType.Replace;
+            }
+
+            throw new AccessViolationException("The GUID provided is already in use. Please provide another one.");
         }
 
         /// <summary>
-        /// Callback for when the upload to Azure has completed
+        /// Uploads the track to the system. Calculates the hash of the track and uploads the track
+        /// to Azure onboarding storage asynchronously. 
         /// </summary>
-        /// <param name="state">The result from the async call</param>
-        private void UploadTrackAsyncCallback(IAsyncResult state)
+        /// <remarks>
+        /// This is async VOID because we want this method to be kicked off and forgotten about.
+        /// </remarks>
+        /// <param name="owner">The username of the owner of the track</param>
+        /// <param name="guid">The guid of the track as provided by the user</param>
+        public async void UploadTrack(string owner, Guid guid)
         {
-            // Verify the async state object
-            NewTrackAsynchronousState asyncState = state.AsyncState as NewTrackAsynchronousState;
-            if (asyncState == null)
+            // We've got a few things to complete tasks
+            try
             {
-                // Something really went wrong.
-                throw new InvalidDataException("Expected UploadAsynchronousState object.");
+                // Step 1.1: Calculate the hash of the track, asynchronously
+                Task<string> calculateHashTask = LocalStorageManager.CalculateMd5HashAsync(guid.ToString());
+
+                // Step 1.2: Upload the track to azure, asynchronously
+                string azurePath = String.Format(@"{0}/{1}", OnboardingDirectory, guid);
+                Task azureUploadTask = AzureStorageManager.StoreBlobAsync(TrackStorageContainer,
+                    LocalStorageManager.GetPath(guid.ToString()), azurePath);
+
+                // Group up all the parallel tasks and wait for them all to complete
+                Task[] tasks =
+                {
+                    calculateHashTask,
+                    azureUploadTask
+                };
+                await Task.WhenAll(tasks);
+
+                // Step 2: Mark the track as ready for onboarding
+                TrackDbManager.Instance.TransitionTrackToPendingOnboarding(guid, calculateHashTask.Result, owner);
+
+                // Step 3: Delete the local file
+                LocalStorageManager.Instance.DeleteFile(guid.ToString());
             }
-
-            // Create the initial DB record for the track in the DB
-            DatabaseManager.CreateInitialTrackRecord(asyncState.Owner, asyncState.TrackGuid, asyncState.TrackHash);
-
-            // Close the stream
-            asyncState.Stream.Close();
+            catch (AggregateException e)
+            {
+                // On aggregate exception, aggregate and mark the track as having an error
+                string adminMessage = e.AggregateExceptionMessages();
+                const string userMessage = "Internal error while uploading track. One or more errors occurred.";
+                TrackDbManager.Instance.TransitionTrackToError(guid, owner, userMessage, adminMessage);
+            }
+            catch (Exception e)
+            {
+                // On regular exception, mark track as having an error
+                string adminMessage = e.ComposeExceptionMessage();
+                const string userMessage = "Internal error while uploading track.";
+                TrackDbManager.Instance.TransitionTrackToError(guid, owner, userMessage, adminMessage);
+            }
         }
 
         /// <summary>
@@ -398,7 +436,7 @@ namespace DolomiteManagement
             }
 
             // Mark the track a needing re-onboarding
-            DatabaseManager.MarkTrackAsNotOnboarderd(track.Id, asyncState.TrackHash, asyncState.Owner);
+            DatabaseManager.TransitionTrackToPendingOnboarding(track.Id, asyncState.TrackHash, asyncState.Owner);
         }
 
         #endregion

@@ -2,6 +2,7 @@
 using System.ServiceModel;
 using System.ServiceModel.Channels;
 using System.ServiceModel.Web;
+using System.Threading.Tasks;
 
 namespace DolomiteWcfService
 {
@@ -11,8 +12,8 @@ namespace DolomiteWcfService
         #region Create Operations
 
         [OperationContract]
-        [WebInvoke(Method = "PUT", UriTemplate = "/{guid}")]
-        Message UploadTrack(Stream file, string guid);
+        [WebInvoke(Method = "PUT", UriTemplate = "/{guid}?md5hash={hash}&originalFilename={filename}")]
+        Task<Message> UploadTrack(Stream file, string guid, string hash, string filename);
 
         #endregion
 

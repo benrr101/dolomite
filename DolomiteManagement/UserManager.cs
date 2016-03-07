@@ -151,17 +151,17 @@ namespace DolomiteManagement
         {
             // Validate the apiKey
             if (!DatabaseManager.ValidateApiKey(apiKey))
-                throw new ApplicationException("Invalid API key.");
+                throw new InvalidApiKeyException();
 
             // Validate the login credentials
             User user = DatabaseManager.GetUserByUsername(username);
             if (user == null)
-                throw new ObjectNotFoundException(String.Format("User with username {0} does not exist", username));
+                throw new InvalidLoginCredentialsException(InvalidLoginCredentialsException.InvalidCredentialType.Username);
 
             // Compare the password hashes
             string hash = CreatePasswordHash(user.Email, password);
             if (!user.PasswordHash.Equals(hash, StringComparison.Ordinal))
-                throw new ObjectNotFoundException(String.Format("User {0} passwords do not match", username));
+                throw new InvalidLoginCredentialsException(InvalidLoginCredentialsException.InvalidCredentialType.Password);
 
             // Everything looks good, fire up a session
             // Determine the timeout times

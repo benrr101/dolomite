@@ -19,6 +19,7 @@
       <Setting name="AbsoluteTimeout" />
     </ConfigurationSettings>
     <LocalResources>
+      <LocalStorage name="UploadStorage" cleanOnRoleRecycle="true" sizeInMB="8092" />
     </LocalResources>
   </WorkerRole>
   <WorkerRole name="DolomiteBackgroundProcessing" vmsize="ExtraSmall">
@@ -27,6 +28,7 @@
     <ConfigurationSettings>
       <Setting name="TrackStorageContainer" />
       <Setting name="StorageConnectionString" />
+      <Setting name="Onboarding_SleepSeconds" />
     </ConfigurationSettings>
     <LocalResources>
       <LocalStorage name="OnboardingStorage" cleanOnRoleRecycle="true" sizeInMB="4096" />

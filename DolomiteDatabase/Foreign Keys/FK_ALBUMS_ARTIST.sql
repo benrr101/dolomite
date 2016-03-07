@@ -1,4 +1,0 @@
-﻿ALTER TABLE [dbo].[Albums]
-	ADD CONSTRAINT [FK_ALBUMS_ARTIST]
-	FOREIGN KEY (Artist)
-	REFERENCES [Artists] (Id)

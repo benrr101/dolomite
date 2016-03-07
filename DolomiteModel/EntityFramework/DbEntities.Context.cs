@@ -27,10 +27,8 @@ namespace DolomiteModel.EntityFramework
             throw new UnintentionalCodeFirstException();
         }
     
-        public virtual DbSet<Album> Albums { get; set; }
         public virtual DbSet<ApiKey> ApiKeys { get; set; }
         public virtual DbSet<Art> Arts { get; set; }
-        public virtual DbSet<Artist> Artists { get; set; }
         public virtual DbSet<AutoplaylistRule> AutoplaylistRules { get; set; }
         public virtual DbSet<Autoplaylist> Autoplaylists { get; set; }
         public virtual DbSet<AvailableQuality> AvailableQualities { get; set; }
@@ -45,6 +43,8 @@ namespace DolomiteModel.EntityFramework
         public virtual DbSet<UserKey> UserKeys { get; set; }
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<UserSetting> UserSettings { get; set; }
+        public virtual DbSet<Status> Statuses { get; set; }
+        public virtual DbSet<ErrorInfo> ErrorInfoes { get; set; }
     
         public virtual int DecrementPlaylistTrackOrder(Nullable<long> playlist, Nullable<int> position)
         {
@@ -161,6 +161,23 @@ namespace DolomiteModel.EntityFramework
                 new ObjectParameter("hash", typeof(string));
     
             return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("SetTrackHash", trackIdParameter, hashParameter);
+        }
+    
+        public virtual int MarkTrackAsError(Nullable<long> trackId, string userError, string adminError)
+        {
+            var trackIdParameter = trackId.HasValue ?
+                new ObjectParameter("trackId", trackId) :
+                new ObjectParameter("trackId", typeof(long));
+    
+            var userErrorParameter = userError != null ?
+                new ObjectParameter("userError", userError) :
+                new ObjectParameter("userError", typeof(string));
+    
+            var adminErrorParameter = adminError != null ?
+                new ObjectParameter("adminError", adminError) :
+                new ObjectParameter("adminError", typeof(string));
+    
+            return ((IObjectContextAdapter)this).ObjectContext.ExecuteFunction("MarkTrackAsError", trackIdParameter, userErrorParameter, adminErrorParameter);
         }
     }
 }

@@ -76,13 +76,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Asynchronous\AzureAsynchronousState.cs" />
-    <Compile Include="Asynchronous\NewTrackAsynchronousState.cs" />
     <Compile Include="Asynchronous\ReplaceAsynchronousState.cs" />
     <Compile Include="Asynchronous\UploadAsynchronousState.cs" />
     <Compile Include="AzureStorageManager.cs" />
+    <Compile Include="Exceptions\DolomiteException.cs" />
     <Compile Include="Exceptions\DuplicateTrackException.cs" />
+    <Compile Include="Exceptions\ExceptionUtilities.cs" />
     <Compile Include="Exceptions\InvalidSessionException.cs" />
     <Compile Include="Exceptions\TrackNotReadyException.cs" />
+    <Compile Include="Exceptions\UserExceptions.cs" />
     <Compile Include="LocalStorageManager.cs" />
     <Compile Include="MimetypeDetector.cs" />
     <Compile Include="PlaylistManager.cs" />
@@ -93,7 +95,9 @@
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
     <Compile Include="TrackManager.cs" />
+    <Compile Include="TrackUploadType.cs" />
     <Compile Include="UserManager.cs" />
+    <Compile Include="Utility\ExtensionMethods.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DolomiteModel\DolomiteModel.csproj">

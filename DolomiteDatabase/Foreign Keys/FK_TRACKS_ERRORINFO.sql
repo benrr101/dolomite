@@ -1,0 +1,4 @@
+﻿ALTER TABLE [dbo].[Tracks]
+	ADD CONSTRAINT [FK_TRACKS_ERRORINFO]
+	FOREIGN KEY (ErrorInfo)
+	REFERENCES [ErrorInfo] (Id)

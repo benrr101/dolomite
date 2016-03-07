@@ -24,6 +24,9 @@ namespace DolomiteWcfService
 
         private UserManager UserManager { get; set; }
 
+        private readonly WebUtilities _webUtilities = new WebUtilities();
+        private WebUtilities WebUtilities { get { return _webUtilities; } }
+
         #endregion
 
         public StaticPlaylistEndpoint()

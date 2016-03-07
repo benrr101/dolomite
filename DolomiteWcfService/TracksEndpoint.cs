@@ -5,14 +5,13 @@ using System.Data.Entity.Core;
 using System.IO;
 using System.Net;
 using System.ServiceModel.Channels;
+using System.Threading.Tasks;
 using DolomiteManagement;
 using DolomiteManagement.Exceptions;
 using DolomiteModel.PublicRepresentations;
 using DolomiteWcfService.Requests;
 using DolomiteWcfService.Responses;
 using Newtonsoft.Json;
-using AntsCode.Util;
-using TagLib;
 
 namespace DolomiteWcfService
 {
@@ -30,6 +29,9 @@ namespace DolomiteWcfService
         /// Instance of the User Manager
         /// </summary>
         private static UserManager UserManager { get; set; }
+
+        private readonly WebUtilities _webUtilities = new WebUtilities();
+        private WebUtilities WebUtilities { get { return _webUtilities; } }
 
         #endregion
 
@@ -54,64 +56,79 @@ namespace DolomiteWcfService
         /// </remarks>
         /// <param name="file">Stream of the file that is uploaded</param>
         /// <param name="guid">The GUID for identifying the track. Provided by the client.</param>
+        /// <param name="providedHash">The MD5 hash provided by the client. Optional.</param>
+        /// <param name="originalFilename">
+        /// A friendly identifier for the track, usually the name of the file on the user's machine.
+        /// </param>
         /// <returns>The GUID of the track that was uploaded</returns>
-        public Message UploadTrack(Stream file, string guid)
+        public async Task<Message> UploadTrack(Stream file, string guid, string providedHash, string originalFilename)
         {
             try
             {
-                // Step 0: Make sure the session is valid
+                // Step 0.1: Make sure the session is valid
                 UserSession sesh = WebUtilities.GetDolomiteSessionToken();
                 string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
                 UserManager.ExtendIdleTimeout(sesh.Token);
 
-                // Step 1: Check to make sure the guid is valid
+                // Step 0.2: Make sure the guid is valid
                 Guid trackGuid;
                 if (!Guid.TryParse(guid, out trackGuid) && trackGuid != Guid.Empty)
                 {
-                    throw new ArgumentException("A valid GUID must be provided as the ID for the track");
+                    throw new ArgumentException("A valid GUID must be provided as the ID for the track.");
                 }
 
-                // Step 2: Read the request body
-                MemoryStream memoryStream;
-                if (WebUtilities.GetContentType() == null)
-                    throw new MissingFieldException("The content type header is missing from the request.");
-                if (WebUtilities.GetContentType().StartsWith("multipart/form-data"))
+                // Step 0.3: Make sure the provided hash exists
+                if (string.IsNullOrWhiteSpace(providedHash))
                 {
-                    // We need to process out other form data for the stuff we want
-                    MultipartParser parser = new MultipartParser(file);
-                    if (parser.Success)
-                    {
-                        memoryStream = new MemoryStream(parser.FileContents);
-                    }
-                    else
-                    {
-                        // Failure of one kind or another
-                        return WebUtilities.GenerateResponse(new ErrorResponse("Failed to process request."),
-                            HttpStatusCode.BadRequest);
-                    }
-                }
-                else
-                {
-                    // There's no need to process out anything else. The body is the file.
-                    memoryStream = new MemoryStream(file.ToByteArray());
+                    throw new ArgumentException("A valid MD5 hash of the uploaded file must be provided.");
                 }
 
-                // Step 3: Does the track exist?
-                string hash;
+                // Step 0.4: Make sure a filename is provided
+                if (string.IsNullOrWhiteSpace(originalFilename))
+                {
+                    throw new ArgumentException("A filename must be provided.");
+                }
+
+                // Step 0.5: Make sure there was content type uploaded
+                string contentType = WebUtilities.GetHeader(HttpRequestHeader.ContentType);
+                if (String.IsNullOrWhiteSpace(contentType))
+                {
+                    throw new ArgumentException("A valid content-type headed must be provided.");
+                }
+                if (contentType.StartsWith("multipart/form-data"))
+                {
+                    throw new ArgumentException("multipart/form-data uploads are not supported. " +
+                                                "The request body must only be the upload content");
+                }
+
+                // Step 1: Read the request body into the temporary storage
+                await LocalStorageManager.Instance.StoreStreamAsync(file, trackGuid.ToString());
+
+                // Step 2: Calculate the hash of the file in temporary storage and compare to the
+                // provided hash to validate the track
+                string calculatedHash = await LocalStorageManager.Instance.CalculateMd5HashAsync(trackGuid.ToString());
+                if (!String.Equals(calculatedHash, providedHash, StringComparison.OrdinalIgnoreCase))
+                {
+                    LocalStorageManager.Instance.DeleteFile(trackGuid.ToString());
+                    throw new FileLoadException();
+                }
+
+                // Step 3: Triage the upload and kick off an async upload process
                 HttpStatusCode returnCode;
-                try
+                switch (await TrackManager.Instance.TriageUpload(trackGuid, username, contentType, originalFilename))
                 {
-                    // Case 1: Track exists, we're replaceing. Will throw exception if track does not exist
-                    TrackManager.ReplaceTrack(memoryStream, trackGuid, username, out hash);
-                    returnCode = HttpStatusCode.OK;
+                    case TrackUploadType.NewUpload:
+                        returnCode = HttpStatusCode.Created;
+                        TrackManager.Instance.UploadTrack(username, trackGuid);
+                        break;
+                    case TrackUploadType.Replace:
+                        returnCode = HttpStatusCode.OK;
+                        break;
+                    default:
+                        throw new Exception("Upload triage returned an invalid enum value.");
                 }
-                catch (ObjectNotFoundException)
-                {
-                    // Case 2: Track does not exist, we're uploading a new one
-                    TrackManager.UploadTrack(memoryStream, username, trackGuid, out hash);
-                    returnCode = HttpStatusCode.Created;
-                }
-                return WebUtilities.GenerateResponse(new UploadSuccessResponse(trackGuid, hash), returnCode);
+
+                return WebUtilities.GenerateResponse(new UploadSuccessResponse(trackGuid), returnCode);
             }
             catch (InvalidSessionException)
             {
@@ -129,9 +146,17 @@ namespace DolomiteWcfService
             }
             catch (DuplicateNameException)
             {
-                ErrorResponse eResponse = new ErrorResponse("The request could not be completed. A track with the same hash already exists." +
-                                                            " Duplicate tracks are not permitted");
+                ErrorResponse eResponse = new ErrorResponse(
+                    "The request could not be completed. A track with the same hash already exists." 
+                    + " Duplicate tracks are not permitted");
                 return WebUtilities.GenerateResponse(eResponse, HttpStatusCode.Conflict);
+            }
+            catch (FileLoadException)
+            {
+                ErrorResponse eResponse = new ErrorResponse(
+                    "The provided MD5 hash does not match the calculated MD5 hash."
+                    + " The file may have been corrupted during upload.");
+                return WebUtilities.GenerateResponse(eResponse, HttpStatusCode.BadRequest);
             }
             catch (Exception)
             {
@@ -201,10 +226,6 @@ namespace DolomiteWcfService
             catch (FormatException)
             {
                 WebUtilities.SetStatusCode(HttpStatusCode.BadRequest);
-            }
-            catch (UnsupportedFormatException)
-            {
-                WebUtilities.SetStatusCode(HttpStatusCode.NotFound);
             }
             catch (ObjectNotFoundException)
             {
@@ -473,51 +494,52 @@ namespace DolomiteWcfService
             try
             {
                 // Make sure we have a valid session
-                UserSession sesh = WebUtilities.GetDolomiteSessionToken();
-                string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
-                UserManager.ExtendIdleTimeout(sesh.Token);
+                //UserSession sesh = WebUtilities.GetDolomiteSessionToken();
+                //string username = UserManager.GetUsernameFromSession(sesh.Token, sesh.ApiKey);
+                //UserManager.ExtendIdleTimeout(sesh.Token);
 
-                // Translate the body and guid
-                Guid trackGuid = Guid.Parse(guid);
+                //// Translate the body and guid
+                //Guid trackGuid = Guid.Parse(guid);
 
-                MemoryStream memoryStream;
-                if (WebUtilities.GetContentLength() == 0)
-                {
-                    // This allows the art file to be deleted
-                    memoryStream = new MemoryStream();
-                }
-                else
-                {
-                    if (WebUtilities.GetContentType() == null)
-                        throw new MissingFieldException("The content type header is missing from the request.");
-                    if (WebUtilities.GetContentType().StartsWith("multipart/form-data"))
-                    {
-                        // Attempt to replace the track with the new file
-                        MultipartParser parser = new MultipartParser(body);
-                        if (parser.Success)
-                        {
-                            // Upload the track
-                            memoryStream = new MemoryStream(parser.FileContents);
-                        }
-                        else
-                        {
-                            // Failure of one kind or another
-                            return WebUtilities.GenerateResponse(new ErrorResponse("Failed to process request."),
-                                HttpStatusCode.BadRequest);
-                        }
-                    }
-                    else
-                    {
-                        // There's no need to process out anything else. The body is the file.
-                        memoryStream = new MemoryStream(body.ToByteArray());
-                    }
-                }
+                //MemoryStream memoryStream;
+                //if (WebUtilities.GetContentLength() == 0)
+                //{
+                //    // This allows the art file to be deleted
+                //    memoryStream = new MemoryStream();
+                //}
+                //else
+                //{
+                //    if (WebUtilities.GetContentType() == null)
+                //        throw new MissingFieldException("The content type header is missing from the request.");
+                //    if (WebUtilities.GetContentType().StartsWith("multipart/form-data"))
+                //    {
+                //        // Attempt to replace the track with the new file
+                //        MultipartParser parser = new MultipartParser(body);
+                //        if (parser.Success)
+                //        {
+                //            // Upload the track
+                //            memoryStream = new MemoryStream(parser.FileContents);
+                //        }
+                //        else
+                //        {
+                //            // Failure of one kind or another
+                //            return WebUtilities.GenerateResponse(new ErrorResponse("Failed to process request."),
+                //                HttpStatusCode.BadRequest);
+                //        }
+                //    }
+                //    else
+                //    {
+                //        // There's no need to process out anything else. The body is the file.
+                //        memoryStream = new MemoryStream(body.ToByteArray());
+                //    }
+                //}
 
-                // Pass it along to the track manager
-                TrackManager.ReplaceTrackArt(trackGuid, username, memoryStream);
+                //// Pass it along to the track manager
+                //TrackManager.ReplaceTrackArt(trackGuid, username, memoryStream);
 
-                // Sucess
-                return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
+                //// Sucess
+                //return WebUtilities.GenerateResponse(new Response(Response.StatusValue.Success), HttpStatusCode.OK);
+                throw new NotImplementedException();
             }
             catch (InvalidSessionException)
             {

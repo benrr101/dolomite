@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using DolomiteManagement;
+using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
 namespace DolomiteBackgroundProcessing
@@ -14,6 +15,7 @@ namespace DolomiteBackgroundProcessing
         #region Constants
 
         private const string TrackContainerKey = "TrackStorageContainer";
+        private const string LocalStorageResourceKey = "OnboardingStorage";
 
         #endregion
 
@@ -54,6 +56,14 @@ namespace DolomiteBackgroundProcessing
             try
             {
                 InitializeTrackManager();
+
+                // Grab the connection string for Azure storage
+                string azureConnectionString = CloudConfigurationManager.GetSetting(AzureStorageManager.ConnectionStringKey);
+                AzureStorageManager.StorageConnectionString = azureConnectionString;
+
+                // Grab the local storage path
+                LocalResource localStorage = RoleEnvironment.GetLocalResource(LocalStorageResourceKey);
+                LocalStorageManager.LocalResourcePath = localStorage.RootPath;
             }
             catch (Exception e)
             {
@@ -98,8 +108,12 @@ namespace DolomiteBackgroundProcessing
             // Grab the configuration information
             try
             {
+                // Get all the configuration values for the onboarding thread
+                int sleepSeconds = GetConfigurationValue<int>(TrackOnboarding.SleepSecondsKey);
+                TrackOnboarding.SleepSeconds = sleepSeconds;
+
                 // Get the track storage container
-                var trackContainer = RoleEnvironment.GetConfigurationSettingValue(TrackContainerKey);
+                string trackContainer = GetConfigurationValue<string>(TrackContainerKey);
                 TrackOnboarding.TrackStorageContainer = trackContainer;
                 TrackManager.TrackStorageContainer = trackContainer;
             }
@@ -167,6 +181,18 @@ namespace DolomiteBackgroundProcessing
             {
                 throw new InvalidDataException("Failed to initialize the Track Manager.", e);
             }
+        }
+
+        /// <summary>
+        /// Returns the configuration value for the role.
+        /// </summary>
+        /// <typeparam name="T">Type of the value</typeparam>
+        /// <param name="configurationKey">The key to use to look up the config value</param>
+        /// <returns>The converted configuration value</returns>
+        private static T GetConfigurationValue<T>(string configurationKey) where T : IConvertible
+        {
+            string configValue = RoleEnvironment.GetConfigurationSettingValue(configurationKey);
+            return (T) Convert.ChangeType(configValue, typeof (T));
         }
     }
 }

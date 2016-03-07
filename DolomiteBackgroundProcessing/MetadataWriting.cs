@@ -219,23 +219,24 @@ namespace DolomiteBackgroundProcessing
         private static void UpdateLocalFileMetadata(string filePath, IEnumerable<MetadataChange> metadata)
         {
             // Generate a TagLib file for writing the tags
-            File file = File.Create(filePath);
+            //File file = File.Create(IO.File.OpenRead(filePath));
 
-            // Use reflection to get/set the appropriate tags in the file
-            Type tagType = file.Tag.GetType();
-            foreach (var md in metadata)
-            {
-                string tagName = md.Array ? md.TagName + "s" : md.TagName;
+            //// Use reflection to get/set the appropriate tags in the file
+            //Type tagType = file.Tag.GetType();
+            //foreach (var md in metadata)
+            //{
+            //    string tagName = md.Array ? md.TagName + "s" : md.TagName;
 
-                PropertyInfo property = tagType.GetProperty(tagName);
-                property.SetValue(file.Tag, md.Array
-                    ? new[] {String.IsNullOrWhiteSpace(md.Value) ? null : md.Value}
-                    : String.IsNullOrWhiteSpace(md.Value) ? null : Convert.ChangeType(md.Value, property.PropertyType));
-            }
+            //    PropertyInfo property = tagType.GetProperty(tagName);
+            //    property.SetValue(file.Tag, md.Array
+            //        ? new[] {String.IsNullOrWhiteSpace(md.Value) ? null : md.Value}
+            //        : String.IsNullOrWhiteSpace(md.Value) ? null : Convert.ChangeType(md.Value, property.PropertyType));
+            //}
 
-            // Write the changes
-            file.Save();
-            file.Dispose();
+            //// Write the changes
+            //file.Save();
+            //file.Dispose();
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -246,14 +247,15 @@ namespace DolomiteBackgroundProcessing
         private static void UpdateLocalFileArt(string localTrackPath, IO.Stream artStream)
         {
             // Generate a TagLib file for writing the image
-            File file = File.Create(localTrackPath);
+            //File file = File.Create(localTrackPath);
 
-            // Clean the pictures if the art is null, otherwise store it as a picture
-            file.Tag.Pictures = artStream == null ? new IPicture[0] : new IPicture[] {new Picture(ByteVector.FromStream(artStream)) };
+            //// Clean the pictures if the art is null, otherwise store it as a picture
+            //file.Tag.Pictures = artStream == null ? new IPicture[0] : new IPicture[] {new Picture(ByteVector.FromStream(artStream)) };
 
-            // Write 'dem changes
-            file.Save();
-            file.Dispose();
+            //// Write 'dem changes
+            //file.Save();
+            //file.Dispose();
+            throw new NotImplementedException();
         }
 
         /// <summary>

@@ -2,9 +2,9 @@
 {
     public class Quality
     {
-        public string Codec { get; set; }
-
         public int Bitrate { get; set; }
+
+        public string FfmpegArgs { get; set; }
 
         public string Directory { get; set; }
 

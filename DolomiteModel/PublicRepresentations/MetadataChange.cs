@@ -1,4 +1,6 @@
-﻿namespace DolomiteModel.PublicRepresentations
+﻿using System;
+
+namespace DolomiteModel.PublicRepresentations
 {
     public class MetadataChange
     {
@@ -6,7 +8,8 @@
 
         public string Value { get; set; }
 
-        public bool Array { get; set; }
+        [Obsolete]
+        public bool Array { get; set; }     // TODO: Remove references to this
 
     }
 }
