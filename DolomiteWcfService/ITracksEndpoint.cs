@@ -12,8 +12,8 @@ namespace DolomiteWcfService
         #region Create Operations
 
         [OperationContract]
-        [WebInvoke(Method = "PUT", UriTemplate = "/{guid}?md5hash={hash}")]
-        Task<Message> UploadTrack(Stream file, string guid, string hash);
+        [WebInvoke(Method = "PUT", UriTemplate = "/{guid}?md5hash={hash}&originalFilename={filename}")]
+        Task<Message> UploadTrack(Stream file, string guid, string hash, string filename);
 
         #endregion
 

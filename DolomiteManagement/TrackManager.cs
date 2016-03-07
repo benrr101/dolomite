@@ -318,24 +318,27 @@ namespace DolomiteManagement
         /// <param name="trackGuid">The guid the user chose for the new upload</param>
         /// <param name="owner">The username of the owner of the track</param>
         /// <param name="contentType">The mimetype of the upload from the HTTP headers</param>
+        /// <param name="originalFilename">
+        /// A friendly identifier for the track, usually the name of the file on the user's machine.
+        /// </param>
         /// <returns>
         /// <c>TrackUploadType.NewUpload</c> if the guid is a completely new upload.
         /// <c>TrackUploadType.Replace</c> if the guid already exists for the user. The track is a
         /// replacement for the existing one.
         /// </returns>
-        public async Task<TrackUploadType> TriageUpload(Guid trackGuid, string owner, string contentType)
+        public async Task<TrackUploadType> TriageUpload(Guid trackGuid, string owner, string contentType, string originalFilename)
         {
             // Search the db for a track with that guid
             if (!TrackDbManager.Instance.TrackExists(trackGuid))
             {
                 // Create an initial record we'll use later
-                await TrackDbManager.Instance.CreateInitialTrackRecordAsync(owner, trackGuid, contentType);
+                await TrackDbManager.Instance.CreateInitialTrackRecordAsync(owner, trackGuid, contentType, originalFilename);
                 return TrackUploadType.NewUpload;
             }
 
             if (TrackDbManager.Instance.TrackExists(trackGuid, owner))
             {
-                // TODO: Handle the content type
+                // TODO: Handle the content type and filename
                 return TrackUploadType.Replace;
             }
 

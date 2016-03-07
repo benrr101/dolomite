@@ -127,8 +127,11 @@ namespace DolomiteModel
         /// <param name="owner">The username for the owner of the track</param>
         /// <param name="guid">The guid of the track</param>
         /// <param name="mimetype">The mimetype of the upload</param>
+        /// <param name="originalFilename">
+        /// A friendly identifier for the track, usually the name of the file on the user's machine.
+        /// </param>
         /// <returns>The internal ID of the new track</returns>
-        public async Task<long> CreateInitialTrackRecordAsync(string owner, Guid guid, string mimetype)
+        public async Task<long> CreateInitialTrackRecordAsync(string owner, Guid guid, string mimetype, string originalFilename)
         {
             using (var context = new Entities())
             {
@@ -142,6 +145,7 @@ namespace DolomiteModel
                     Locked = false,
                     Owner = context.Users.First(u => u.Username == owner).Id,
                     OriginalMimetype = mimetype,
+                    OriginalFileName = originalFilename,
                     Status = 1        // The "Initial" status
                 };
                 context.Tracks.Add(track);

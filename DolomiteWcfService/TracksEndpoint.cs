@@ -57,8 +57,11 @@ namespace DolomiteWcfService
         /// <param name="file">Stream of the file that is uploaded</param>
         /// <param name="guid">The GUID for identifying the track. Provided by the client.</param>
         /// <param name="providedHash">The MD5 hash provided by the client. Optional.</param>
+        /// <param name="originalFilename">
+        /// A friendly identifier for the track, usually the name of the file on the user's machine.
+        /// </param>
         /// <returns>The GUID of the track that was uploaded</returns>
-        public async Task<Message> UploadTrack(Stream file, string guid, string providedHash)
+        public async Task<Message> UploadTrack(Stream file, string guid, string providedHash, string originalFilename)
         {
             try
             {
@@ -80,7 +83,13 @@ namespace DolomiteWcfService
                     throw new ArgumentException("A valid MD5 hash of the uploaded file must be provided.");
                 }
 
-                // Step 0.4: Make sure there was content type uploaded
+                // Step 0.4: Make sure a filename is provided
+                if (string.IsNullOrWhiteSpace(originalFilename))
+                {
+                    throw new ArgumentException("A filename must be provided.");
+                }
+
+                // Step 0.5: Make sure there was content type uploaded
                 string contentType = WebUtilities.GetHeader(HttpRequestHeader.ContentType);
                 if (String.IsNullOrWhiteSpace(contentType))
                 {
@@ -106,7 +115,7 @@ namespace DolomiteWcfService
 
                 // Step 3: Triage the upload and kick off an async upload process
                 HttpStatusCode returnCode;
-                switch (await TrackManager.Instance.TriageUpload(trackGuid, username, contentType))
+                switch (await TrackManager.Instance.TriageUpload(trackGuid, username, contentType, originalFilename))
                 {
                     case TrackUploadType.NewUpload:
                         returnCode = HttpStatusCode.Created;
