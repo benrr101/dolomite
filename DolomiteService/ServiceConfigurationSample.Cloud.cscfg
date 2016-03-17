@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ServiceConfiguration serviceName="DolomiteService" xmlns="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceConfiguration" osFamily="3" osVersion="*" schemaVersion="2014-06.2.4">
+  <Role name="DolomiteWcfService">
+    <Instances count="1" />
+    <ConfigurationSettings>
+      <Setting name="StorageConnectionString" value="UseDevelopmentStorage=true" />
+      <Setting name="TrackStorageContainer" value="trackstorage" />
+      <Setting name="UserKeysEnabled" value="True" />
+      <Setting name="IdleTimeout" value="02:00:00" />
+      <Setting name="AbsoluteTimeout" value="06:00:00" />
+      <Setting name="SqlConnectionString" value="" />
+    </ConfigurationSettings>
+    <Certificates>
+      <Certificate name="LocalSSLCert" thumbprint="4CC9FE35B292C0378793F28D42010BAC42CA53C0" thumbprintAlgorithm="sha1" />
+    </Certificates>
+  </Role>
+  <Role name="DolomiteBackgroundProcessing">
+    <Instances count="1" />
+    <ConfigurationSettings>
+      <Setting name="TrackStorageContainer" value="trackstorage" />
+      <Setting name="StorageConnectionString" value="UseDevelopmentStorage=true" />
+      <Setting name="Onboarding_SleepSeconds" value="10" />
+      <Setting name="SqlConnectionString" value="qqq" />
+    </ConfigurationSettings>
+  </Role>
+</ServiceConfiguration>
