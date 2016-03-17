@@ -11,6 +11,11 @@ namespace DolomiteModel
     {
         #region Singleton Instance Code
 
+        /// <summary>
+        /// The connection string to the database
+        /// </summary>
+        public static string SqlConnectionString { get; set; }
+
         private static MetadataDbManager _instance;
 
         /// <summary>
@@ -37,7 +42,7 @@ namespace DolomiteModel
         /// <param name="writeOut">Whether or not the metadata change should be written to the file</param>
         public async Task StoreTrackMetadataAsync(Pub.Track track, bool writeOut)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Iterate over the metadatas and store new objects for each
                 // Skip values that are null (ie, they should be deleted)
@@ -75,7 +80,7 @@ namespace DolomiteModel
         /// <returns>Dictionary of metadata field names to metadata ids</returns>
         public Dictionary<string, int> GetAllowedMetadataFields()
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Grab all the metadata fields
                 return context.MetadataFields.Select(f => new { f.TagName, f.Id }).ToDictionary(o => o.TagName, o => o.Id);
@@ -94,7 +99,7 @@ namespace DolomiteModel
         /// TODO: use the message queue stuff when ready
         public Pub.MetadataChange[] GetMetadataToWriteOut(Guid trackGuid)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // We want to make sure that we only fetch the metadata that /can/
                 // be written to a file. If there isn't anything, we'll just return an
@@ -128,7 +133,7 @@ namespace DolomiteModel
         /// <param name="trackId">The ID of the track to remove blank metadata for.</param>
         public void DeleteEmptyMetadata(long trackId)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Find all the metadata for the track that is empty
                 var emptyTags = context.Metadatas.Where(
@@ -148,13 +153,13 @@ namespace DolomiteModel
         /// <param name="metadataField">The metadatafield to delete</param>
         public void DeleteMetadata(Guid trackGuid, string metadataField)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Search for the metadata record for the track with the field
                 var field = context.Metadatas.FirstOrDefault(
                     m => m.Track1.GuidId == trackGuid && m.MetadataField.TagName == metadataField);
 
-                // If it doesn't exist, we succeeeded in deleting it, right?
+                // If it doesn't exist, we succeeded in deleting it, right?
                 if (field == null)
                     return;
 
@@ -171,7 +176,7 @@ namespace DolomiteModel
         /// <param name="trackGuid">GUID of the track to delete the metadata for</param>
         public async Task DeleteAllMetadataAsync(Guid trackGuid)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Delete all the metadata for the given track
                 var trackMetadatas = context.Metadatas.Where(m => m.Track1.GuidId == trackGuid);

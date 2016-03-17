@@ -10,8 +10,13 @@ using Pub = DolomiteModel.PublicRepresentations;
 namespace DolomiteModel
 {
     public class ArtDbManager
-    {
+    {  
         #region Singleton Instance Code
+
+        /// <summary>
+        /// The connection string to the database
+        /// </summary>
+        public static string SqlConnectionString { get; set; }
 
         private static ArtDbManager _instance;
 
@@ -26,7 +31,7 @@ namespace DolomiteModel
         /// <summary>
         /// Singleton constructor for the art database manager
         /// </summary>
-        private ArtDbManager() { }
+        private ArtDbManager() {}
 
         #endregion
 
@@ -41,7 +46,7 @@ namespace DolomiteModel
         [Obsolete("Use CreateArtRecordAsync method")]
         public long CreateArtRecord(Guid guid, string mimetype, string hash)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Create a new art object
                 Art artObj = new Art
@@ -66,7 +71,7 @@ namespace DolomiteModel
         /// <returns>The internal ID of the newly created art record</returns>
         public async Task<long> CreateArtRecordAsync(Guid guid, string mimetype, string hash)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Create a new art object
                 Art artObj = new Art
@@ -94,7 +99,7 @@ namespace DolomiteModel
         /// <returns>A public-ready art object</returns>
         public Pub.Art GetArt(long artId)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 Pub.Art art = GetArtModel(artId, context, true).Select(a => new Pub.Art
                 {
@@ -118,7 +123,7 @@ namespace DolomiteModel
         /// <returns>A public-ready art object</returns>
         public Pub.Art GetArt(Guid artId)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 Pub.Art art = GetArtModel(artId, context, true).Select(a => new Pub.Art
                 {
@@ -142,7 +147,7 @@ namespace DolomiteModel
         /// TODO: Return a Pub.Art
         public long? GetArtIdByHash(string hash)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 Art art = context.Arts.FirstOrDefault(a => a.Hash == hash);
                 return art == null ? (long?)null : art.Id;
@@ -156,7 +161,7 @@ namespace DolomiteModel
         /// <returns>True if the art is still in use by a track, false otherwise.</returns>
         public bool IsArtInUse(long artId)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 return context.Tracks.Any(t => t.Art == artId);
             }
@@ -176,7 +181,7 @@ namespace DolomiteModel
         [Obsolete("Use SetTrackArtAsync method.")]
         public void SetTrackArt(long trackId, long? artId, bool fileChange)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Search out the track
                 Track track = TrackDbManager.GetTrackModel(trackId, context, false).FirstOrDefault();
@@ -198,7 +203,7 @@ namespace DolomiteModel
         /// <param name="fileChange">Whether or not the art change should be processed to the file</param>
         public async Task SetTrackArtAsync(Pub.Track track, long? artId, bool fileChange)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Fetch down the track to make sure it exists, we'll be making changes to it soon
                 Track internalTrack = await TrackDbManager.GetTrackModel(track.InternalId, context, false).FirstOrDefaultAsync();
@@ -240,7 +245,7 @@ namespace DolomiteModel
         /// TODO: Move this to a sproc to avoid possible race conditions between getting and removing the art
         public void DeleteArt(long artId)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Find the art
                 Art art = GetArtModel(artId, context, false).FirstOrDefault();

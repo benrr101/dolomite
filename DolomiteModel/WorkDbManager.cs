@@ -7,6 +7,11 @@ namespace DolomiteModel
     {
         #region Singleton Instance Code
 
+        /// <summary>
+        /// The connection string to the database
+        /// </summary>
+        public static string SqlConnectionString { get; set; }
+
         private static WorkDbManager _instance;
 
         /// <summary>
@@ -33,7 +38,7 @@ namespace DolomiteModel
         /// TODO: Return a Track object (or just wait until the dataflow/message queue thing is ready)
         public long? GetArtWorkItem()
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Call the stored proc and get a work item
                 return context.GetAndLockTopArtItem().FirstOrDefault();
@@ -48,7 +53,7 @@ namespace DolomiteModel
         /// TODO: Use the message queue
         public long? GetMetadataWorkItem()
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Call the stored proc and get a work item
                 return context.GetAndLockTopMetadataItem().FirstOrDefault();
@@ -63,7 +68,7 @@ namespace DolomiteModel
         /// TODO: use message queues when ready
         public long? GetOnboardingWorkItem()
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Call the stored procedure and hopefully it'll give us a work item
                 return context.GetAndLockTopOnboardingItem().FirstOrDefault();
@@ -81,7 +86,7 @@ namespace DolomiteModel
         /// <param name="workItem">The work item to release</param>
         public void ReleaseAndCompleteArtItem(long workItem)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Call the stored procedure to complete the track onboarding
                 context.ReleaseAndCompleteArtChange(workItem);
@@ -96,7 +101,7 @@ namespace DolomiteModel
         /// <param name="workItem">The track to release</param>
         public void ReleaseAndCompleteMetadataItem(long workItem)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 context.ReleaseAndCompleteMetadataUpdate(workItem);
             }
@@ -109,7 +114,7 @@ namespace DolomiteModel
         /// <param name="workItem">The work item to release</param>
         public void ReleaseAndCompleteOnboardingItem(long workItem)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Call the stored procedure to complete the track onboarding
                 context.ReleaseAndCompleteOnboardingItem(workItem);

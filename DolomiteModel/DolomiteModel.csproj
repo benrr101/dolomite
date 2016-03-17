@@ -85,6 +85,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>DbEntities.edmx</DependentUpon>
     </Compile>
+    <Compile Include="EntityFramework\EntitiesExtension.cs" />
     <Compile Include="EntityFramework\ErrorInfo.cs">
       <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
