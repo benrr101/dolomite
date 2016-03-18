@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArtDbManager.cs" />
+    <Compile Include="AutoPlaylistDbManager.cs" />
     <Compile Include="EntityFramework\ApiKey.cs">
       <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>

@@ -9,14 +9,6 @@ namespace DolomiteManagement
     public class PlaylistManager
     {
 
-        #region Properties
-
-        private PlaylistDbManager PlaylistDbManager { get; set; }
-
-        private TrackDbManager TrackDbManager { get; set; }
-
-        #endregion
-
         #region Singleton Instance Code
 
         private static PlaylistManager _instance;
@@ -34,8 +26,6 @@ namespace DolomiteManagement
         /// </summary>
         private PlaylistManager()
         {
-            PlaylistDbManager = PlaylistDbManager.Instance;
-            TrackDbManager = TrackDbManager.Instance;
         }
 
         #endregion
@@ -57,14 +47,14 @@ namespace DolomiteManagement
             Guid id = Guid.Empty;
             try
             {
-                id = PlaylistDbManager.CreateAutoPlaylist(playlist, owner);
+                id = AutoPlaylistDbManager.Instance.CreateAutoPlaylist(playlist, owner);
 
                 // Did they send rules to add to the playlist?
                 if (playlist.Rules != null && playlist.Rules.Any())
                 {
                     foreach (AutoPlaylistRule rule in playlist.Rules)
                     {
-                        PlaylistDbManager.AddRuleToAutoplaylist(id, rule);
+                        AutoPlaylistDbManager.Instance.AddRuleToAutoplaylist(id, rule);
                     }
                 }
 
@@ -73,7 +63,7 @@ namespace DolomiteManagement
             catch (Exception)
             {
                 // Delete the playlist
-                PlaylistDbManager.DeleteAutoPlaylist(id);
+                AutoPlaylistDbManager.Instance.DeleteAutoPlaylist(id);
                 throw;
             }
         }
@@ -92,7 +82,7 @@ namespace DolomiteManagement
             try
             {
                 // Create the playlist
-                id = PlaylistDbManager.CreateStandardPlaylist(playlist.Name, owner);
+                id = PlaylistDbManager.Instance.CreateStandardPlaylist(playlist.Name, owner);
 
                 // Did they send tracks to add to the playlist?
                 if (playlist.Tracks != null && playlist.Tracks.Any())
@@ -108,7 +98,7 @@ namespace DolomiteManagement
             catch (Exception)
             {
                 // Delete the playlist
-                PlaylistDbManager.DeleteStaticPlaylist(id);
+                PlaylistDbManager.Instance.DeleteStaticPlaylist(id);
                 throw;
             }
         }
@@ -124,7 +114,7 @@ namespace DolomiteManagement
         /// <returns>List of all auto playlists</returns>
         public List<Playlist> GetAllAutoPlaylists(string owner)
         {
-            return PlaylistDbManager.GetAllAutoPlaylists(owner);
+            return AutoPlaylistDbManager.Instance.GetAllAutoPlaylists(owner);
         }
 
         /// <summary>
@@ -135,7 +125,7 @@ namespace DolomiteManagement
         public List<Playlist> GetAllStaticPlaylists(string owner)
         {
             // Simple, pass it off to the db wrangler
-            return PlaylistDbManager.GetAllStaticPlaylists(owner);
+            return PlaylistDbManager.Instance.GetAllStaticPlaylists(owner);
         }
 
         /// <summary>
@@ -147,7 +137,7 @@ namespace DolomiteManagement
         public AutoPlaylist GetAutoPlaylist(Guid playlistGuid, string owner)
         {
             // Grab it from the db manager
-            AutoPlaylist playlist = PlaylistDbManager.GetAutoPlaylist(playlistGuid);
+            AutoPlaylist playlist = AutoPlaylistDbManager.Instance.GetAutoPlaylist(playlistGuid);
 
             // Verify that the owners are the same
             if(playlist.Owner != owner)
@@ -165,7 +155,7 @@ namespace DolomiteManagement
         public Playlist GetStaticPlaylist(Guid playlistGuid, string owner)
         {
             // Grab it from the db
-            Playlist playlist = PlaylistDbManager.GetStaticPlaylist(playlistGuid);
+            Playlist playlist = PlaylistDbManager.Instance.GetStaticPlaylist(playlistGuid);
 
             // Verify that the owners are the same
             if (playlist.Owner != owner)
@@ -187,7 +177,7 @@ namespace DolomiteManagement
         public void AddRuleToAutoPlaylist(Guid playlistGuid, string owner, AutoPlaylistRule rule)
         {
             // Check to see that the playlist exists, verify its owner
-            AutoPlaylist playlist = PlaylistDbManager.GetAutoPlaylist(playlistGuid, false);
+            AutoPlaylist playlist = AutoPlaylistDbManager.Instance.GetAutoPlaylist(playlistGuid, false);
             if (playlist.Owner != owner)
             {
                 string message = String.Format("The rule cannot be added to the auto playlist {0}" +
@@ -197,7 +187,7 @@ namespace DolomiteManagement
             }
 
             // Add the rule to the playlist
-            PlaylistDbManager.AddRuleToAutoplaylist(playlistGuid, rule);
+            AutoPlaylistDbManager.Instance.AddRuleToAutoplaylist(playlistGuid, rule);
         }
 
         /// <summary>
@@ -210,9 +200,9 @@ namespace DolomiteManagement
         public void AddTrackToPlaylist(Guid playlistGuid, Guid trackGuid, string owner, int? position = null)
         {
             // Check to see if the track and playlist exists, verify the owners of both
-            Track track = TrackDbManager.GetTrack(trackGuid, owner);
+            Track track = TrackDbManager.Instance.GetTrack(trackGuid, owner);
 
-            Playlist playlist = PlaylistDbManager.GetStaticPlaylist(playlistGuid);
+            Playlist playlist = PlaylistDbManager.Instance.GetStaticPlaylist(playlistGuid);
             if (playlist.Owner != owner)
             {
                 string message = String.Format(
@@ -223,7 +213,7 @@ namespace DolomiteManagement
             }
 
             // Add the track to the playlist
-            PlaylistDbManager.AddTrackToPlaylist(playlist, track, position);
+            PlaylistDbManager.Instance.AddTrackToPlaylist(playlist, track, position);
         }
 
         /// <summary>
@@ -235,7 +225,7 @@ namespace DolomiteManagement
         public void DeleteRuleFromAutoPlaylist(Guid playlistGuid, string owner, int ruleId)
         {
             // Check to see that the playlist exists, verify its owner
-            AutoPlaylist playlist = PlaylistDbManager.GetAutoPlaylist(playlistGuid, false);
+            AutoPlaylist playlist = AutoPlaylistDbManager.Instance.GetAutoPlaylist(playlistGuid, false);
             if (playlist.Owner != owner)
             {
                 string message = String.Format("The rule cannot be removed from the autoplaylist {0}" +
@@ -245,7 +235,7 @@ namespace DolomiteManagement
             }
 
             // Pass the call to the database
-            PlaylistDbManager.DeleteRuleFromAutoplaylist(playlist, ruleId);
+            AutoPlaylistDbManager.Instance.DeleteRuleFromAutoplaylist(playlist, ruleId);
         }
 
         /// <summary>
@@ -257,7 +247,7 @@ namespace DolomiteManagement
         public void DeleteTrackFromStaticPlaylist(Guid playlistGuid, string owner, int trackId)
         {
             // Check that the playlist exists and verify its owner
-            Playlist playlist = PlaylistDbManager.GetStaticPlaylist(playlistGuid);
+            Playlist playlist = PlaylistDbManager.Instance.GetStaticPlaylist(playlistGuid);
             if (playlist.Owner != owner)
             {
                 string message = String.Format("The track {0} cannot be removed from playlist {1} " +
@@ -266,7 +256,7 @@ namespace DolomiteManagement
                 throw new UnauthorizedAccessException(message);
             }
 
-            PlaylistDbManager.DeleteTrackFromPlaylist(playlist, trackId);
+            PlaylistDbManager.Instance.DeleteTrackFromPlaylist(playlist, trackId);
         }
 
         #endregion
@@ -281,7 +271,7 @@ namespace DolomiteManagement
         public void DeleteAutoPlaylist(Guid guid, string owner)
         {
             // Check to see that the playlist exists, verify its owner
-            AutoPlaylist playlist = PlaylistDbManager.GetAutoPlaylist(guid, false);
+            AutoPlaylist playlist = AutoPlaylistDbManager.Instance.GetAutoPlaylist(guid, false);
             if (playlist.Owner != owner)
             {
                 string message = String.Format("The playlist {0} cannot be deleted" +
@@ -291,7 +281,7 @@ namespace DolomiteManagement
             }
 
             // Send the call to the database
-            PlaylistDbManager.DeleteAutoPlaylist(guid);
+            AutoPlaylistDbManager.Instance.DeleteAutoPlaylist(guid);
         }
 
         /// <summary>
@@ -302,7 +292,7 @@ namespace DolomiteManagement
         public void DeleteStaticPlaylist(Guid guid, string owner)
         {
             // Check that the playlist exists and verify its owner
-            Playlist playlist = PlaylistDbManager.GetStaticPlaylist(guid);
+            Playlist playlist = PlaylistDbManager.Instance.GetStaticPlaylist(guid);
             if (playlist.Owner != owner)
             {
                 string message = String.Format("The playlist {0} cannot be deleted" +
@@ -312,7 +302,7 @@ namespace DolomiteManagement
             }
 
             // Send the call to the database
-            PlaylistDbManager.DeleteStaticPlaylist(guid);
+            PlaylistDbManager.Instance.DeleteStaticPlaylist(guid);
         }
 
         #endregion

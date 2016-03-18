@@ -200,6 +200,7 @@ namespace DolomiteBackgroundProcessing
                 
                 // Set it on all the database managers
                 ArtDbManager.SqlConnectionString = connectionString;
+                AutoPlaylistDbManager.SqlConnectionString = connectionString;
                 MetadataDbManager.SqlConnectionString = connectionString;
                 QualityDbManager.SqlConnectionString = connectionString;
                 TrackDbManager.SqlConnectionString = connectionString;
