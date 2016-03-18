@@ -25,7 +25,7 @@ namespace DolomiteModel
                 // Peform the cache lookup if necessary
                 if (_allowedMetadataRules == null)
                 {
-                    using (var context = new Entities())
+                    using (var context = new Entities(SqlConnectionString))
                     {
                         _allowedMetadataRules = (from r in context.Rules
                             group r by r.Type
@@ -38,6 +38,11 @@ namespace DolomiteModel
                 return _allowedMetadataRules;
             }
         }
+
+        /// <summary>
+        /// The connection string to the database
+        /// </summary>
+        public static string SqlConnectionString { get; set; }
 
         #endregion
 
@@ -72,7 +77,7 @@ namespace DolomiteModel
         /// <returns>The new guid id for the playlist</returns>
         public Guid CreateAutoPlaylist(Pub.AutoPlaylist input, string owner)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Generate a new playlist guid
                 // TODO: Remove, let the user provide the guid
@@ -130,7 +135,7 @@ namespace DolomiteModel
         /// <returns>The new guid id for the playlist</returns>
         public Guid CreateStandardPlaylist(string name, string owner)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Generate the guid of the playlist
                 // TODO: Remove, let the user put the guid
@@ -177,7 +182,7 @@ namespace DolomiteModel
         /// <returns>A public-ready list of auto playlists w/o rules</returns>
         public List<Pub.Playlist> GetAllAutoPlaylists(string owner)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 return (from p in context.Autoplaylists
                         where p.User.Username == owner
@@ -199,7 +204,7 @@ namespace DolomiteModel
         /// <returns>The list of static playlists without tracks</returns>
         public List<Pub.Playlist> GetAllStaticPlaylists(string owner)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 return (from p in context.Playlists
                         where p.User.Username == owner
@@ -229,7 +234,7 @@ namespace DolomiteModel
         /// <returns>A public-ready auto playlist object.</returns>
         public Pub.AutoPlaylist GetAutoPlaylist(Guid guid, bool fetchTracks = true)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Try to retrieve the playlist as an auto playlist
                 Autoplaylist autoPlaylist = context.Autoplaylists.FirstOrDefault(ap => ap.GuidId == guid);
@@ -298,7 +303,7 @@ namespace DolomiteModel
         /// <returns>A public-ready static playlist object</returns>
         public Pub.Playlist GetStaticPlaylist(Guid playlistGuid)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Try to retrieve the playlist as a standard playlist
                 Playlist playlist = context.Playlists.FirstOrDefault(p => p.GuidId == playlistGuid);
@@ -334,7 +339,7 @@ namespace DolomiteModel
         /// </param>
         public void AddTrackToPlaylist(Pub.Playlist playlist, Pub.Track track, int? position = null)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Determine what the position should be
                 if (position.HasValue)
@@ -377,7 +382,7 @@ namespace DolomiteModel
                 throw new InvalidExpressionException(message);
             }
 
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Add the rule to the playlist
                 Autoplaylist playlist = context.Autoplaylists.FirstOrDefault(p => p.GuidId == playlistGuid);
@@ -411,7 +416,7 @@ namespace DolomiteModel
         /// <param name="ruleId">The id of the rule to delete</param>
         public void DeleteRuleFromAutoplaylist(Pub.AutoPlaylist playlist, int ruleId)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Find the rule in the playlist
                 var rule = context.AutoplaylistRules.FirstOrDefault(
@@ -434,7 +439,7 @@ namespace DolomiteModel
         /// <param name="trackId">ID of the track to remove from the playlist</param>
         public void DeleteTrackFromPlaylist(Pub.Playlist playlist, int trackId)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Find the playlist<->track object
                 var playlistTrack = context.PlaylistTracks.FirstOrDefault(
@@ -466,7 +471,7 @@ namespace DolomiteModel
             if (playlistGuid == Guid.Empty)
                 return;
 
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Try to delete the playlist from the autoplaylists
                 Autoplaylist autoplaylist = context.Autoplaylists.FirstOrDefault(ap => ap.GuidId == playlistGuid);
@@ -487,7 +492,7 @@ namespace DolomiteModel
             if (playlistGuid == Guid.Empty)
                 return;
 
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Try to delete the static playlist from the playlists
                 Playlist playlist = context.Playlists.FirstOrDefault(p => p.GuidId == playlistGuid);
@@ -513,7 +518,7 @@ namespace DolomiteModel
         /// <returns>True if the rule is valid. False otherwise.</returns>
         private bool IsValidRule(Pub.AutoPlaylistRule rule)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Try to fetch the field that the rule uses
                 MetadataField field = context.MetadataFields.FirstOrDefault(f => f.TagName == rule.Field);

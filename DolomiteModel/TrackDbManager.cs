@@ -14,6 +14,11 @@ namespace DolomiteModel
     {
         #region Singleton Instance Code
 
+        /// <summary>
+        /// The connection string to the database
+        /// </summary>
+        public static string SqlConnectionString { get; set; }
+
         private static TrackDbManager _instance;
 
         /// <summary>
@@ -45,7 +50,7 @@ namespace DolomiteModel
         /// <returns>The internal ID of the new track</returns>
         public async Task<long> CreateInitialTrackRecordAsync(string owner, Guid guid, string mimetype, string originalFilename)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // TODO: Don't use magic numbers
                 // Create the new track record
@@ -80,7 +85,7 @@ namespace DolomiteModel
         /// TODO: Return whether or not the track is ready?
         public List<Pub.Track> GetAllTracksByOwner(string owner)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Fetch ORM version of the track from the database
                 // <remarks>Unfortunately, there isn't a better way to do this.
@@ -111,7 +116,7 @@ namespace DolomiteModel
         /// <returns>A public-ready object representation of the track</returns>
         public Pub.Track GetTrack(Guid trackGuid, string owner)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Find the track
                 Track track = GetTrackModel(trackGuid, owner, context, true).FirstOrDefault();
@@ -131,7 +136,7 @@ namespace DolomiteModel
         /// <returns>A public-ready object representation of the track</returns>
         public Pub.Track GetTrack(long trackId)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Find the track
                 Track track = GetTrackModel(trackId, context, true).FirstOrDefault();
@@ -151,7 +156,7 @@ namespace DolomiteModel
         /// TODO: DUPE!
         public Pub.Track GetTrack(string hash, string owner)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 return GetTrackModel(hash, owner, context, true)
                     .Select(t => new Pub.Track {InternalId = t.Id, Id = t.GuidId})
@@ -168,7 +173,7 @@ namespace DolomiteModel
         /// TODO: DUPE!
         public Pub.Track GetTrackByHash(string hash, string owner)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Search for the track
                 return (from track in context.Tracks
@@ -188,7 +193,7 @@ namespace DolomiteModel
         /// TODO: Why have two methods for this?
         public bool TrackExists(Guid trackGuid)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Search for the track
 
@@ -204,7 +209,7 @@ namespace DolomiteModel
         /// <returns>True if the track exists, false otherwise</returns>
         public bool TrackExists(Guid trackGuid, string owner)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Search for the track
                 return context.Tracks.Any(t => t.GuidId == trackGuid && t.User.Username == owner);
@@ -224,7 +229,7 @@ namespace DolomiteModel
         /// <returns>A list of guids that match the search criteria</returns>
         public List<Guid> SearchTracks(string owner, Dictionary<string, string> searchCriteria)
         {
-            using(var context = new Entities()) 
+            using(var context = new Entities(SqlConnectionString)) 
             {
                 // Build a result set -- using hashset prevents defaults to work
                 HashSet<Guid> hashSet = new HashSet<Guid>();
@@ -273,7 +278,7 @@ namespace DolomiteModel
         /// <param name="owner">The owner of the track</param>
         public void TransitionTrackToPendingOnboarding(Guid trackGuid, string newHash, string owner)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Fetch the track that is to be marked as not onboarded
                 Track track = GetTrackModel(trackGuid, owner, context, false).FirstOrDefault();
@@ -308,7 +313,7 @@ namespace DolomiteModel
         /// <param name="adminError">The error for internal debugging</param>
         public void TransitionTrackToError(Guid trackGuid, string owner, string userError, string adminError)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Fetch the track to be marked as error
                 Track track = GetTrackModel(trackGuid, owner, context, true).First();
@@ -327,7 +332,7 @@ namespace DolomiteModel
         /// <returns></returns>
         public async Task SetTrackErrorStateAsync(Pub.Track track, string userError, string adminError)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Create a new error info
                 ErrorInfo ei = new ErrorInfo
@@ -368,7 +373,7 @@ namespace DolomiteModel
         /// <param name="owner">The username of the owner of the track to delete</param>
         public void DeleteTrack(Guid trackGuid, string owner)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Fetch the track
                 Track track = GetTrackModel(trackGuid, owner, context, false).FirstOrDefault();
@@ -386,9 +391,10 @@ namespace DolomiteModel
         /// </summary>
         /// <exception cref="ObjectNotFoundException">Thrown when the track does not exist</exception>
         /// <param name="trackId">The guid of the track to delete</param>
+        /// TODO: Determine if this method is needed
         public void DeleteTrack(long trackId)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Fetch the track
                 Track track = GetTrackModel(trackId, context, false).FirstOrDefault();

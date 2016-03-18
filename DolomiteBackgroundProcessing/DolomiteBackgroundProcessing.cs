@@ -201,6 +201,9 @@ namespace DolomiteBackgroundProcessing
                 // Set it on all the database managers
                 ArtDbManager.SqlConnectionString = connectionString;
                 MetadataDbManager.SqlConnectionString = connectionString;
+                QualityDbManager.SqlConnectionString = connectionString;
+                TrackDbManager.SqlConnectionString = connectionString;
+                UserDbManager.SqlConnectionString = connectionString;
                 WorkDbManager.SqlConnectionString = connectionString;
             }
             catch (Exception e)

@@ -13,6 +13,11 @@ namespace DolomiteModel
     {
         #region Singleton Instance Code
 
+        /// <summary>
+        /// The connection string to the database
+        /// </summary>
+        public static string SqlConnectionString { get; set; }
+
         private static UserDbManager _instance;
 
         /// <summary>
@@ -44,7 +49,7 @@ namespace DolomiteModel
         /// <param name="absExpire">The time to timeout the session regardless of actions taken</param>
         public void CreateSession(Pub.User user, string apiKey, string token, string ipAddress, DateTime idleExpire, DateTime absExpire)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Create a new Session object
                 Session session = new Session
@@ -78,7 +83,7 @@ namespace DolomiteModel
         /// <param name="email">The user's email. Must not be duplicate.</param>
         public void CreateUser(string username, string passwordHash, string email)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Create the new user object
                 User user = new User
@@ -123,7 +128,7 @@ namespace DolomiteModel
         /// <param name="settingsObj">The settings to save</param>
         public void StoreUserSettings(string username, Pub.UserSettings settingsObj)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Fetch the user and see if they have a settings record yet
                 var user = context.Users.FirstOrDefault(u => u.Username == username);
@@ -165,7 +170,7 @@ namespace DolomiteModel
         /// <returns>A public representation of the session</returns>
         public Pub.Session GetSession(string token)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Find the matching session
                 Pub.Session session = (from s in context.Sessions
@@ -196,7 +201,7 @@ namespace DolomiteModel
         /// <returns>A user object if the user exists, null if the user doesn't exist</returns>
         public Pub.User GetUserByUsername(string username)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Find the matching user
                 return (from u in context.Users
@@ -220,7 +225,7 @@ namespace DolomiteModel
         /// </returns>
         public Pub.UserSettings GetUserSettings(string username)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Find the matching user's settings
                 var settings = context.UserSettings.FirstOrDefault(us => us.User1.Username == username);
@@ -236,13 +241,10 @@ namespace DolomiteModel
         /// <returns>True if the key exists, false otherwise</returns>
         public bool ValidateApiKey(string key)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
-                // Find the matching API key
-                var apiKey = context.ApiKeys.FirstOrDefault(k => k.ApiKey1 == key);
-
                 // Key must exist
-                return apiKey != null;
+                return context.ApiKeys.AsNoTracking().Any(k => k.ApiKey1 == key);
             }
         } 
 
@@ -256,7 +258,7 @@ namespace DolomiteModel
         /// <returns>True if the key is valid, false otherwise</returns>
         public bool ValidateUserKey(Guid key, string email)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Find the matching user key
                 var userKey = context.UserKeys.FirstOrDefault(k => k.Id == key);
@@ -265,6 +267,7 @@ namespace DolomiteModel
                 // 1) exist
                 // 2) either have matching email or no email requirement
                 // 3) not be claimed
+                // TODO: Simplify to single .Any call
                 return userKey != null && (String.IsNullOrWhiteSpace(userKey.Email) || userKey.Email == email) && !userKey.Claimed;
             }
         }
@@ -280,7 +283,7 @@ namespace DolomiteModel
         /// <param name="newTimeout">The new time to set the absolute timeout to</param>
         public void SetSessionAbsoluteTimeout(string sessionToken, DateTime newTimeout)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Fetch the session
                 Session session = context.Sessions.FirstOrDefault(s => s.Token == sessionToken);
@@ -300,7 +303,7 @@ namespace DolomiteModel
         /// <param name="newTimeout">The new time to set the idle timeout to</param>
         public void SetSessionIdleTimeout(string sessionToken, DateTime newTimeout)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Fetch the session
                 Session session = context.Sessions.FirstOrDefault(s => s.Token == sessionToken);
@@ -323,7 +326,7 @@ namespace DolomiteModel
         /// <param name="value">The value to set the claim status to.</param>
         public void SetUserKeyClaimStatus(Guid key, bool value)
         {
-            using (var context = new Entities())
+            using (var context = new Entities(SqlConnectionString))
             {
                 // Fetch the user key
                 var userKey = context.UserKeys.FirstOrDefault(k => k.Id == key);
