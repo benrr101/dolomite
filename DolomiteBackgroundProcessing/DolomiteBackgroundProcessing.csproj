@@ -89,6 +89,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArtWriting.cs" />
     <Compile Include="MetadataWriting.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TrackMetadata.cs" />

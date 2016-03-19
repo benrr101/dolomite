@@ -29,8 +29,10 @@
     <ConfigurationSettings>
       <Setting name="TrackStorageContainer" />
       <Setting name="StorageConnectionString" />
-      <Setting name="Onboarding_SleepSeconds" />
       <Setting name="SqlConnectionString" />
+      <Setting name="Onboarding_WorkCheckInterval" />
+      <Setting name="Art_WorkCheckInterval" />
+      <Setting name="Metadata_WorkCheckInterval" />
     </ConfigurationSettings>
     <LocalResources>
       <LocalStorage name="OnboardingStorage" cleanOnRoleRecycle="true" sizeInMB="4096" />
