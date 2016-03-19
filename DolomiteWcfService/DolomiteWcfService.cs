@@ -7,8 +7,8 @@ using System.ServiceModel.Description;
 using System.ServiceModel.Web;
 using System.Threading;
 using DolomiteManagement;
+using DolomiteModel;
 using DolomiteWcfService.Cors;
-using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
 namespace DolomiteWcfService
@@ -18,10 +18,11 @@ namespace DolomiteWcfService
         #region Constants
 
         private const string IdleTimeoutKey = "IdleTimeout";
-        private const string AbsolulteTimeoutKey = "AbsoluteTimeout";
+        private const string AbsoluteTimeoutKey = "AbsoluteTimeout";
         private const string TrackContainerKey = "TrackStorageContainer";
         private const string UserKeyEnabledKey = "UserKeysEnabled";
         private const string LocalStorageResourceKey = "UploadStorage";
+        private const string SqlConnectionStringKey = "SqlConnectionString";
 
         #endregion
 
@@ -72,10 +73,10 @@ namespace DolomiteWcfService
             {
                 InitializeUserManager();
                 InitializeTrackManager();
+                InitializeDbManagers();
 
                 // Grab the connection string for Azure storage
-                string azureConnectionString = CloudConfigurationManager.GetSetting(AzureStorageManager.ConnectionStringKey);
-                AzureStorageManager.StorageConnectionString = azureConnectionString;
+                AzureStorageManager.StorageConnectionString = GetConfigurationValue<string>(AzureStorageManager.ConnectionStringKey);
 
                 // Grab the local storage path
                 LocalResource localStorage = RoleEnvironment.GetLocalResource(LocalStorageResourceKey);
@@ -187,20 +188,44 @@ namespace DolomiteWcfService
             try
             {
                 // Get the user enabled key
-                var ukEnabled = RoleEnvironment.GetConfigurationSettingValue(UserKeyEnabledKey);
-                UserManager.UserKeysEnabled = bool.Parse(ukEnabled);
+                UserManager.UserKeysEnabled = GetConfigurationValue<bool>(UserKeyEnabledKey);
 
                 // Get the idle timeout
                 var idleTimeout = RoleEnvironment.GetConfigurationSettingValue(IdleTimeoutKey);
                 UserManager.IdleTimeoutInterval = TimeSpan.Parse(idleTimeout);
 
                 // Get the absolute timeout
-                var absTimeout = RoleEnvironment.GetConfigurationSettingValue(AbsolulteTimeoutKey);
+                var absTimeout = RoleEnvironment.GetConfigurationSettingValue(AbsoluteTimeoutKey);
                 UserManager.AbsoluteTimeoutInterval = TimeSpan.Parse(absTimeout);
             }
             catch (Exception e)
             {
                 throw new InvalidDataException("Failed to initialize the User Manager.", e);
+            }
+        }
+
+        /// <summary>
+        /// Fetches the SQL configuration information from the role config
+        /// </summary>
+        private static void InitializeDbManagers()
+        {
+            try
+            {
+                // Get the SQL connection string
+                var connectionString = GetConfigurationValue<string>(SqlConnectionStringKey);
+
+                // Set it on all the database managers
+                ArtDbManager.SqlConnectionString = connectionString;
+                AutoPlaylistDbManager.SqlConnectionString = connectionString;
+                MetadataDbManager.SqlConnectionString = connectionString;
+                QualityDbManager.SqlConnectionString = connectionString;
+                TrackDbManager.SqlConnectionString = connectionString;
+                UserDbManager.SqlConnectionString = connectionString;
+                WorkDbManager.SqlConnectionString = connectionString;
+            }
+            catch (Exception e)
+            {
+                throw new InvalidDataException("Failed to initialize the database managers.", e);
             }
         }
 
@@ -216,6 +241,18 @@ namespace DolomiteWcfService
             {
                 throw new InvalidDataException("Failed to initialize the Track Manager.", e);
             }
+        }
+
+        /// <summary>
+        /// Returns the configuration value for the role.
+        /// </summary>
+        /// <typeparam name="T">Type of the value</typeparam>
+        /// <param name="configurationKey">The key to use to look up the config value</param>
+        /// <returns>The converted configuration value</returns>
+        private static T GetConfigurationValue<T>(string configurationKey) where T : IConvertible
+        {
+            string configValue = RoleEnvironment.GetConfigurationSettingValue(configurationKey);
+            return (T)Convert.ChangeType(configValue, typeof(T));
         }
     }
 }
