@@ -12,6 +12,8 @@ Thumbs.db
 # Azure specific things
 */rcf/*
 */csx/*
+ServiceConfiguration.Cloud.cscfg
+ServiceConfiguration.Local.cscfg
 
 # NuGet things
 packages/*

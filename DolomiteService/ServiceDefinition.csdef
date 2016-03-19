@@ -17,6 +17,7 @@
       <Setting name="UserKeysEnabled" />
       <Setting name="IdleTimeout" />
       <Setting name="AbsoluteTimeout" />
+      <Setting name="SqlConnectionString" />
     </ConfigurationSettings>
     <LocalResources>
       <LocalStorage name="UploadStorage" cleanOnRoleRecycle="true" sizeInMB="8092" />
@@ -29,6 +30,7 @@
       <Setting name="TrackStorageContainer" />
       <Setting name="StorageConnectionString" />
       <Setting name="Onboarding_SleepSeconds" />
+      <Setting name="SqlConnectionString" />
     </ConfigurationSettings>
     <LocalResources>
       <LocalStorage name="OnboardingStorage" cleanOnRoleRecycle="true" sizeInMB="4096" />

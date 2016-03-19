@@ -168,7 +168,7 @@ namespace DolomiteManagement
         public Art GetTrackArt(Guid artGuid)
         {
             // Grab the art object from the database
-            var art = DatabaseManager.GetArt(artGuid);
+            var art = ArtDbManager.Instance.GetArt(artGuid);
             
             string path = ArtDirectory + "/" + art.Id;
             art.ArtStream = AzureStorageManager.GetBlob(TrackStorageContainer, path);
@@ -232,7 +232,7 @@ namespace DolomiteManagement
             IEnumerable<string> fieldsToDelete = clearAll ? track.Metadata.Keys : metadata.Keys;
             foreach (string field in fieldsToDelete)
             {
-                DatabaseManager.DeleteMetadata(guid, field);
+                MetadataDbManager.Instance.DeleteMetadata(guid, field);
             }
 
             // Store the new values
@@ -260,7 +260,7 @@ namespace DolomiteManagement
             {
                 // We have art! Have we already uploaded it?
                 string hash = LocalStorageManager.CalculateMd5Hash(stream);
-                newArtId = DatabaseManager.GetArtIdByHash(hash);
+                newArtId = ArtDbManager.Instance.GetArtIdByHash(hash);
                 if (newArtId == default(long))
                 {
                     // Art was not found, we need to upload it!
@@ -275,7 +275,7 @@ namespace DolomiteManagement
                     // Step 3) Decide where the art is going to live and upload it
                     string artPath = String.Format("{0}/{1}", ArtDirectory, newArtGuid);
                     AzureStorageManager.StoreBlob(TrackStorageContainer, artPath, stream);
-                    newArtId = DatabaseManager.CreateArtRecord(newArtGuid, mimetype, hash);
+                    newArtId = ArtDbManager.Instance.CreateArtRecord(newArtGuid, mimetype, hash);
                 }
             }
             else
@@ -285,18 +285,18 @@ namespace DolomiteManagement
             }
 
             // Step 2) Reset the track's art
-            DatabaseManager.SetTrackArt(track.InternalId, newArtId, true);
+            ArtDbManager.Instance.SetTrackArt(track.InternalId, newArtId, true);
 
             // Step 3) Did we have an old art file that we may need to blow away?
-            if (oldArtId.HasValue && !DatabaseManager.IsArtInUse(oldArtId.Value))
+            if (oldArtId.HasValue && !ArtDbManager.Instance.IsArtInUse(oldArtId.Value))
             {
                 // Get the art so we can have it's guid
-                Art oldArt = DatabaseManager.GetArt(oldArtId.Value);
+                Art oldArt = ArtDbManager.Instance.GetArt(oldArtId.Value);
                 string oldArtPath = String.Format("{0}/{1}", ArtDirectory, oldArt.Id);
                 AzureStorageManager.DeleteBlob(TrackStorageContainer, oldArtPath);
 
                 // Delete the art from the database
-                DatabaseManager.DeleteArt(oldArtId.Value);
+                ArtDbManager.Instance.DeleteArt(oldArtId.Value);
             }
         }
 
@@ -425,10 +425,10 @@ namespace DolomiteManagement
             }
 
             // Delete the album art if it is no longer in use
-            if (track.ArtId.HasValue && !DatabaseManager.IsArtInUse(track.ArtId.Value))
+            if (track.ArtId.HasValue && !ArtDbManager.Instance.IsArtInUse(track.ArtId.Value))
             {
                 // Delete the art from the database
-                DatabaseManager.DeleteArt(track.ArtId.Value);
+                ArtDbManager.Instance.DeleteArt(track.ArtId.Value);
 
                 // Delete the file from Azure
                 string path = ArtDirectory + "/" + track.ArtId.Value;

@@ -5,6 +5,7 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using DolomiteManagement;
+using DolomiteModel;
 using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.ServiceRuntime;
 
@@ -16,6 +17,7 @@ namespace DolomiteBackgroundProcessing
 
         private const string TrackContainerKey = "TrackStorageContainer";
         private const string LocalStorageResourceKey = "OnboardingStorage";
+        private const string SqlConnectionStringKey = "SqlConnectionString";
 
         #endregion
 
@@ -56,6 +58,7 @@ namespace DolomiteBackgroundProcessing
             try
             {
                 InitializeTrackManager();
+                InitializeDatabaseManagers();
 
                 // Grab the connection string for Azure storage
                 string azureConnectionString = CloudConfigurationManager.GetSetting(AzureStorageManager.ConnectionStringKey);
@@ -79,7 +82,7 @@ namespace DolomiteBackgroundProcessing
             try
             {
                 Trace.TraceInformation("Starting onboarding threads...");
-                StartOnboardingThreads(1);
+                StartOnboardingThreads(0);
                 Trace.TraceInformation("Onboarding threads started");
 
                 Trace.TraceInformation("Starting metadata threads...");
@@ -174,12 +177,39 @@ namespace DolomiteBackgroundProcessing
             try
             {
                 // Get the track storage container
-                var trackContainer = RoleEnvironment.GetConfigurationSettingValue(TrackContainerKey);
+                var trackContainer = GetConfigurationValue<string>(TrackContainerKey);
+
+                // Set it for the onboarding threads
                 TrackManager.TrackStorageContainer = trackContainer;
             }
             catch (Exception e)
             {
                 throw new InvalidDataException("Failed to initialize the Track Manager.", e);
+            }
+        }
+
+        /// <summary>
+        /// Fetches the SQL configuration information from the role config
+        /// </summary>
+        private static void InitializeDatabaseManagers()
+        {
+            try
+            {
+                // Get the SQL connection string
+                var connectionString = GetConfigurationValue<string>(SqlConnectionStringKey);
+                
+                // Set it on all the database managers
+                ArtDbManager.SqlConnectionString = connectionString;
+                AutoPlaylistDbManager.SqlConnectionString = connectionString;
+                MetadataDbManager.SqlConnectionString = connectionString;
+                QualityDbManager.SqlConnectionString = connectionString;
+                TrackDbManager.SqlConnectionString = connectionString;
+                UserDbManager.SqlConnectionString = connectionString;
+                WorkDbManager.SqlConnectionString = connectionString;
+            }
+            catch (Exception e)
+            {
+                throw new InvalidDataException("Failed to initialize the database managers.", e);
             }
         }
 

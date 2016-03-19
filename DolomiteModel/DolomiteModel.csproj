@@ -53,6 +53,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArtDbManager.cs" />
+    <Compile Include="AutoPlaylistDbManager.cs" />
     <Compile Include="EntityFramework\ApiKey.cs">
       <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
@@ -84,6 +86,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>DbEntities.edmx</DependentUpon>
     </Compile>
+    <Compile Include="EntityFramework\EntitiesExtension.cs" />
     <Compile Include="EntityFramework\ErrorInfo.cs">
       <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
@@ -123,6 +126,7 @@
     <Compile Include="EntityFramework\UserSetting.cs">
       <DependentUpon>DbEntities.tt</DependentUpon>
     </Compile>
+    <Compile Include="MetadataDbManager.cs" />
     <Compile Include="PlaylistDbManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublicRepresentations\Art.cs" />
@@ -136,9 +140,11 @@
     <Compile Include="PublicRepresentations\Track.cs" />
     <Compile Include="PublicRepresentations\User.cs" />
     <Compile Include="PublicRepresentations\UserSettings.cs" />
+    <Compile Include="QualityDbManager.cs" />
     <Compile Include="TrackDbManager.cs" />
     <Compile Include="TrackRuleProvider.cs" />
     <Compile Include="UserDbManager.cs" />
+    <Compile Include="WorkDbManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.Config" />
