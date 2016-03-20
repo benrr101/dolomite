@@ -18,25 +18,31 @@ namespace DolomiteBackgroundProcessing
     {
         #region Properties and Constants
 
+        #region Role Configuration
+
+        /// <summary>
+        /// Key in the role config for the amount of time to sleep in between checks for work
+        /// </summary>
+        public const string WorkCheckIntervalKey = "Onboarding_WorkCheckInterval";
+
+        /// <summary>
+        /// The amount of time to sleep between checks for work. Should be stored in the 
+        /// configuration for the role.
+        /// </summary>
+        public static TimeSpan WorkCheckInterval { private get; set; }
+
+        /// <summary>
+        /// The name of the container that contains the tracks. Should be stored in the
+        /// configuration for the role.
+        /// </summary>
+        public static string TrackStorageContainer { private get; set; }
+
+        #endregion
+
         /// <summary>
         /// The directory to use for onboarding storage locally and in Azure
         /// </summary>
         public const string OnboardingDirectory = "onboarding";
-
-        /// <summary>
-        /// The number of seconds to sleep between checks for work
-        /// </summary>
-        public static int SleepSeconds { private get; set; }
-
-        /// <summary>
-        /// Key in the role config for the number of seconds to sleep in between checks for work
-        /// </summary>
-        public const string SleepSecondsKey = "Onboarding_SleepSeconds";
-
-        /// <summary>
-        /// The container to store the tracks in
-        /// </summary>
-        public static string TrackStorageContainer { private get; set; }
 
         /// <summary>
         /// A list of processes that hve been launched. This list is used to keep track of zombie
@@ -132,7 +138,7 @@ namespace DolomiteBackgroundProcessing
                 {
                     // No Work items. Sleep.
                     Trace.TraceInformation("No work items for {0}. Sleeping...", GetHashCode());
-                    Thread.Sleep(TimeSpan.FromSeconds(SleepSeconds));
+                    Thread.Sleep(WorkCheckInterval);
                 }
             }
         }

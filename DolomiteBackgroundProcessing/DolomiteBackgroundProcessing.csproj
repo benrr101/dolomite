@@ -104,6 +104,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DolomiteCommon\DolomiteCommon.csproj">
+      <Project>{8d0908cd-fd3d-460c-8e4c-8028ea8e66aa}</Project>
+      <Name>DolomiteCommon</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DolomiteManagement\DolomiteManagement.csproj">
       <Project>{133d0e5c-8dd3-4112-bb7d-352bf3ba28dd}</Project>
       <Name>DolomiteManagement</Name>

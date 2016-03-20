@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading;
+using DolomiteCommon;
 using DolomiteManagement;
 using DolomiteModel;
 using Microsoft.WindowsAzure;
@@ -111,14 +112,15 @@ namespace DolomiteBackgroundProcessing
             // Grab the configuration information
             try
             {
-                // Get all the configuration values for the onboarding thread
-                int sleepSeconds = GetConfigurationValue<int>(TrackOnboarding.SleepSecondsKey);
-                TrackOnboarding.SleepSeconds = sleepSeconds;
-
                 // Get the track storage container
-                string trackContainer = GetConfigurationValue<string>(TrackContainerKey);
+                string trackContainer = RoleUtilities.GetConfigurationValue<string>(TrackContainerKey);
                 TrackOnboarding.TrackStorageContainer = trackContainer;
                 TrackManager.TrackStorageContainer = trackContainer;
+
+                // Get the work check interval
+                TimeSpan workCheckInterval = RoleUtilities.GetConfigurationValue<TimeSpan>(
+                    TrackOnboarding.WorkCheckIntervalKey);
+                TrackOnboarding.WorkCheckInterval = workCheckInterval;
             }
             catch (Exception e)
             {
@@ -149,8 +151,13 @@ namespace DolomiteBackgroundProcessing
             try
             {
                 // Get the track storage container
-                var trackContainer = RoleEnvironment.GetConfigurationSettingValue(TrackContainerKey);
+                var trackContainer = RoleUtilities.GetConfigurationValue<string>(TrackContainerKey);
                 MetadataWriting.TrackStorageContainer = trackContainer;
+
+                // Get the work check interval
+                TimeSpan workCheckInterval = RoleUtilities.GetConfigurationValue<TimeSpan>(
+                    MetadataWriting.WorkCheckIntervalKey);
+                MetadataWriting.WorkCheckInterval = workCheckInterval;
             }
             catch (Exception e)
             {
@@ -177,7 +184,7 @@ namespace DolomiteBackgroundProcessing
             try
             {
                 // Get the track storage container
-                var trackContainer = GetConfigurationValue<string>(TrackContainerKey);
+                var trackContainer = RoleUtilities.GetConfigurationValue<string>(TrackContainerKey);
 
                 // Set it for the onboarding threads
                 TrackManager.TrackStorageContainer = trackContainer;
@@ -196,7 +203,7 @@ namespace DolomiteBackgroundProcessing
             try
             {
                 // Get the SQL connection string
-                var connectionString = GetConfigurationValue<string>(SqlConnectionStringKey);
+                var connectionString = RoleUtilities.GetConfigurationValue<string>(SqlConnectionStringKey);
                 
                 // Set it on all the database managers
                 ArtDbManager.SqlConnectionString = connectionString;
@@ -211,18 +218,6 @@ namespace DolomiteBackgroundProcessing
             {
                 throw new InvalidDataException("Failed to initialize the database managers.", e);
             }
-        }
-
-        /// <summary>
-        /// Returns the configuration value for the role.
-        /// </summary>
-        /// <typeparam name="T">Type of the value</typeparam>
-        /// <param name="configurationKey">The key to use to look up the config value</param>
-        /// <returns>The converted configuration value</returns>
-        private static T GetConfigurationValue<T>(string configurationKey) where T : IConvertible
-        {
-            string configValue = RoleEnvironment.GetConfigurationSettingValue(configurationKey);
-            return (T) Convert.ChangeType(configValue, typeof (T));
         }
     }
 }

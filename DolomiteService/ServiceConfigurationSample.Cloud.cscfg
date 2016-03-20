@@ -19,8 +19,22 @@
     <ConfigurationSettings>
       <Setting name="TrackStorageContainer" value="trackstorage" />
       <Setting name="StorageConnectionString" value="UseDevelopmentStorage=true" />
-      <Setting name="Onboarding_SleepSeconds" value="10" />
       <Setting name="SqlConnectionString" value="qqq" />
+
+      <!-- Art Thread Config Stting =========================================-->
+      <!-- Amount of time to waite between checking for art work.
+           Should be a TimeSpan formatted string -->
+      <Setting name="Art_WorkCheckInterval" value="00:00:10" />
+
+      <!-- Metadata Thread Config Settings ==================================-->
+      <!-- Amount of time to wait between checking for metadata work.
+           Should be a TimeSpan formatted string -->
+      <Setting name="Metadata_WorkCheckInterval" value="00:00:10" />
+
+      <!-- Onboarding Thread Config Setting =================================-->
+      <!-- Amount of time to wait between checking for onboarding work.
+           Should be a TimeSpan formatter string -->
+      <Setting name="Onboarding_WorkCheckInterval" value="00:00:10" />
     </ConfigurationSettings>
   </Role>
 </ServiceConfiguration>

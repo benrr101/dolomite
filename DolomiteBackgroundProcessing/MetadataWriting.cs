@@ -16,15 +16,32 @@ namespace DolomiteBackgroundProcessing
 
         #region Properties and Constants
 
-        private const int SleepSeconds = 10;
+        #region Role Configuration
+
+        /// <summary>
+        /// Key in the role config for the amount of time to sleep in between checks for work
+        /// </summary>
+        public const string WorkCheckIntervalKey = "Metadata_WorkcheckInterval";
+
+        /// <summary>
+        /// The amount of time to sleep between checks for work. Should be stored in the 
+        /// configuration for the role.
+        /// </summary>
+        public static TimeSpan WorkCheckInterval { private get; set; }
+
+        /// <summary>
+        /// The name of the container that contains the tracks. Should be stored in the
+        /// configuration for the role.
+        /// </summary>
+        public static string TrackStorageContainer { private get; set; }
+
+	    #endregion
 
         private static TrackDbManager TrackDatabaseManager { get; set; }
 
         private static LocalStorageManager LocalStorageManager { get; set; }
 
         private static AzureStorageManager AzureStorageManager { get; set; }
-
-        public static string TrackStorageContainer { private get; set; }
 
         #endregion
 
@@ -128,7 +145,7 @@ namespace DolomiteBackgroundProcessing
                 else
                 {
                     Trace.TraceInformation("No art items for {0}. Sleeping...", GetHashCode());
-                    Thread.Sleep(TimeSpan.FromSeconds(SleepSeconds));
+                    Thread.Sleep(WorkCheckInterval);
                 }
             }
         }
