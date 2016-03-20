@@ -12,9 +12,9 @@ using System.Linq;
 using System.Threading;
 using DolomiteModel;
 
-namespace DolomiteBackgroundProcessing
+namespace DolomiteBackgroundProcessing.Threads
 {
-    internal class TrackOnboarding
+    internal class Onboarding
     {
         #region Properties and Constants
 

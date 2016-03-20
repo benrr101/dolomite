@@ -9,9 +9,9 @@ using DolomiteModel;
 using DolomiteModel.PublicRepresentations;
 using TagLib;
 
-namespace DolomiteBackgroundProcessing
+namespace DolomiteBackgroundProcessing.Threads
 {
-    class MetadataWriting
+    class Metadata
     {
 
         #region Properties and Constants

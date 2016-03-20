@@ -83,7 +83,7 @@ namespace DolomiteBackgroundProcessing
             try
             {
                 Trace.TraceInformation("Starting onboarding threads...");
-                StartOnboardingThreads(0);
+                StartOnboardingThreads(1);
                 Trace.TraceInformation("Onboarding threads started");
 
                 Trace.TraceInformation("Starting metadata threads...");
@@ -114,13 +114,12 @@ namespace DolomiteBackgroundProcessing
             {
                 // Get the track storage container
                 string trackContainer = RoleUtilities.GetConfigurationValue<string>(TrackContainerKey);
-                TrackOnboarding.TrackStorageContainer = trackContainer;
+                Threads.Onboarding.TrackStorageContainer = trackContainer;
                 TrackManager.TrackStorageContainer = trackContainer;
 
                 // Get the work check interval
-                TimeSpan workCheckInterval = RoleUtilities.GetConfigurationValue<TimeSpan>(
-                    TrackOnboarding.WorkCheckIntervalKey);
-                TrackOnboarding.WorkCheckInterval = workCheckInterval;
+                TimeSpan workCheckInterval = RoleUtilities.GetConfigurationValue<TimeSpan>(Threads.Onboarding.WorkCheckIntervalKey);
+                Threads.Onboarding.WorkCheckInterval = workCheckInterval;
             }
             catch (Exception e)
             {
@@ -130,7 +129,7 @@ namespace DolomiteBackgroundProcessing
             // Create the onboarding threads
             for (int i = 0; i < threads; ++i)
             {
-                TrackOnboarding newOnboarder = new TrackOnboarding();
+                Threads.Onboarding newOnboarder = new Threads.Onboarding();
                 Thread newThread = new Thread(newOnboarder.Run);
                 newThread.Start();
 
@@ -152,12 +151,11 @@ namespace DolomiteBackgroundProcessing
             {
                 // Get the track storage container
                 var trackContainer = RoleUtilities.GetConfigurationValue<string>(TrackContainerKey);
-                MetadataWriting.TrackStorageContainer = trackContainer;
+                Threads.Metadata.TrackStorageContainer = trackContainer;
 
                 // Get the work check interval
-                TimeSpan workCheckInterval = RoleUtilities.GetConfigurationValue<TimeSpan>(
-                    MetadataWriting.WorkCheckIntervalKey);
-                MetadataWriting.WorkCheckInterval = workCheckInterval;
+                TimeSpan workCheckInterval = RoleUtilities.GetConfigurationValue<TimeSpan>(Threads.Metadata.WorkCheckIntervalKey);
+                Threads.Metadata.WorkCheckInterval = workCheckInterval;
             }
             catch (Exception e)
             {
@@ -167,7 +165,7 @@ namespace DolomiteBackgroundProcessing
             // Create the metadata threads
             for (int i = 0; i < threads; ++i)
             {
-                MetadataWriting newWriting = new MetadataWriting();
+                Threads.Metadata newWriting = new Threads.Metadata();
                 Thread newThread = new Thread(newWriting.Run);
                 newThread.Start();
 
