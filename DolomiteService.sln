@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{CC5FD16D-436D-48AD-A40C-5A424C6E3E79}") = "DolomiteService", "DolomiteService\DolomiteService.ccproj", "{919F1FAF-2554-436B-A6B4-DC1EDB6F745E}"
 EndProject
@@ -14,6 +14,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DolomiteManagement", "DolomiteManagement\DolomiteManagement.csproj", "{133D0E5C-8DD3-4112-BB7D-352BF3BA28DD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DolomiteBackgroundProcessing", "DolomiteBackgroundProcessing\DolomiteBackgroundProcessing.csproj", "{16709AC6-84D7-498D-A65F-7B1CFD6211F1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DolomiteCommon", "DolomiteCommon\DolomiteCommon.csproj", "{8D0908CD-FD3D-460C-8E4C-8028EA8E66AA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +49,10 @@ Global
 		{16709AC6-84D7-498D-A65F-7B1CFD6211F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{16709AC6-84D7-498D-A65F-7B1CFD6211F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{16709AC6-84D7-498D-A65F-7B1CFD6211F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D0908CD-FD3D-460C-8E4C-8028EA8E66AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D0908CD-FD3D-460C-8E4C-8028EA8E66AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D0908CD-FD3D-460C-8E4C-8028EA8E66AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D0908CD-FD3D-460C-8E4C-8028EA8E66AA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

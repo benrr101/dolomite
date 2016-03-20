@@ -90,11 +90,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArtWriting.cs" />
-    <Compile Include="MetadataWriting.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TrackMetadata.cs" />
-    <Compile Include="TrackOnboarding.cs" />
     <Compile Include="DolomiteBackgroundProcessing.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Threads\Metadata.cs" />
+    <Compile Include="Threads\Onboarding.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config">
@@ -105,6 +107,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DolomiteCommon\DolomiteCommon.csproj">
+      <Project>{8d0908cd-fd3d-460c-8e4c-8028ea8e66aa}</Project>
+      <Name>DolomiteCommon</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DolomiteManagement\DolomiteManagement.csproj">
       <Project>{133d0e5c-8dd3-4112-bb7d-352bf3ba28dd}</Project>
       <Name>DolomiteManagement</Name>
@@ -119,6 +125,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
