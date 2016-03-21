@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using DolomiteModel.EntityFramework;
+using Pub = DolomiteModel.PublicRepresentations;
 
 namespace DolomiteModel
 {
@@ -36,12 +37,15 @@ namespace DolomiteModel
         /// </summary>
         /// <returns>The guid of the track to process, or null if none exists</returns>
         /// TODO: Return a Track object (or just wait until the dataflow/message queue thing is ready)
-        public long? GetArtWorkItem()
+        public Pub.Track GetArtWorkItem()
         {
             using (var context = new Entities(SqlConnectionString))
             {
-                // Call the stored proc and get a work item
-                return context.GetAndLockTopArtItem().FirstOrDefault();
+                // Call the stored procedure and hopefully it'll give us a work item
+                long? workItemId = context.GetAndLockTopArtItem().FirstOrDefault();
+                return workItemId.HasValue
+                    ? TrackDbManager.Instance.GetTrack(workItemId.Value)
+                    : null;
             }
         }
 

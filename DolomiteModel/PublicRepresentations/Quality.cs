@@ -2,7 +2,16 @@
 {
     public class Quality
     {
-        public int Bitrate { get; set; }
+        public Quality(EntityFramework.Quality quality)
+        {
+            Id = quality.Id;
+            Bitrate = quality.Bitrate;
+            FfmpegArgs = quality.FfmpegArgs;
+            Directory = quality.Directory;
+            Extension = quality.Extension;
+        }
+
+        public int? Bitrate { get; set; }
 
         public string FfmpegArgs { get; set; }
 

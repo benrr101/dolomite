@@ -159,6 +159,7 @@ namespace DolomiteManagement
         /// The position will be reset to the beginning.
         /// </returns>
         /// TODO: Use aync calls
+        [Obsolete("Use download method OR figure out how to use a temp access string")]
         public Stream GetBlob(string containerName, string path)
         {
             try
@@ -205,6 +206,41 @@ namespace DolomiteManagement
                 Trace.TraceError("Failed to retrieve blob {0}: {1}", path, e.Message);
                 throw;
             }
+        }
+
+        #endregion
+
+        #region Modify Methods
+
+        /// <summary>
+        /// Renames a blob via a copy and delete process.
+        /// </summary>
+        /// <param name="containerName">Container to rename the blob in</param>
+        /// <param name="oldPath">The old blob path, relative to the container</param>
+        /// <param name="newPath">The new blob path, relative to the container</param>
+        public async Task RenameBlobAsync(string containerName, string oldPath, string newPath)
+        {
+            CloudBlobContainer container = BlobClient.GetContainerReference(containerName);
+            ICloudBlob oldBlob = await container.GetBlobReferenceFromServerAsync(oldPath);
+                
+            // Copy the blob to the new file name
+            ICloudBlob newBlob = container.GetBlockBlobReference(newPath);
+            await newBlob.StartCopyFromBlobAsync(oldBlob.Uri);
+
+            // Wait for the copy to complete
+            while (newBlob.CopyState.Status == CopyStatus.Pending)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+            }
+            if (newBlob.CopyState.Status != CopyStatus.Success)
+            {
+                string message = String.Format("Failed to copy '{0}' to '{1}' as part of rename operation: {2}",
+                    oldBlob.Uri, newBlob.Uri, newBlob.CopyState.StatusDescription);
+                throw new ApplicationException(message);
+            }
+
+            // Delete the old blob;
+            await oldBlob.DeleteAsync();
         }
 
         #endregion

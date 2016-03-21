@@ -126,7 +126,7 @@ namespace DolomiteBackgroundProcessing.Threads
 
                 // Check for art work items
                 // TODO: Make this a separate thread
-                long? artWorkItem = WorkDbManager.Instance.GetArtWorkItem();
+                long? artWorkItem = null;//WorkDbManager.Instance.GetArtWorkItem();
                 if (artWorkItem.HasValue)
                 {
                     try

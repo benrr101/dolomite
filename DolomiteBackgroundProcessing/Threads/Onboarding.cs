@@ -87,7 +87,10 @@ namespace DolomiteBackgroundProcessing.Threads
                     try
                     {
                         // Step 1: Grab the track from Azure
-                        CopyFileToLocalStorage(trackFilePath, track.Id).Wait();
+                        LocalStorageManager.Instance.CopyFromAzureToLocalStorageAsync(
+                            TrackStorageContainer,
+                            AzureStorageManager.CombineAzurePath(OnboardingDirectory, track.Id.ToString()), 
+                            trackFilePath).Wait();
 
                         // Step 2: Grab the metadata for the track
                         TrackMetadata metadata;
@@ -106,8 +109,11 @@ namespace DolomiteBackgroundProcessing.Threads
                         Task.WaitAll(metadataTasks);
 
                         // Step 4: Create all the qualities for the track
-                        var qualities = DetermineQualitiesToGenerate(metadata).Result;
+                        var qualities = DetermineQualitiesToGenerate(metadata);
                         Task.WaitAll(qualities.Select(q => GenerateQuality(track, q)).ToArray());
+
+                        // Step 5: Make the original quality
+                        StoreOriginalQuality(track, metadata).Wait();
 
                         // Onboarding complete! Delete the temp copy! Release the lock!
                         LocalStorageManager.Instance.DeleteFile(trackFilePath);
@@ -150,15 +156,14 @@ namespace DolomiteBackgroundProcessing.Threads
         /// than the original quality of the track.
         /// </summary>
         /// <param name="metadata">Metadata from the track to convert.</param>
-        private static async Task<List<Quality>> DetermineQualitiesToGenerate(TrackMetadata metadata)
+        private static List<Quality> DetermineQualitiesToGenerate(TrackMetadata metadata)
         {
-            // Step 1) Fetch all the supported qualities from the DB
-            List<Quality> allQualities = await QualityDbManager.Instance.GetAllQualitiesAsync();
+            Quality[] qualities = QualityDbManager.Instance.CreatedQualities;
 
-            // Step 2) Determine which qualities to use by picking all qualities with bitrates less
-            // than or equal to the original (+/- 5kbps to handle lousy sources)
-            var maxQuality = allQualities.Where(q => Math.Abs(q.Bitrate - metadata.BitrateKbps) <= 5);
-            var lesserQualities = allQualities.Where(q => q.Bitrate < metadata.BitrateKbps);
+            // Determine which qualities to use by picking all qualities with bitrates less than or
+            // equal to the original (+/- 5kbps to handle lousy sources)
+            var maxQuality = qualities.Where(q => q.Bitrate.HasValue && Math.Abs(q.Bitrate.Value - metadata.BitrateKbps) <= 5);
+            var lesserQualities = qualities.Where(q => q.Bitrate < metadata.BitrateKbps);
             
             return lesserQualities.Union(maxQuality).ToList();
         }
@@ -192,11 +197,13 @@ namespace DolomiteBackgroundProcessing.Threads
             await LaunchProcessAsync(@"Externals\ffmpeg.exe", arguments);
 
             // Upload the file to Azure and delete it when we're done
-            await MoveFileToAzure(outputLocalFilePath, quality.Directory);
+            // Also, store the quality record to the database
+            await Task.WhenAll(new[]
+            {
+                MoveFileToAzure(outputLocalFilePath, quality.Directory),
+                QualityDbManager.Instance.AddAvailableQualityRecordAsync(track, quality)
+            });
             LocalStorageManager.Instance.DeleteFile(outputLocalRelative);
-
-            // Store the quality record to the database
-            QualityDbManager.Instance.AddAvailableQualityRecord(track, quality);
         }
 
         /// <summary>
@@ -302,8 +309,29 @@ namespace DolomiteBackgroundProcessing.Threads
         /// <param name="metadata">The information to store about the track</param>
         private static async Task StoreOriginalQuality(Track track, TrackMetadata metadata)
         {
-            await QualityDbManager.Instance.SetAudioQualityInfoAsync(track.InternalId, metadata.BitrateKbps,
-                    metadata.Mimetype, metadata.Extension);
+            Quality originalQuality = QualityDbManager.Instance.OriginalQuality;
+
+            // Async tasks to complete
+            // Write the information about the original track to the track's record
+            Task trackWrite = QualityDbManager.Instance.SetAudioQualityInfoAsync(
+                track.InternalId, metadata.BitrateKbps, metadata.Mimetype, metadata.Extension);
+            
+            // Create a quality record for the original
+            Task qualityWrite = QualityDbManager.Instance.AddAvailableQualityRecordAsync(
+                track, originalQuality);
+
+            // Move the onboarding copy to the original folder in Azure
+            string oldPath = AzureStorageManager.CombineAzurePath(OnboardingDirectory, track.Id.ToString());
+            string newPath = AzureStorageManager.CombineAzurePath(originalQuality.Directory, track.Id.ToString());
+            Task moveOriginal = AzureStorageManager.Instance.RenameBlobAsync(TrackStorageContainer, oldPath, newPath);
+
+            // Wait for completion of all the tasks
+            await Task.WhenAll(new []
+            {
+                trackWrite,
+                qualityWrite,
+                moveOriginal
+            });
         }
 
         #endregion
@@ -339,13 +367,17 @@ namespace DolomiteBackgroundProcessing.Threads
                 }
 
                 // Fetch the qualities from the DB to make this faster
-                List<Quality> qualities = await QualityDbManager.Instance.GetAllQualitiesAsync();
+                Quality[] qualities = QualityDbManager.Instance.CreatedQualities;
+                Quality originalQuality = QualityDbManager.Instance.OriginalQuality;
 
                 // Delete the original file and any generated qualities from azure storage
                 List<Task> cleanupTasks = new List<Task>();
 
-                string originalAzurePath = AzureStorageManager.CombineAzurePath(OnboardingDirectory,
+                string onboardingAzurePath = AzureStorageManager.CombineAzurePath(OnboardingDirectory,
                     workItem.Id.ToString());
+                string originalAzurePath = AzureStorageManager.CombineAzurePath(originalQuality.Directory, 
+                    workItem.Id.ToString());
+                cleanupTasks.Add(AzureStorageManager.Instance.DeleteBlobAsync(TrackStorageContainer, onboardingAzurePath));
                 cleanupTasks.Add(AzureStorageManager.Instance.DeleteBlobAsync(TrackStorageContainer, originalAzurePath));
                 cleanupTasks.AddRange(qualities.Select(q =>
                 {
@@ -353,6 +385,7 @@ namespace DolomiteBackgroundProcessing.Threads
                     string azureFilePath = AzureStorageManager.CombineAzurePath(q.Directory, azureFilename);
                     return AzureStorageManager.Instance.DeleteBlobAsync(TrackStorageContainer, azureFilePath);
                 }));
+
 
                 // Delete the original file and any generated qualities from local storage
                 LocalStorageManager.Instance.DeleteFile(IO.Path.Combine(OnboardingDirectory, workItem.Id.ToString()));
@@ -386,21 +419,6 @@ namespace DolomiteBackgroundProcessing.Threads
         }
 
         #region Private Helper Methods
-
-        /// <summary>
-        /// Copies the file from azure to the local, temporary storage
-        /// </summary>
-        /// <param name="tempPath">Path for the file in local storage</param>
-        /// <param name="trackGuid">The guid of the track to pull from azure</param>
-        private static async Task CopyFileToLocalStorage(string tempPath, Guid trackGuid)
-        {
-            // Get the stream from Azure
-            string azurePath = AzureStorageManager.CombineAzurePath(OnboardingDirectory, trackGuid.ToString());
-            using (IO.FileStream localStream = LocalStorageManager.Instance.CreateFile(tempPath))
-            {
-                await AzureStorageManager.Instance.DownloadBlobAsync(TrackStorageContainer, azurePath, localStream);
-            }
-        }
 
         /// <summary>
         /// Generates the filename for the given quality. This is to ensure we use the same names

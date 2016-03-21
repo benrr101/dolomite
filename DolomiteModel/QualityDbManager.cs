@@ -12,6 +12,22 @@ namespace DolomiteModel
     public class QualityDbManager
     {
 
+        #region Constants
+        
+        /// <summary>
+        /// The ID of the original track record.
+        /// NOTE: Although this is a magic number, it's a relatively safe one. Qualities are hard
+        /// coded into the database metadata, so they shouldn't change very often.
+        /// </summary>
+        private const int OriginalId = 1;
+
+        /// <summary>
+        /// The amount of time to wait before invalidating the cache
+        /// </summary>
+        private readonly static TimeSpan CacheExpirationInterval = TimeSpan.FromHours(1);
+
+        #endregion
+
         #region Singleton Instance Code
 
         /// <summary>
@@ -36,6 +52,64 @@ namespace DolomiteModel
 
         #endregion
 
+        #region Cache Logic
+
+        /// <summary>
+        /// The date when the cache is expired
+        /// </summary>
+        private DateTime CacheExpirationDate { get; set; }
+
+        /// <summary>
+        /// Internal storage of all qualities
+        /// </summary>
+        private Pub.Quality[] _cachedQualities;
+
+        /// <summary>
+        /// All qualities from the db. This performs the caching logic
+        /// </summary>
+        private IEnumerable<Pub.Quality> AllQualities
+        {
+            get
+            {
+                // If we don't have a chached version, go get one
+                if (_cachedQualities == null || DateTime.UtcNow > CacheExpirationDate)
+                {
+                    using (var context = new Entities(SqlConnectionString))
+                    {
+                        _cachedQualities = context.Qualities.AsNoTracking()
+                            .Select(q => new Pub.Quality(q))
+                            .ToArray();
+                    }
+
+                    CacheExpirationDate = DateTime.UtcNow + CacheExpirationInterval;
+                }
+
+                return _cachedQualities;
+            }
+        }
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// All qualities that should be created from the original track
+        /// </summary>
+        public Pub.Quality[] CreatedQualities
+        {
+            get { return AllQualities.Where(q => q.Id != OriginalId).ToArray(); }
+        }
+
+        /// <summary>
+        /// The quality for the original copy of the track
+        /// </summary>
+        public Pub.Quality OriginalQuality
+        {
+            get { return AllQualities.First(q => q.Id == OriginalId); }
+        }
+
+        #endregion
+
         #region Creation Methods
 
         /// <summary>
@@ -43,7 +117,7 @@ namespace DolomiteModel
         /// </summary>
         /// <param name="track">The track to add the quality to</param>
         /// <param name="quality">The object representing the quality</param>
-        public void AddAvailableQualityRecord(Pub.Track track, Pub.Quality quality)
+        public async Task AddAvailableQualityRecordAsync(Pub.Track track, Pub.Quality quality)
         {
             using (var context = new Entities(SqlConnectionString))
             {
@@ -54,49 +128,7 @@ namespace DolomiteModel
                     Track = track.InternalId
                 };
                 context.AvailableQualities.Add(aq);
-                context.SaveChanges();
-            }
-        }
-
-        /// <summary>
-        /// Creates an available audio quality record to the given track for
-        /// the original audio quality.
-        /// </summary>
-        /// <param name="track">The track to add the record to</param>
-        public void AddAvailableOriginalQualityRecord(Pub.Track track)
-        {
-            using (var context = new Entities(SqlConnectionString))
-            {
-                // Fetch the original quality record
-                Quality original = context.Qualities.First(q => q.Name.Equals("original", StringComparison.OrdinalIgnoreCase));
-                Pub.Quality pubOriginal = new Pub.Quality { Id = original.Id };
-                AddAvailableQualityRecord(track, pubOriginal);
-            }
-        }
-
-        #endregion
-
-        #region Retrieval Methods
-        
-        /// <summary>
-        /// Fetches all supported qualities from the database
-        /// </summary>
-        /// <returns>A list of qualities</returns>
-        /// TODO: Add caching
-        public async Task<List<Pub.Quality>> GetAllQualitiesAsync()
-        {
-            using (var context = new Entities(SqlConnectionString))
-            {
-                return await context.Qualities.AsNoTracking()
-                    .Where(q => q.Bitrate != null)
-                    .Select(q => new Pub.Quality
-                    {
-                        Id = q.Id,
-                        Bitrate = q.Bitrate.Value,
-                        FfmpegArgs = q.FfmpegArgs,
-                        Directory = q.Directory,
-                        Extension = q.Extension
-                    }).ToListAsync();
+                await context.SaveChangesAsync();
             }
         }
 

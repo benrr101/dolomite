@@ -56,6 +56,21 @@ namespace DolomiteManagement
         #region Storage Methods
 
         /// <summary>
+        /// Downloads a blob from azure storage to local storage, asynchronously
+        /// </summary>
+        /// <param name="azureStorageContainer">The name of the container that's storing the blob</param>
+        /// <param name="sourcePath">The absolute path to the blob in the container</param>
+        /// <param name="destinationRelativePath">The output path, relative to local storage root</param>
+        public async Task CopyFromAzureToLocalStorageAsync(string azureStorageContainer, string sourcePath, string destinationRelativePath)
+        {
+            // Get the stream from Azure
+            using (FileStream localStream = File.Create(GetPath(destinationRelativePath)))
+            {
+                await AzureStorageManager.Instance.DownloadBlobAsync(azureStorageContainer, sourcePath, localStream);
+            }
+        }
+
+        /// <summary>
         /// Initializes a given storage directory by creating it if it doesn't already exist.
         /// </summary>
         /// <param name="directory">The directory to initialize</param>
